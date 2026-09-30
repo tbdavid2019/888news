@@ -8,6 +8,7 @@ import { config, credential } from "../config.ts";
 import { sql } from "../db.ts";
 import { sha256 } from "../lib/ids.ts";
 import { feishuInternalEnabled, forwardFeedbackToFeishu } from "../notify/feishu.ts";
+import { dispatchFeedback } from "../notify/dispatch.ts";
 
 export class FeedbackRejected extends Error {
   readonly status: number;
@@ -73,16 +74,46 @@ export async function submitFeedback(input: FeedbackInput): Promise<{ id: number
     INSERT INTO feedback (content, email, page_url, screenshot_key, source_hash, forward_error)
     VALUES (${content}, ${email}, ${pageUrl}, ${screenshotKey}, ${source}, 'pending') RETURNING id`;
   const id = row!.id;
-  void forwardFeedbackToFeishu(id).catch(() => {});
+  void forwardFeedback(id).catch(() => {});
   return { id };
 }
 
 /**
- * Every few minutes: feedback that did not reach the internal chat (Feishu down, a screenshot upload
- * failing) is tried again for a week. Newer than a few minutes is still being sent by its submission.
+ * Forwards one feedback to configured channels (Slack, Discord, Telegram, and optional Feishu).
+ */
+export async function forwardFeedback(id: number): Promise<"sent" | "disabled"> {
+  const [fb] = await sql<{ id: number; content: string; email: string | null; note: string | null; page_url: string | null; screenshot_key: string | null; created_at: Date }[]>`
+    SELECT id, content, email, note, page_url, screenshot_key, created_at FROM feedback WHERE id = ${id} AND forwarded_at IS NULL`;
+  if (!fb) return "disabled";
+
+  try {
+    const res = await dispatchFeedback({
+      id: fb.id,
+      content: fb.content,
+      email: fb.email,
+      pageUrl: fb.page_url,
+      createdAt: fb.created_at,
+    });
+
+    if (feishuInternalEnabled()) {
+      await forwardFeedbackToFeishu(id).catch(() => {});
+    }
+
+    if (res.dispatchedChannels.length > 0 || feishuInternalEnabled()) {
+      await sql`UPDATE feedback SET forwarded_at = now(), forward_error = NULL WHERE id = ${id}`;
+      return "sent";
+    }
+    return "disabled";
+  } catch (error) {
+    await sql`UPDATE feedback SET forward_error = ${String(error instanceof Error ? error.message : error).slice(0, 300)} WHERE id = ${id}`;
+    throw error;
+  }
+}
+
+/**
+ * Every few minutes: feedback that did not reach the configured channels is tried again for a week.
  */
 export async function forwardPendingFeedback(): Promise<{ sent: number; failed: number }> {
-  if (!feishuInternalEnabled()) return { sent: 0, failed: 0 };
   const rows = await sql<{ id: number }[]>`
     SELECT id FROM feedback WHERE forwarded_at IS NULL AND forward_error IS NOT NULL
       AND created_at < now() - interval '5 minutes' AND created_at > now() - interval '7 days'
@@ -91,7 +122,7 @@ export async function forwardPendingFeedback(): Promise<{ sent: number; failed: 
   let failed = 0;
   for (const r of rows) {
     try {
-      if ((await forwardFeedbackToFeishu(r.id)) === "sent") sent += 1;
+      if ((await forwardFeedback(r.id)) === "sent") sent += 1;
     } catch {
       failed += 1;
     }

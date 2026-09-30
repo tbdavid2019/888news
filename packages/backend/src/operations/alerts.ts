@@ -6,7 +6,8 @@
 // Delivery goes through sendAlert (ops chat, internal-chat fallback; off unless FEISHU_INTERNAL_ENABLED).
 import { beijingDate, beijingTime } from "@aihot/contracts/time";
 import { sql } from "../db.ts";
-import { beijingDay, beijingStamp, duration, formatAlert, formatRecovery, sendAlert, type Finding, type Level } from "../notify/feishu.ts";
+import { beijingDay, beijingStamp, duration, formatAlert, formatRecovery, type Finding, type Level } from "../notify/feishu.ts";
+import { dispatchAlert } from "../notify/dispatch.ts";
 import { backupConfigured } from "./backup.ts";
 
 const REPEAT_MS: Record<Exclude<Level, "digest">, number> = { now: 3600_000, today: 24 * 3600_000 };
@@ -256,7 +257,7 @@ export async function checkAlerts(now = Date.now()) {
     if (open && now - Date.parse(open.sentAt) <= REPEAT_MS[level]) continue;
     const since = open ? new Date(open.since) : (f.since ?? new Date(now));
     const msg = formatAlert(f, since, now, !!open);
-    await sendAlert(msg.title, msg.lines);
+    await dispatchAlert(msg.title, msg.lines, level);
     state[f.key] = { title: f.title, level, since: since.toISOString(), sentAt: new Date(now).toISOString() };
     sent.push(f.key);
   }
@@ -265,7 +266,7 @@ export async function checkAlerts(now = Date.now()) {
     // Entries without a level predate this scheme (2026-09-29) and close without a message.
     if (state[key]!.level) {
       const msg = formatRecovery(state[key]!.title, new Date(state[key]!.since), now);
-      await sendAlert(msg.title, msg.lines);
+      await dispatchAlert(msg.title, msg.lines, state[key]!.level as Exclude<Level, "digest">);
       sent.push(`${key}:recovered`);
     }
     delete state[key];
@@ -280,6 +281,6 @@ export async function sendDigest(now = Date.now()) {
   const items = (await collectFindings(now)).filter((f) => f.level === "digest");
   const lines = items.map((f, i) => `${i + 1}. ${f.title}${f.detail ? `\n   ${f.detail}` : ""}`);
   if (!lines.length) return { items: 0 };
-  await sendAlert(`📋 系统日报 · ${beijingDay(now)}`, ["以下事项不影响读者，你不用处理；需要的话把整条转给 AI。", ...lines]);
+  await dispatchAlert(`📋 系統日報 · ${beijingDay(now)}`, ["以下事項不影響讀者，你不用處理；需要的話把整條轉給 AI。", ...lines], "digest");
   return { items: lines.length };
 }

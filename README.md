@@ -66,7 +66,24 @@
 - **同一件事只看一次**：不論多少家媒體轉載、社群如何討論，同一事件彙整為一個主卡片，後續發展串聯在事件時間軸上。
 - **防灌水熱度評分**：單一媒體發十篇僅計一次權重，結合 48 小時時間衰減演算法，精準呈現真正引起全網關注的重要趨勢。
 
-### 🔌 4. 為 AI Agent 與開放生態而生
+### 🛡️ 4. 全球頂級 LLM 支援、多級熔斷防驚群 Fallback
+- **廣泛服務商相容**：原生預設整合 Groq（Llama 3.3 70B, DeepSeek R1）、Google Gemini（2.5 Flash, 2.5 Pro）、OpenAI（GPT-4o, GPT-4o-mini）以及任何相容 OpenAI 的 API 端點。
+- **三級容災架構 (`Primary` $\rightarrow$ `Fallback 1` $\rightarrow$ `Fallback 2`)**：遇到 Rate Limit (HTTP 429) 或 5xx 故障時自動無縫降級，保障 24/7 流水線不停擺。
+- **熔斷器 (Circuit Breaker) & 防驚群效應 (Anti-Thundering Herd)**：
+  - 故障連續觸發時進入 `OPEN` 熔斷狀態，冷卻期內立即短路，拒絕盲目重試。
+  - 冷卻後採用單一探針（Canary Probe）進行 `HALF-OPEN` 恢復探測。
+  - 降級請求具備**隨機抖動退避（Randomized Jitter Backoff）**與**併發限制信號量（Concurrency Semaphore）**，徹底消除峰值流量瞬間壓垮備用 LLM 的驚群效應。
+- **降級即時告警**：每次觸發 Fallback 降級均會自動發送警報至管理員頻道。
+
+### 📡 5. 多渠道 Webhook 通知 (Slack / Discord / Telegram)
+- 揮別單一通訊軟體限制，全方位支援 **Slack**、**Discord**、**Telegram** 即時 Webhook 與 Bot 通知。
+- 系統告警（如 LLM 降級觸發、採集靜默警報、每日情報摘要）與使用者提交之意見反饋（Feedback）均可即時、非同步並行廣播至指定頻道。
+
+### 🕷️ 6. 動態反爬蟲 Universal Web Reader
+- 整合 `2md.aiurl.tw` (888-url2md) 高效 Markdown 渲染器，輕鬆穿透 SPA 與動態反爬頁面。
+- 具備雙層防護機制，若有設定 `JINA_API_KEY` 時亦可平滑自動容災切換。
+
+### 🔌 7. 為 AI Agent 與開放生態而生
 - **Model Context Protocol (MCP)**：內建 MCP Server，任何 AI Agent（如 Claude Desktop、Cursor、Cline）均可直接掛載為工具，呼叫最新情報與搜尋。
 - **RSS 與 OpenAPI**：包含精選、全文、日報、主題分類多維度 RSS 與無須授權的唯讀 RESTful 介面。
 
@@ -77,7 +94,7 @@
 ### 系統需求
 - [Docker](https://docs.docker.com/get-docker/) 與 Docker Compose
 - Node.js 24+（後端原生執行 TypeScript）
-- 一組 OpenAI 相容的大模型 API Key（DeepSeek、通義千問、智譜 GLM、OpenAI、Moonshot 等均可）
+- 一組 OpenAI 相容的大模型 API Key（OpenAI, Groq, Gemini, DeepSeek, 千問等均可）
 
 ### 一鍵啟動
 
@@ -110,12 +127,19 @@ docker compose up -d --build
 | `GITHUB_REPO_URL` | 開源專案 GitHub 倉庫連結 | `https://github.com/tbdavid2019/888news` |
 | `ADMIN_PASSWORD` | 管理後台登入密碼 | 由 `init-env.ts` 隨機生成 |
 | `DATABASE_URL` | PostgreSQL 連線字串 | `postgres://user:pass@127.0.0.1:5432/aihot` |
-| `LLM_API_KEY` | 主要大模型 API 金鑰 | 自行填寫 |
-| `LLM_BASE_URL` | 主要大模型 API 端點 | 相容 OpenAI 的 API URL |
-| `FEISHU_INTERNAL_ENABLED` | 是否開啟內部飛書通知（反饋/告警） | `false` |
+| **`LLM_API_KEY`** | 主要大模型 API 金鑰 | 自行填寫（OpenAI / Groq / Gemini 等） |
+| **`LLM_BASE_URL`** | 主要大模型 API 端點 | `https://api.openai.com/v1` 等 |
+| **`LLM_MODEL`** | 主要大模型名稱 | `gpt-4o-mini` / `deepseek-flash` 等 |
+| **`LLM_FALLBACK_1_*`** | 第一級容災大模型配置（BaseURL, Key, Model） | 選填，故障時自動切換 |
+| **`LLM_FALLBACK_2_*`** | 第二級容災大模型配置（BaseURL, Key, Model） | 選填，次級故障時切換 |
+| **`READER_BASE_URL`** | 動態反爬網頁渲染器 | `https://2md.aiurl.tw` |
+| **`SLACK_WEBHOOK_URL`** | Slack 告警與反饋通知 Webhook URL | 選填 |
+| **`DISCORD_WEBHOOK_URL`** | Discord 告警與反饋通知 Webhook URL | 選填 |
+| **`TELEGRAM_BOT_TOKEN`** | Telegram Bot API Token | 選填 |
+| **`TELEGRAM_CHAT_ID`** | Telegram 頻道 / 群組 Chat ID | 選填 |
 
-> 💡 **使用者反饋 (Feedback) 去哪了？**  
-> 使用者在前端提交的反饋意見**直接儲存在你自己的 PostgreSQL 資料庫 `feedback` 資料表中**，管理員可在 `/admin` 後台即時查閱與管理。若開啟飛書開關，系統會額外推播至指定的內部飛書群組。**絕不會傳送至任何外部或原作者信箱**。
+> 💡 **使用者反饋 (Feedback) 與告警通知**  
+> 使用者提交的反饋直接儲存於 PostgreSQL `feedback` 表，並即時透過 Webhook 同步推播至已啟用的 Slack、Discord、Telegram 頻道；若啟用飛書亦支援推播至內部群組。絕不傳送至任何第三方未知信箱。
 
 ---
 

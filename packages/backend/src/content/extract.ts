@@ -5,7 +5,7 @@ import { parseHTML } from "linkedom";
 import { sql } from "../db.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { collapseWhitespace, stripTags } from "../lib/text.ts";
-import { jinaRead } from "../providers/jina.ts";
+import { readPageAsMarkdown } from "../providers/reader.ts";
 import { BudgetExceededError } from "../providers/receipts.ts";
 import { getArticle } from "../providers/socialdata.ts";
 import { onlyXArticleLink, xArticleText } from "../sources/x.ts";
@@ -81,7 +81,7 @@ export async function extractFromUrl(url: string, opts: { allowJina: boolean; su
   }
   if (!opts.allowJina) return null;
   try {
-    const page = await jinaRead(url, { purpose: "body_fallback", subject: opts.subject });
+    const page = await readPageAsMarkdown(url, { purpose: "body_fallback", subject: opts.subject });
     const html = trimTrailingChrome(sanitizeBody(markdownToHtml(page.markdown), url));
     const text = stripTags(html);
     if (text.length < MIN_BODY_CHARS) return null;

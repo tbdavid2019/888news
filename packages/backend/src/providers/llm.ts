@@ -6,6 +6,8 @@ import { config, credential } from "../config.ts";
 import { sha256 } from "../lib/ids.ts";
 import { completeReceipt, paidRequest, ProviderRejectedError, rejectReceivedResponse } from "./receipts.ts";
 import { sql } from "../db.ts";
+import { canExecute, computeJitterDelay, recordFailure, recordSuccess, withConcurrencyLimit } from "./circuit-breaker.ts";
+import { dispatchAlert } from "../notify/dispatch.ts";
 
 export interface ModelSpec {
   key: string;
@@ -79,6 +81,42 @@ export const MODELS: Record<string, ModelSpec> = {
     key: "qwen3-vl-flash", service: "dashscope", model: "qwen3-vl-flash",
     baseUrlEnv: "DASHSCOPE_BASE_URL", apiKeyEnv: "DASHSCOPE_API_KEY",
     extra: { enable_thinking: false }, jsonMode: false, vision: true,
+  },
+  // --- Global Providers: Groq, Google Gemini, OpenAI ---
+  "groq-llama-70b": {
+    key: "groq-llama-70b", service: "groq", model: "llama-3.3-70b-versatile",
+    baseUrlEnv: "GROQ_BASE_URL", apiKeyEnv: "GROQ_API_KEY", jsonMode: true,
+  },
+  "groq-deepseek-r1": {
+    key: "groq-deepseek-r1", service: "groq", model: "deepseek-r1-distill-llama-70b",
+    baseUrlEnv: "GROQ_BASE_URL", apiKeyEnv: "GROQ_API_KEY", jsonMode: true,
+  },
+  "gemini-2.5-flash": {
+    key: "gemini-2.5-flash", service: "gemini", model: "gemini-2.5-flash",
+    baseUrlEnv: "GEMINI_BASE_URL", apiKeyEnv: "GEMINI_API_KEY", jsonMode: true,
+  },
+  "gemini-2.5-pro": {
+    key: "gemini-2.5-pro", service: "gemini", model: "gemini-2.5-pro",
+    baseUrlEnv: "GEMINI_BASE_URL", apiKeyEnv: "GEMINI_API_KEY", jsonMode: true,
+  },
+  "openai-gpt-4o-mini": {
+    key: "openai-gpt-4o-mini", service: "openai", model: "gpt-4o-mini",
+    baseUrlEnv: "OPENAI_BASE_URL", apiKeyEnv: "OPENAI_API_KEY", jsonMode: true,
+  },
+  "openai-gpt-4o": {
+    key: "openai-gpt-4o", service: "openai", model: "gpt-4o",
+    baseUrlEnv: "OPENAI_BASE_URL", apiKeyEnv: "OPENAI_API_KEY", jsonMode: true,
+  },
+  // --- Configurable Multi-Tier Fallbacks ---
+  fallback_1: {
+    key: "fallback_1", service: "fallback_1", baseUrlEnv: "LLM_FALLBACK_1_BASE_URL", apiKeyEnv: "LLM_FALLBACK_1_API_KEY",
+    get model() { return process.env.LLM_FALLBACK_1_MODEL ?? ""; },
+    jsonMode: true,
+  },
+  fallback_2: {
+    key: "fallback_2", service: "fallback_2", baseUrlEnv: "LLM_FALLBACK_2_BASE_URL", apiKeyEnv: "LLM_FALLBACK_2_API_KEY",
+    get model() { return process.env.LLM_FALLBACK_2_MODEL ?? ""; },
+    jsonMode: true,
   },
 };
 
@@ -157,13 +195,36 @@ function isConnectFailure(error: unknown): boolean {
   return ["ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN", "UND_ERR_CONNECT_TIMEOUT", "ECONNRESET_BEFORE_SEND", "CERT_HAS_EXPIRED"].includes(code ?? "");
 }
 
-export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): Promise<ChatJsonResult<z.infer<S>>> {
-  const spec = MODELS[opts.model];
-  if (!spec) throw new Error(`Unknown model ${opts.model}`);
-  if (!config.modelCallsEnabled) throw new Error("Model calls are disabled (MODEL_CALLS_ENABLED=false)");
-  const baseUrl = credential("models", spec.baseUrlEnv);
-  const apiKey = credential("models", spec.apiKeyEnv);
-  if (!baseUrl || !apiKey || !spec.model) throw new Error(`Model ${opts.model} is not configured (${spec.baseUrlEnv}, ${spec.apiKeyEnv}${spec.key === "default" ? ", LLM_MODEL" : ""})`);
+export function getBaseUrl(spec: ModelSpec): string | null {
+  const custom = credential("models", spec.baseUrlEnv) ?? process.env[spec.baseUrlEnv];
+  if (custom && custom.trim() !== "") return custom;
+  if (spec.service === "groq") return "https://api.groq.com/openai/v1";
+  if (spec.service === "gemini") return "https://generativelanguage.googleapis.com/v1beta/openai/";
+  if (spec.service === "openai") return "https://api.openai.com/v1";
+  return null;
+}
+
+export function getApiKey(spec: ModelSpec): string | null {
+  return credential("models", spec.apiKeyEnv) ?? process.env[spec.apiKeyEnv] ?? null;
+}
+
+export function isFallbackConfigured(key: "fallback_1" | "fallback_2"): boolean {
+  const spec = MODELS[key];
+  if (!spec) return false;
+  const apiKey = getApiKey(spec);
+  const model = spec.model;
+  return Boolean(apiKey && model);
+}
+
+async function executeSingleModel<S extends z.ZodType>(
+  spec: ModelSpec,
+  opts: ChatJsonOptions<S>,
+): Promise<ChatJsonResult<z.infer<S>>> {
+  const baseUrl = getBaseUrl(spec);
+  const apiKey = getApiKey(spec);
+  if (!baseUrl || !apiKey || !spec.model) {
+    throw new Error(`Model ${spec.key} is not configured (${spec.baseUrlEnv}, ${spec.apiKeyEnv}${spec.key === "default" ? ", LLM_MODEL" : ""})`);
+  }
 
   const temperature = opts.temperature ?? 0.2;
   const maxTokens = Math.max(opts.maxTokens ?? 1500, 512) + (spec.key.endsWith("-think") ? 4000 : 0);
@@ -235,9 +296,73 @@ export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): P
   } catch (error) {
     // Unusable output: record it and let a later attempt pay for a fresh answer.
     await rejectReceivedResponse(receipt.receiptId, `unusable output: ${String(error).slice(0, 500)}`);
-    throw new ModelOutputError(`Model ${opts.model} returned unusable output for ${opts.subject}: ${String(error).slice(0, 300)}`, receipt.receiptId);
+    throw new ModelOutputError(`Model ${spec.key} returned unusable output for ${opts.subject}: ${String(error).slice(0, 300)}`, receipt.receiptId);
   }
   return { data: parsed, receiptId: receipt.receiptId, reused: receipt.reused, model: spec.key, usage: response.usage ?? null };
+}
+
+export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): Promise<ChatJsonResult<z.infer<S>>> {
+  if (!config.modelCallsEnabled) throw new Error("Model calls are disabled (MODEL_CALLS_ENABLED=false)");
+
+  const primaryKey = opts.model;
+  const candidates: string[] = [primaryKey];
+  if (isFallbackConfigured("fallback_1") && primaryKey !== "fallback_1") candidates.push("fallback_1");
+  if (isFallbackConfigured("fallback_2") && primaryKey !== "fallback_2") candidates.push("fallback_2");
+
+  let lastError: unknown = null;
+
+  for (let i = 0; i < candidates.length; i++) {
+    const candidateKey = candidates[i]!;
+    const spec = MODELS[candidateKey];
+    if (!spec) {
+      if (candidateKey === primaryKey) throw new Error(`Unknown model ${primaryKey}`);
+      continue;
+    }
+
+    // Circuit Breaker check: avoid hammering broken provider or stampeding
+    const check = canExecute(candidateKey);
+    if (!check.allow && candidates.length > 1 && i < candidates.length - 1) {
+      console.warn(`[CircuitBreaker] Skipping ${candidateKey} (${check.reason}), switching to fallback`);
+      continue;
+    }
+
+    try {
+      let result: ChatJsonResult<z.infer<S>>;
+      if (i > 0) {
+        // Fallback tier: apply concurrency limiter (max 3 concurrent calls) and randomized jitter delay
+        const jitterMs = computeJitterDelay(i);
+        if (jitterMs > 0) await new Promise((r) => setTimeout(r, jitterMs));
+        result = await withConcurrencyLimit(candidateKey, 3, () => executeSingleModel(spec, opts));
+      } else {
+        result = await executeSingleModel(spec, opts);
+      }
+
+      recordSuccess(candidateKey);
+      return result;
+    } catch (err) {
+      lastError = err;
+      const status = (err as { status?: number })?.status ?? null;
+      recordFailure(candidateKey, err, status);
+
+      // If there is a next fallback candidate, notify admin and try it
+      if (i < candidates.length - 1) {
+        const nextCandidate = candidates[i + 1]!;
+        console.warn(`[LLM Fallback] Model ${candidateKey} failed: ${err instanceof Error ? err.message : String(err)}. Falling back to ${nextCandidate}`);
+        void dispatchAlert(
+          "🚨 LLM 模型調用異常並觸發 Fallback 備援",
+          [
+            `故障模型：${candidateKey} (${spec.model || "default"})`,
+            `錯誤訊息：${err instanceof Error ? err.message : String(err)}`,
+            `切換備援至：${nextCandidate}`,
+            `調用目的：${opts.purpose} (${opts.subject})`,
+          ],
+          "now",
+        ).catch(() => {});
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
 export async function markReceiptsCompleted(ids: number[]): Promise<void> {
