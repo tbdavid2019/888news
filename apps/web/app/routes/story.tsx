@@ -12,6 +12,10 @@ import { PillTabs } from "../components/ui/Tabs";
 import { Select } from "../components/ui/Controls";
 import { IconArrowLeft, IconChevronRight, IconClock, IconDoc, IconUsers } from "../components/icons";
 
+import { detectLocale } from "../lib/i18n/detect.ts";
+import { localizeData } from "../lib/i18n/converter.server.ts";
+
+
 export async function loader({ params, request }: Route.LoaderArgs) {
   const res = await fetch(`${process.env.API_BASE_URL || "http://127.0.0.1:3001"}/api/site/stories/${encodeURIComponent(params.publicId)}`, { redirect: "manual", signal: AbortSignal.any([request.signal, AbortSignal.timeout(15000)]) });
   if (res.status === 308) {
@@ -20,8 +24,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
   if (res.status === 404) throw routeData({ message: "not_found" }, { status: 404 });
   if (!res.ok) throw routeData({ message: "unavailable" }, { status: 503 });
-  return { story: (await res.json()) as StoryDetail };
+  const rawStory = (await res.json()) as StoryDetail;
+  const locale = detectLocale(request);
+  const story = locale === "zh-TW" ? localizeData(rawStory, "zh-TW") : rawStory;
+  return { story };
 }
+
 
 export function meta({ loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: titled("事件不存在") }, { name: "robots", content: "noindex" }];

@@ -12,6 +12,7 @@ import { EmptyState } from "../../components/ui/Page";
 import { beijingDate, beijingTime, beijingWeekday } from "../../lib/format";
 import { markRead, useReadSet } from "../../lib/local-state";
 import { isHydrated, isReload, markHydrated, readSnapshot, restoreAnchor, saveSnapshot } from "./restore";
+import { useI18n } from "../../lib/i18n";
 
 const AUTO_BATCHES = 3;
 
@@ -41,15 +42,23 @@ const WEEKDAY_SHORT = ["周日", "周一", "周二", "周三", "周四", "周五
 
 /** Sticky day header: a quiet row on desktop, a grey full-width bar on phones. */
 export function DayHeader({ day, today, count, collapsed, onToggle }: { day: string; today: string; count: number | null; collapsed?: boolean; onToggle?: () => void }) {
+  const { t, locale } = useI18n();
   const [, m, d] = day.split("-").map(Number) as [number, number, number];
-  const date = `${m}月${d}日`;
-  const weekday = beijingWeekday(day);
-  const short = WEEKDAY_SHORT[new Date(`${day}T12:00:00+08:00`).getUTCDay()] ?? "";
+  const date = locale === "en"
+    ? new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    : `${m}月${d}日`;
+  const weekday = locale === "en"
+    ? new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long" })
+    : beijingWeekday(day).replace("星期", locale === "zh-TW" ? "週" : "周");
+  const short = locale === "en"
+    ? new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "short" })
+    : (locale === "zh-TW" ? ["週日", "週一", "週二", "週三", "週四", "週五", "週六"] : WEEKDAY_SHORT)[new Date(`${day}T12:00:00+08:00`).getUTCDay()] ?? "";
+
   return (
     <div className="sticky top-0 z-20 -mx-4 bg-daybar px-4 lg:mx-0 lg:bg-bg lg:px-0">
       {/* Phones: a full-width day bar. */}
       <div className="flex h-9 items-center gap-2 lg:hidden">
-        <span className="text-[14px] font-bold text-ink">{day === today ? "今天" : date}</span>
+        <span className="text-[14px] font-bold text-ink">{day === today ? t("feed.today") : date}</span>
         {day === today && <span className="text-[12.5px] text-ink-4">{date}</span>}
         <span className="text-[12.5px] text-ink-4">{short}</span>
       </div>
@@ -63,7 +72,7 @@ export function DayHeader({ day, today, count, collapsed, onToggle }: { day: str
             type="button"
             onClick={onToggle}
             aria-expanded={!collapsed}
-            aria-label={collapsed ? `展开${date}` : `收起${date}`}
+            aria-label={collapsed ? t("feed.expand_day", { date }) : t("feed.collapse_day", { date })}
             className="grid size-6 place-items-center justify-self-center rounded-full text-ink-4 transition-colors hover:bg-bg-sunk hover:text-ink"
           >
             <IconChevronDown size={14} className={`transition-transform duration-200 ${collapsed ? "-rotate-90" : ""}`} />
@@ -76,7 +85,7 @@ export function DayHeader({ day, today, count, collapsed, onToggle }: { day: str
           {count !== null && (
             <>
               {" · "}
-              <span className="num">{count}</span> 条
+              <span className="num">{count}</span> {locale === "en" ? (count === 1 ? "item" : "items") : (locale === "zh-TW" ? "則" : "条")}
             </>
           )}
         </span>
@@ -84,6 +93,7 @@ export function DayHeader({ day, today, count, collapsed, onToggle }: { day: str
     </div>
   );
 }
+
 
 /**
  * One dated slot: the time, the rail (desktop) and the item. As on the original timeline, the rail is a
@@ -307,25 +317,28 @@ export function Timeline({ initial, filters }: { initial: TimelineResponse; filt
 
 /** The foot of a paged list: loading, retry, "加载更多" after a few automatic pages, or the end. */
 export function FeedEnd({ loading, error, hasMore, manual, empty, onMore }: { loading: boolean; error: boolean; hasMore: boolean; manual: boolean; empty: boolean; onMore: () => void }) {
+  const { t } = useI18n();
+
   return (
     <div className="flex justify-center py-6">
       {loading ? (
         <span className="inline-flex items-center gap-2 text-[12.5px] text-ink-4">
-          <RingMark className="size-4 text-accent" spinning /> 正在加载
+          <RingMark className="size-4 text-accent" spinning /> {t("feed.loading")}
         </span>
       ) : error ? (
         <button type="button" onClick={onMore} className="h-9 rounded-full border border-hot/30 px-4 text-[13px] text-hot hover:bg-hot-soft">
-          加载失败，点此重试
+          {t("feed.load_failed")}
         </button>
       ) : hasMore ? (
         manual && (
           <button type="button" onClick={onMore} className="h-9 rounded-full border border-line-strong bg-surface px-5 text-[13px] font-medium text-ink-2 transition-colors hover:border-ink-4 hover:text-ink">
-            加载更多
+            {t("feed.load_more")}
           </button>
         )
       ) : (
-        !empty && <span className="text-[12px] text-ink-4">已经到底了</span>
+        !empty && <span className="text-[12px] text-ink-4">{t("feed.end_of_feed")}</span>
       )}
     </div>
   );
 }
+

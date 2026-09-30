@@ -138,10 +138,13 @@ function Panel({ open, children }: { open: boolean; children: ReactNode }) {
   );
 }
 
+import { useI18n } from "../../lib/i18n";
+
 function LoadState({ loading, error, next, onMore, onRetry, empty }: { loading: boolean; error: boolean; next: string | null; onMore: () => void; onRetry: () => void; empty: boolean }) {
+  const { t } = useI18n();
   if (loading && empty) return <div className="space-y-2 py-1">{[0, 1].map((i) => <div key={i} className="skeleton h-4" />)}</div>;
-  if (error) return <button type="button" onClick={onRetry} className="py-1 text-[12.5px] text-hot">暂时无法加载，点此重试</button>;
-  if (next && !loading) return <button type="button" onClick={onMore} className="py-1 text-[12.5px] text-accent hover:underline">加载更多</button>;
+  if (error) return <button type="button" onClick={onRetry} className="py-1 text-[12.5px] text-hot">{t("feed.load_failed")}</button>;
+  if (next && !loading) return <button type="button" onClick={onMore} className="py-1 text-[12.5px] text-accent hover:underline">{t("feed.load_more")}</button>;
   return null;
 }
 
@@ -152,8 +155,9 @@ export function GroupSources({ group, filters, parentId }: { group: GroupInfo; f
     (cursor) => `/api/site/groups/${encodeURIComponent(group.factId)}/reports?${filterParams(filters, cursor)}`,
     (b) => b.reports as GroupReport[],
   );
+  const { t } = useI18n();
   const others = state.items.filter((r) => r.id !== parentId);
-  const label = group.additionalSourceCount > 0 ? `另有 ${group.additionalSourceCount} 家信源报道` : `${group.reportCount} 篇报道`;
+  const label = group.additionalSourceCount > 0 ? t("feed.other_sources", { count: group.additionalSourceCount }) : t("feed.reports_count", { count: group.reportCount });
   return (
     <div>
       <Toggle
@@ -173,7 +177,7 @@ export function GroupSources({ group, filters, parentId }: { group: GroupInfo; f
               <Link to={`/items/${r.id}`} className="min-w-0 flex-1 truncate text-ink-2 hover:text-accent">
                 {r.title}
               </Link>
-              <a href={r.originalUrl} target="_blank" rel="noopener noreferrer" aria-label="打开原文" className="shrink-0 text-ink-4 hover:text-accent">
+              <a href={r.originalUrl} target="_blank" rel="noopener noreferrer" aria-label={t("feed.open_original")} className="shrink-0 text-ink-4 hover:text-accent">
                 <IconArrowUpRight size={13} />
               </a>
             </li>
@@ -192,6 +196,7 @@ export function GroupDevelopments({ group, filters, parentId }: { group: GroupIn
     (cursor) => `/api/site/stories/${encodeURIComponent(group.story.publicId)}/developments?${filterParams(filters, cursor)}`,
     (b) => b.developments as Development[],
   );
+  const { t } = useI18n();
   return (
     <div>
       <Toggle
@@ -201,7 +206,7 @@ export function GroupDevelopments({ group, filters, parentId }: { group: GroupIn
           if (!open && !state.loaded && !state.loading) void load(null);
         }}
       >
-        展开 {group.developmentCount} 条进展
+        {t("feed.expand_developments", { count: group.developmentCount })}
       </Toggle>
       <Panel open={open}>
         <ol className="relative space-y-2 py-1 pl-3.5 before:absolute before:bottom-2 before:left-[3px] before:top-2 before:w-px before:bg-line">
@@ -213,14 +218,14 @@ export function GroupDevelopments({ group, filters, parentId }: { group: GroupIn
               </Link>
               <div className="mt-0.5 text-[11.5px] text-ink-4">
                 {shortSourceName(d.representative.source.name)} · <span className="num">{monthDayTime(d.representative.timelineAt)}</span>
-                {d.reportCount > 1 ? ` · ${d.reportCount} 篇报道` : ""}
+                {d.reportCount > 1 ? ` · ${t("feed.reports_count", { count: d.reportCount })}` : ""}
               </div>
             </li>
           ))}
         </ol>
         <LoadState loading={state.loading} error={state.error} next={state.next} empty={state.items.length === 0} onMore={() => load(state.next)} onRetry={() => load(null)} />
         <Link to={`/story/${group.story.publicId}`} className="mt-1 inline-flex items-center gap-0.5 py-1 text-[12.5px] font-medium text-accent hover:text-accent-ink">
-          查看完整事件 <IconArrowUpRight size={12} />
+          {t("feed.view_full_story")} <IconArrowUpRight size={12} />
         </Link>
       </Panel>
     </div>
@@ -229,12 +234,14 @@ export function GroupDevelopments({ group, filters, parentId }: { group: GroupIn
 
 /** "最新进展 · 9月27日 01:21 · …": why a folded event card sits where it does. */
 export function LatestDevelopment({ group }: { group: GroupInfo }) {
+  const { t } = useI18n();
   if (!group.latestDevelopment || group.developmentCount <= 1) return null;
   return (
     <p className="relative z-10 mt-2.5 flex items-baseline gap-1.5 text-[13px] leading-relaxed">
-      <span className="shrink-0 font-medium text-accent">最新进展</span>
+      <span className="shrink-0 font-medium text-accent">{t("feed.latest_development")}</span>
       <span className="num shrink-0 text-ink-4">{monthDayTime(group.latestDevelopment.at)}</span>
       <span className="line-clamp-1 text-ink-3">{group.latestDevelopment.title}</span>
     </p>
   );
 }
+

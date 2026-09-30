@@ -21,11 +21,15 @@ export function Badge({ tone = "neutral", dot = false, children, className = "",
   );
 }
 
+import { useI18n } from "../../lib/i18n";
+
 /** The "精选" mark on a report. */
 export function SelectedBadge() {
+  const { t } = useI18n();
   return (
     <Badge tone="selected" dot>
-      精选
+      {t("feed.selected")}
     </Badge>
   );
 }
+

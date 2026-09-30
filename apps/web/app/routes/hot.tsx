@@ -12,8 +12,9 @@ import { Faces } from "../features/hot/Faces";
 import { Delta } from "../features/hot/Delta";
 
 export async function loader({ request }: { request: Request }) {
-  return { hot: await loadOr404<HotResponse>("/api/site/hot", { signal: request.signal }) };
+  return { hot: await loadOr404<HotResponse>("/api/site/hot", { request, signal: request.signal }) };
 }
+
 
 export function meta() {
   return pageMeta({

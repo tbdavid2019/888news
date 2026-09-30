@@ -1,6 +1,8 @@
-// Server-side HTTP client for route loaders. The web process never touches the database;
-// SSR reads the api over loopback with keep-alive, one or two requests per page.
 import { data, redirect } from "react-router";
+import { detectLocale } from "./i18n/detect.ts";
+import { localizeData } from "./i18n/converter.server.ts";
+import type { Locale } from "./i18n/types.ts";
+
 
 const API_BASE = process.env.API_BASE_URL || "http://127.0.0.1:3001";
 
@@ -16,7 +18,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiGet<T>(path: string, init?: { signal?: AbortSignal; headers?: Record<string, string>; responseHeaders?: Headers }): Promise<T> {
+export async function apiGet<T>(
+  path: string,
+  init?: { signal?: AbortSignal; headers?: Record<string, string>; responseHeaders?: Headers; request?: Request; locale?: Locale }
+): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { accept: "application/json", "x-aihot-ssr": "1", ...init?.headers },
     signal: init?.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(15_000)]) : AbortSignal.timeout(15_000),
@@ -32,13 +37,22 @@ export async function apiGet<T>(path: string, init?: { signal?: AbortSignal; hea
     throw new ApiError(res.status, code, retry ? Number(retry) : null);
   }
   res.headers.forEach((value, name) => init?.responseHeaders?.set(name, value));
-  return (await res.json()) as T;
+  const raw = (await res.json()) as T;
+  const loc = init?.locale ?? (init?.request ? detectLocale(init.request) : null);
+  if (loc === "zh-TW") {
+    return localizeData(raw, "zh-TW");
+  }
+  return raw;
 }
 
 /** Maps API failures to route responses: real 404s, search-busy page, otherwise 503. */
-export async function loadOr404<T>(path: string, opts: { busyRedirect?: string; responseHeaders?: Headers; signal?: AbortSignal } = {}): Promise<T> {
+export async function loadOr404<T>(
+  path: string,
+  opts: { busyRedirect?: string; responseHeaders?: Headers; signal?: AbortSignal; request?: Request; locale?: Locale } = {}
+): Promise<T> {
   try {
-    return await apiGet<T>(path, { responseHeaders: opts.responseHeaders, signal: opts.signal });
+    return await apiGet<T>(path, { responseHeaders: opts.responseHeaders, signal: opts.signal, request: opts.request, locale: opts.locale });
+
   } catch (error) {
     if (opts.signal?.aborted) throw error;
     if (error instanceof ApiError) {

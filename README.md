@@ -1,8 +1,8 @@
+# 888news
+
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.png">
-    <img src="docs/assets/banner-light.png" alt="AIHOT：每个行业，都可以有自己的 AIHOT。很多条信源流进中间的精选，再分给法律、人力资源、金融等各个行业" width="100%">
-  </picture>
+  <b>全球科技與 AI 情報雷達 · 每日精選 · 多語系熱點聚合與自動簡報</b><br>
+  Global AI & Tech Intelligence Radar with Multi-Language Support
 </p>
 
 <p align="center">
@@ -10,168 +10,145 @@
   <img src="https://img.shields.io/badge/Node.js-24-176b75?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 24">
   <img src="https://img.shields.io/badge/PostgreSQL-17-176b75?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL 17">
   <img src="https://img.shields.io/badge/Docker-Compose-176b75?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose">
-  <a href="https://aihot.news"><img src="https://img.shields.io/badge/demo-aihot.news-202a30?style=flat-square" alt="aihot.news"></a>
+  <a href="https://github.com/tbdavid2019/888news"><img src="https://img.shields.io/badge/GitHub-tbdavid2019%2F888news-202a30?style=flat-square&logo=github" alt="GitHub Repository"></a>
 </p>
 
 <p align="center">
-  <b>一个自己找热点、自己写日报的网站框架。</b><br>
-  把信源换成你的，把精选标准换成你的 KnowHow，它就是你的行业热点站。
-</p>
-
-<p align="center">
-  <a href="#跑起来">跑起来</a> ·
-  <a href="docs/customize.md">改成你的行业</a> ·
-  <a href="#它是怎么工作的">它是怎么工作的</a> ·
-  <a href="#文档">文档</a>
+  <a href="#致謝原作者">致謝原作者</a> ·
+  <a href="#核心特色">核心特色</a> ·
+  <a href="#快速上手">快速上手</a> ·
+  <a href="#架構與工作原理">工作原理</a> ·
+  <a href="#環境變數配置">配置參數</a> ·
+  <a href="#授權協議">授權協議</a>
 </p>
 
 <br>
 
-## 这是什么
+---
 
-[AIHOT](https://aihot.news) 是我做的一个 AI 热点网站。它每天从一批信源里收资料，用大模型先筛一遍、再独立打两次分，挑出真正值得看的，写成中文标题和摘要；把不同来源说的同一件事聚成一个事件，按有多少人在说排出热点；每天早上出一份日报。
+## 致謝原作者 (Special Thanks)
 
-这个仓库是它的完整框架：网站、后台、精选流程、聚簇和热度算法，**所有提示词的原文和入选门槛**，都在这里。
+**888news** 的核心架構與情報處理引擎深深受益於 **數字生命卡茲克** 所開創的 [AIHOT](https://github.com/KKKKhazix/AIHOT) 開源專案。
 
-## 为什么开源
+在此由衷感謝原作者無私開源這套兼具設計美感與高工程品質的行業熱點框架，將自動化信源採集、多模型評分、事件向量聚類與日報生成的「火種」交到社群手中。
 
-这半年，很多做法律、做 HR、做金融、做贵金属的朋友问我，能不能也给他们的行业做一个。
-
-我做不了。我不懂你们的行业，不知道哪些信源有用，也不知道什么样的消息，对你们来说才叫热点。
-
-但你们懂。
-
-既然我没办法满足所有人，那就把火种交到大家自己手上。
-
-## 说在前面
-
-- **我不是专业的开发者。** 我是设计师出身，半年前还看不太懂代码。这套代码是我和 AI 一起重写的，比以前干净了很多，但一定还有写得不好的地方。发现问题欢迎提 Issue，我不一定能很快回复，先说声抱歉。
-- **这是一份快照。** 它来自 AIHOT 正在线上跑的代码，不是精心打磨的通用框架。以后 AIHOT 的更新，我会尽量同步过来，但没法保证每一次都同步。
-- **里面没有 AIHOT 的信源名单和运营数据。** 仓库带了 18 个公开的海外 AI 资讯源做示范，够你跑起来看效果；真正的信源，要换成你自己行业的。
-- **请不要用 AIHOT 的名字和 Logo。** 换上你自己的名字，它就是你的站。
-
-## 它是怎么工作的
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/how-dark.png">
-  <img src="docs/assets/how-light.png" alt="六步：采集、预筛、两次评分、写作、聚簇、热点与成刊" width="100%">
-</picture>
-
-一条资料从信源进来，先判重，再预筛；可能重要的独立打两次分，过了门槛才进精选；然后写中文标题和摘要，和别的报道聚成事件，算进热度，最后进日报。每一步的提示词都在 [`industry/prompts/`](industry/prompts/)，改标准不用改代码。详见 [精选与校准](docs/selection.md)。
-
-### 聚簇与热点
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/cluster-dark.png">
-  <img src="docs/assets/cluster-light.png" alt="五个来源的报道聚成一个事件，事件进入当前热点榜" width="100%">
-</picture>
-
-同一件事，官网发一篇、媒体转十篇、X 上吵一天，读者只需要看到一次。AIHOT 把它们聚成一个**事件**：先用标题摘要的向量在最近两周里找候选，再让模型判断是同一件事、后续进展，还是两件事；拿不准的合并，换一家模型再确认一遍。
-
-**热度**按事件算，不按文章算：48 小时内，每个独立来源只算一次，24 小时减半。重复抓取不会多算，一家媒体发十篇也只算一次，所以排在前面的，是真正有很多人在说的事。
-
-### 速度
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/perf-dark.png">
-  <img src="docs/assets/perf-light.png" alt="AIHOT 线上实测：页面中位数 10 毫秒，95% 在 50 毫秒内；接口中位数 6 毫秒，95% 在 12 毫秒内；文章页 95% 在 14 毫秒内" width="100%">
-</picture>
-
-## 你会得到什么
-
-| | |
-|---|---|
-| **六种信源** | RSS、网页列表、JSON 接口、X 账号、微信公众号，以及你自己脚本推送进来的内容。信源分级（官方一手 / 媒体个人），抓取频率按产出自动调整 |
-| **精选** | 预筛，同一份评分标准独立打两次分，再按信源分级的门槛决定入选。提示词和门槛全部公开，全部可以改；用你自己标注的样本在 SelectBench 里校准 |
-| **写作** | 中文标题、答案先行的摘要、推荐理由、标签，外文全文翻译；防止模型把原文没提到的公司写进标题 |
-| **聚簇** | 不同来源报道的同一件事聚成一个事件，后续进展挂在同一个事件下，事件页有综述；人工改过的归属不会被覆盖 |
-| **热点** | 按事件算热度：独立来源越多越靠前，X 上的讨论也算进来；和 6 小时前比，涨得快的标上升，新出现的标“新” |
-| **日报、周报、月报** | 每天 08:00 出日报，每周一出周报，每月 1 日出月报，按分类分节，带导语 |
-| **主题与搜索** | 公司、方向、内容形态三类主题页；标题摘要搜索和全文相关搜索 |
-| **给 Agent 用** | RSS（精选、全部、全文、日报）、公开 API、MCP、`llms.txt`，同一份内容给人看也给 Agent 用 |
-| **后台** | 信源管理与试抓、内容诊断、精选评测、每一步单独换模型、付费服务的预算熔断、运行记录与告警 |
-| **AI 专属模块** | 模型榜（汇总多家公开评测，方法公开）和 Codex 重置监控。别的行业一个开关关掉 |
-
-## 看一眼
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/shots-dark.png">
-  <img src="docs/assets/shots-light.png" alt="首页的当前热点与精选，关于页的信源河" width="100%">
-</picture>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/board-dark.png">
-  <img src="docs/assets/board-light.png" alt="模型榜" width="100%">
-</picture>
-
-<p align="center"><sub>截图来自用示范信源跑起来的本地站，站名是默认的 MyHOT。</sub></p>
-
-## 跑起来
-
-需要 [Docker](https://docs.docker.com/get-docker/)，和一个 OpenAI 兼容的模型 API Key（DeepSeek、千问、智谱都可以）。
-
-```bash
-git clone https://github.com/KKKKhazix/AIHOT.git myhot
-cd myhot
-node scripts/init-env.ts --llm-key <你的模型 API Key>
-docker compose up -d --build
-```
-
-打开 <http://localhost:3000>。后台在 `/admin`，管理员密码在 `.env` 的 `ADMIN_PASSWORD` 里。一两分钟后开始有内容，第一次导入的资料大约半小时处理完。
-
-机器上没有 Node、服务器在中国大陆、要配域名和 HTTPS，见 [部署](docs/deploy.md)。
-
-## 把它改成你的行业
-
-最省事的办法：打开你的 Agent（Claude Code、Codex 都可以），把这个仓库交给它，然后说：
-
-```text
-请读 AGENTS.md 和 docs/customize.md，把这个站改成「法律」行业的热点站。
-我关心的是：……（你想盯哪些信源，你觉得什么消息重要、什么不重要，越具体越好）。
-```
-
-要改的东西几乎都在 [`industry/`](industry/) 这一个文件夹里，代码基本不用动：
-
-| 文件 | 改什么 |
-|---|---|
-| `site.ts` | 站名、行业词、首页文案、关于页 |
-| `taxonomy.ts`、`topics.json` | 分类、标签、主题 |
-| `sources.json` | 首次启动时导入的信源 |
-| `prompts/` | 精选标准和写作要求。**你的行业 KnowHow，就写在这里** |
-| `selection.ts` | 入选门槛 |
-| `features.ts` | 模型榜、Codex 重置监控的开关 |
-| `brand/`、`pages/` | 图标、使用规则和隐私说明 |
-
-最值得花时间的是评分标准（`prompts/selection-score.md`）和门槛：拿一两百条你自己标注过的资料，用 `scripts/eval-selection.ts` 跑一遍，看它选得准不准，再回去改。怎么做写在 [精选与校准](docs/selection.md) 里。
-
-## 文档
-
-| 文档 | 内容 |
-|---|---|
-| [把它改成你的行业](docs/customize.md) | 站名、分类、信源、提示词、门槛、品牌，一步一步来 |
-| [信源](docs/sources.md) | 六种信源怎么配，分级和全文，外部推送接口 |
-| [精选与校准](docs/selection.md) | 一条资料怎么变成精选，怎么用自己的样本校准 |
-| [事件归组与关系评测](docs/grouping.md) | 事件关系怎么判断，怎么用自己的 pairwise gold set 评测 |
-| [部署](docs/deploy.md) | Docker、域名和 HTTPS、中国大陆、更新、备份、花多少钱 |
-| [架构](docs/architecture.md) | 三个进程、几条不变的规则、目录、对外出口 |
-| [模型榜与 Codex 重置监控](docs/leaderboard.md) | 两个 AI 专属模块 |
-
-技术栈：Node.js 24 · TypeScript · React Router（服务端渲染）· Fastify · PostgreSQL · pg-boss · Tailwind CSS · Docker Compose。
-
-## 最后
-
-AIHOT 曾经只是我无数个深夜里，一个很小、很小的念头。
-
-我不知道它会被改成什么样子，会走到多远的地方。但这可能就是开源最浪漫的地方。
-
-剩下的路，就交给你们了。
-
-<p align="right">—— 数字生命卡兹克</p>
-
-## 许可
-
-代码使用 [MIT 许可证](LICENSE)。AIHOT 的名字和 Logo 不在许可范围内。字体、模型厂商和评测来源的标志各有自己的许可和商标归属，见 [NOTICE](NOTICE)。
+遵照開源規範與原作者聲明：
+- 本專案採用全新的獨立識別 **888news**。
+- 本專案基於原版架構進行了現代化多語系國際化擴展（繁體中文/台灣用語在地化、English 國際化、智慧語系偵測）、開放參數化設定與客製化升級。
 
 ---
 
-<sub>**In English:** AIHOT ([aihot.news](https://aihot.news)) is an AI news site that collects from many sources, lets a language model filter and score every item twice, writes Chinese headlines and summaries, clusters reports of the same story into one event, ranks events by how many independent sources discuss them, and publishes a daily briefing. This repository is its complete framework, including every prompt and threshold. Hand it to your coding agent with `AGENTS.md` and `docs/customize.md` to turn it into a news site for your own field. The documentation is in Chinese.</sub>
+## 這是什麼
+
+**888news** 是一個能夠**自動盯住全球信源、用大模型篩選寫作、歸併多方報導為單一事件，並每日自動產出情報簡報**的現代化資訊雷達。
+
+每天科技圈有成千上萬條資訊發布，但其中 90% 都是同質公關稿、轉述水文與瑣碎雜訊。888news 透過完整的流水線處理：
+1. **盯住海量信源**：官方部落格、科技媒體、X / Twitter、GitHub Releases、研究機構等。
+2. **兩次獨立模型評分**：先預篩剔除雜訊，再由獨立大模型評分，只有跨越門檻的高價值情報才能入選。
+3. **事件聚類與熱度榜**：運用向量相似度與模型二次驗證，將多篇報導同一事件的內容歸組為單一事件，計算獨立討論源，真實反映熱點排行。
+4. **全平台交付**：提供網頁、深淺色切換、RSS 訂閱、RESTful OpenAPI、MCP (Model Context Protocol) 以及 `llms.txt`。
+
+---
+
+## 核心特色
+
+### 🌐 1. 全方位多語系支援 (Multi-Language)
+- **繁 | EN | 简 平滑切換**：提供繁體中文（`zh-TW`）、英文（`en`）、簡體中文（`zh-CN`）完整介面字典支援。
+- **瀏覽器語系自動偵測**：首次造訪依使用者環境自動適配，非中文環境預設自動 Fallback 顯示英文。
+- **動態內文繁體在地化（台灣詞彙）**：整合伺服端 OpenCC（`cn` $\rightarrow$ `twp` 詞庫），自動將新聞內文的標題、摘要、推薦理由轉化為在地化用語（如「網絡」$\rightarrow$「網路」、「内存」$\rightarrow$「記憶體」），且完全在 Node.js SSR 處理，零前端資源負擔。
+
+### 🤖 2. 智慧情報管線
+- **六種信源相容**：支援 RSS / Atom、網頁列表 (Web List)、JSON API、X (Twitter)、微信公眾號及外部腳本推播。
+- **動態調整頻率**：一手信源與活躍源高頻巡邏，產出低的信源自動降低頻率。
+- **大模型寫作**：自動提煉「答案先行」的高密度中文摘要、核心觀點與入選推薦理由。
+
+### 🔥 3. 事件歸組與真實熱點演算法
+- **同一件事只看一次**：不論多少家媒體轉載、社群如何討論，同一事件彙整為一個主卡片，後續發展串聯在事件時間軸上。
+- **防灌水熱度評分**：單一媒體發十篇僅計一次權重，結合 48 小時時間衰減演算法，精準呈現真正引起全網關注的重要趨勢。
+
+### 🔌 4. 為 AI Agent 與開放生態而生
+- **Model Context Protocol (MCP)**：內建 MCP Server，任何 AI Agent（如 Claude Desktop、Cursor、Cline）均可直接掛載為工具，呼叫最新情報與搜尋。
+- **RSS 與 OpenAPI**：包含精選、全文、日報、主題分類多維度 RSS 與無須授權的唯讀 RESTful 介面。
+
+---
+
+## 快速上手
+
+### 系統需求
+- [Docker](https://docs.docker.com/get-docker/) 與 Docker Compose
+- Node.js 24+（後端原生執行 TypeScript）
+- 一組 OpenAI 相容的大模型 API Key（DeepSeek、通義千問、智譜 GLM、OpenAI、Moonshot 等均可）
+
+### 一鍵啟動
+
+```bash
+# 1. 複製專案庫
+git clone https://github.com/tbdavid2019/888news.git
+cd 888news
+
+# 2. 初始化環境設定檔
+node scripts/init-env.ts --llm-key <你的大模型 API KEY>
+
+# 3. 啟動所有容器服務（Web、API、Worker、PostgreSQL、Caddy）
+docker compose up -d --build
+```
+
+啟動後造訪：
+- 前端站點：<http://localhost:3000>
+- 管理後台：<http://localhost:3000/admin>（預設管理密碼請見 `.env` 的 `ADMIN_PASSWORD`）
+
+---
+
+## 環境變數配置
+
+所有環境變數集中在 `.env`，主要常用參數如下：
+
+| 變數名稱 | 說明 | 預設值 / 範例 |
+|---|---|---|
+| `SITE_URL` | 網站對外正式域名 | `http://localhost:3000` |
+| `SITE_ICP` | 網站備案號（選填，若無備案保持為空即可） | `null` |
+| `GITHUB_REPO_URL` | 開源專案 GitHub 倉庫連結 | `https://github.com/tbdavid2019/888news` |
+| `ADMIN_PASSWORD` | 管理後台登入密碼 | 由 `init-env.ts` 隨機生成 |
+| `DATABASE_URL` | PostgreSQL 連線字串 | `postgres://user:pass@127.0.0.1:5432/aihot` |
+| `LLM_API_KEY` | 主要大模型 API 金鑰 | 自行填寫 |
+| `LLM_BASE_URL` | 主要大模型 API 端點 | 相容 OpenAI 的 API URL |
+| `FEISHU_INTERNAL_ENABLED` | 是否開啟內部飛書通知（反饋/告警） | `false` |
+
+> 💡 **使用者反饋 (Feedback) 去哪了？**  
+> 使用者在前端提交的反饋意見**直接儲存在你自己的 PostgreSQL 資料庫 `feedback` 資料表中**，管理員可在 `/admin` 後台即時查閱與管理。若開啟飛書開關，系統會額外推播至指定的內部飛書群組。**絕不會傳送至任何外部或原作者信箱**。
+
+---
+
+## 自定義與客製化
+
+要自訂信源或替換產業主題，只需編輯 [`industry/`](industry/) 目錄：
+
+```text
+industry/
+├── site.ts          # 站名、品牌標語、首頁文案、GitHub 與 ICP 參數
+├── taxonomy.ts      # 分類標籤、主題維度定義
+├── topics.json      # 專題追蹤主題
+├── sources.json     # 初始信源清單
+├── prompts/         # 篩選評分標準、摘要撰寫、事件聚類提示詞
+├── selection.ts     # 入選門檻閥值
+└── brand/           # Logo、圖示與視覺資產
+```
+
+---
+
+## 技術棧
+
+- **Runtime & Language**：Node.js 24（原生 ESM / TypeScript 執行，無編譯負擔）
+- **Web 前端**：React Router (SSR) · Tailwind CSS
+- **API 後端**：Fastify · OpenAPI
+- **任務排程**：Worker Process · pg-boss 隊列
+- **資料庫**：PostgreSQL 17
+- **國際化**：自研 i18n 輕量架構 · OpenCC 繁簡轉換引擎
+- **部署營運**：Docker Compose · Caddy 反向代理
+
+---
+
+## 授權協議
+
+本專案基於 [MIT 授權條款](LICENSE) 開源。  
+字體、部分展示商標與信源標誌各有其版權所屬，詳見 [NOTICE](NOTICE)。

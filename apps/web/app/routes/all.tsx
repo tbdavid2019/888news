@@ -11,6 +11,8 @@ import { DayList, Pagination } from "../features/feed/DayList";
 import { EmptyState } from "../components/ui/Page";
 import { RingMark } from "../components/Logo";
 
+import { useI18n } from "../lib/i18n";
+
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const channelParam = url.searchParams.get("channel") ?? "all";
@@ -24,10 +26,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   const page = Math.min(Math.max(Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1, 1), 50);
   const data = await loadOr404<PoolResponse>(
     `/api/site/pool${queryString({ channel: channel === "all" ? null : channel, category, tag, q, tab, page: page > 1 ? page : null })}`,
-    { signal: request.signal, busyRedirect: "/all/search-busy" },
+    { request, signal: request.signal, busyRedirect: "/all/search-busy" },
   );
   return { data };
 }
+
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const f = loaderData?.data.filters;

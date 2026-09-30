@@ -8,20 +8,23 @@ const TIERS = [
   { min: 0, className: "text-ink-4 ring-line-soft" },
 ];
 
+import { useI18n } from "../../lib/i18n";
+
 /** "AI 评分 · 88" on desktop cards; `compact` keeps only the number (phones). */
 export function ScoreLabel({ score, compact = false }: { score: number | null; compact?: boolean }) {
   if (score === null) return null;
+  const { t } = useI18n();
   const value = Math.round(score);
   const tier = TIERS.find((t) => value >= t.min)!;
   return (
     <span
-      title={`AI 评分 ${value}/100`}
-      aria-label={`AI 评分 ${value} 分`}
+      title={`${t("feed.ai_score")} ${value}/100`}
+      aria-label={`${t("feed.ai_score")} ${value}`}
       className={`inline-flex h-[20px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 ring-1 ring-inset ${tier.className}`}
     >
       {!compact && (
         <>
-          <span className="text-[11px] font-medium leading-none opacity-80">AI 评分</span>
+          <span className="text-[11px] font-medium leading-none opacity-80">{t("feed.ai_score")}</span>
           <span className="h-2.5 w-px bg-current opacity-25" aria-hidden="true" />
         </>
       )}
@@ -29,3 +32,4 @@ export function ScoreLabel({ score, compact = false }: { score: number | null; c
     </span>
   );
 }
+

@@ -51,17 +51,21 @@ export function MediaThumbs({ media, className = "" }: { media: MediaView[]; cla
   );
 }
 
+import { useI18n } from "../../lib/i18n";
+
 /** Bookmark toggle kept in this browser (收藏). */
 export function StarButton({ item, size = 26, className = "" }: { item: Pick<FeedItemSummary, "id" | "title" | "summary" | "source" | "publishedAt" | "score" | "selected">; size?: number; className?: string }) {
   const starred = useIsStarred(item.id);
   const [pulse, setPulse] = useState(0);
+  const { t } = useI18n();
   const on = starred;
   return (
     <button
       type="button"
       aria-pressed={on}
-      aria-label={on ? "取消收藏" : "收藏"}
-      title={on ? "取消收藏" : "收藏"}
+      aria-label={on ? t("feed.unstar") : t("feed.star")}
+      title={on ? t("feed.unstar") : t("feed.star")}
+
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

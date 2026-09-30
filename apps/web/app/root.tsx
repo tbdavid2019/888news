@@ -12,9 +12,15 @@ import { MobileTabBar } from "./components/shell/MobileTabBar";
 import { BackToTop, NavigationProgress } from "./components/shell/Chrome";
 import { RingMark } from "./components/Logo";
 import { buttonClass } from "./components/ui/Controls";
-import { THEME_BOOT_SCRIPT } from "./lib/local-state";
-import { apiGet } from "./lib/api.server";
-import { useHydratedFlag } from "./lib/hydration";
+import { THEME_BOOT_SCRIPT } from "./lib/local-state.ts";
+
+import { apiGet } from "./lib/api.server.ts";
+import { useHydratedFlag } from "./lib/hydration.ts";
+import { detectLocale, LocaleProvider, useI18n, type Locale } from "./lib/i18n/index.ts";
+
+
+
+
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.ico", sizes: "any" },
@@ -26,21 +32,27 @@ export const links: Route.LinksFunction = () => [
 
 interface SiteMeta {
   changelogVersion: string | null;
+  locale: Locale;
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
+  const locale = detectLocale(request);
   try {
-    return await apiGet<SiteMeta>("/api/site/meta", { signal: request.signal });
+    const meta = await apiGet<Omit<SiteMeta, "locale">>("/api/site/meta", { signal: request.signal });
+    return { ...meta, locale };
   } catch {
-    return { changelogVersion: null } satisfies SiteMeta;
+    return { changelogVersion: null, locale } satisfies SiteMeta;
   }
 }
 
 export const shouldRevalidate: ShouldRevalidateFunction = () => false;
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const rootData = useRouteLoaderData<typeof loader>("root");
+  const locale = rootData?.locale ?? "en";
+
   return (
-    <html lang={SITE.locale} suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -69,11 +81,13 @@ export function meta({ error }: Route.MetaArgs) {
 /** Sidebar, main column and phone tab bar around a page (or an error). */
 function SiteShell({ changelogVersion, children }: { changelogVersion: string | null; children: ReactNode }) {
   const navigation = useNavigation();
+  const { t } = useI18n();
+
   return (
     <div className="flex min-h-dvh">
       <NavigationProgress active={navigation.state === "loading"} />
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-control focus:bg-surface focus:px-3 focus:py-2">
-        跳到正文
+        {t("nav.skip_to_content")}
       </a>
       <Sidebar changelogVersion={changelogVersion} />
       {/* Mobile shell (≤ 960px): one centred column, the tab bar below. Desktop: the page fills the main area
@@ -94,9 +108,11 @@ export default function App() {
   // The admin has its own chrome.
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return <Outlet />;
   return (
-    <SiteShell changelogVersion={meta.changelogVersion}>
-      <Outlet />
-    </SiteShell>
+    <LocaleProvider locale={meta.locale}>
+      <SiteShell changelogVersion={meta.changelogVersion}>
+        <Outlet />
+      </SiteShell>
+    </LocaleProvider>
   );
 }
 
@@ -106,6 +122,8 @@ export function ErrorBoundary() {
   const { pathname } = useLocation();
   const status = isRouteErrorResponse(error) ? error.status : 500;
   const notFound = status === 404;
+  const locale = site?.locale ?? "en";
+
   const body = (
     <div className="flex min-h-[70vh] items-center justify-center px-2 py-16">
       <div className="max-w-sm text-center">
@@ -128,5 +146,9 @@ export function ErrorBoundary() {
   );
   // Admin errors stay inside the admin's own chrome.
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return body;
-  return <SiteShell changelogVersion={site?.changelogVersion ?? null}>{body}</SiteShell>;
+  return (
+    <LocaleProvider locale={locale}>
+      <SiteShell changelogVersion={site?.changelogVersion ?? null}>{body}</SiteShell>
+    </LocaleProvider>
+  );
 }

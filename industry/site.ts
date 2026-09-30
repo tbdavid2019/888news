@@ -4,41 +4,43 @@
 
 export const SITE = {
   /** 站名：导航、页面标题、分享图、RSS、MCP、后台都用它。 */
-  name: "MyHOT",
+  name: "888news",
   /**
    * 行业词：拼进默认说法里，比如“AI 日报”“AI 动态”。
    * 改成“法律”“HR”“黄金”之类，页面上就会变成“法律日报”“法律动态”。
    */
   subject: "AI",
   /** 首页的完整标题（浏览器标签、搜索结果）。 */
-  homeTitle: "MyHOT — AI 行业动态 · 每日精选与日报",
+  homeTitle: "888news — AI 科技動態 · 每日精選與情報",
   /** 一句话介绍：搜索引擎、分享卡片、RSS、llms.txt 会用。 */
-  description: "自动盯住上百个信源，用模型摘要、打分、精选，把同一件事的多篇报道归到一起，每天早上出一份日报。",
+  description: "自動追蹤上百個全球科技與 AI 信源，用模型摘要、打分、精選，把同一件事的多篇報導歸組，每天出一份精選情報。",
   /** 首页左上角和侧边栏下面的一行小字。 */
-  tagline: "值得关注的 AI 动态",
+  tagline: "值得關注的 AI 科技動態",
   /** 界面语言（HTML lang、og:locale）。 */
-  locale: "zh-CN",
+  locale: "zh-TW",
   /** 默认域名，只在没设置 SITE_URL 时使用。 */
   defaultUrl: "http://localhost:3000",
   /**
-   * MCP 工具名的前缀（小写字母、数字、下划线），工具会叫 myhot_get_latest、myhot_search……
+   * MCP 工具名的前缀（小写字母、数字、下划线），工具会叫 news888_get_latest、news888_search……
    * 已经有人接入后就不要再改。
    */
-  mcpPrefix: "myhot",
+  mcpPrefix: "news888",
   /** 对外联系邮箱（选填）：使用规则、llms.txt、响应头里会写。 */
   contactEmail: null as string | null,
   /** 页脚的一行小字（选填）。 */
-  footerNote: "由 AIHOT 开源框架驱动",
-  /** 中国大陆网站的 ICP 备案号（选填），填了就显示在页脚并链接到工信部备案系统。 */
-  icp: null as string | null,
+  footerNote: "由 888news 開源專案驅動",
+  /** 中国大陆网站的 ICP 备案号（选填，支持通过环境变量 SITE_ICP 配置，默认无）。 */
+  icp: (typeof process !== "undefined" && process.env?.SITE_ICP ? process.env.SITE_ICP : null) as string | null,
+  /** GitHub 开源仓库链接（选填，支持通过环境变量 GITHUB_REPO_URL 配置）。 */
+  githubUrl: (typeof process !== "undefined" && process.env?.GITHUB_REPO_URL ? process.env.GITHUB_REPO_URL : "https://github.com/tbdavid2019/888news") as string | null,
   /** 结构化数据里的网站运营者（搜索引擎用）。 */
   organization: {
-    name: "MyHOT",
+    name: "888news",
     /** 创始人（选填）：{ name, url, description }。 */
     founder: null as null | { name: string; url?: string; description?: string },
   },
   /** 抓取信源时报上的名字（User-Agent 里用），不要冒用别的站。 */
-  crawlerName: "MyHOTBot",
+  crawlerName: "888NewsBot",
 } as const;
 
 /** 关于页的文案。数字（信源数、收录数、精选数、日报期数）来自站内实时统计，不用写在这里。 */

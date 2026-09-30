@@ -1,9 +1,9 @@
-// Feed filters: the channel and category row, and search.
 import { useEffect, useRef, useState } from "react";
 import { Form, Link, useNavigation, useSearchParams } from "react-router";
-import { CATEGORY_KEYS, CATEGORY_LABELS, CHANNEL_LABELS, type CategoryKey, type ChannelKey } from "@aihot/contracts/taxonomy";
+import { CATEGORY_KEYS, type CategoryKey, type ChannelKey } from "@aihot/contracts/taxonomy";
 import { IconClose, IconSearch } from "../../components/icons";
 import { PillTabs } from "../../components/ui/Tabs";
+import { useI18n, type TranslationKey } from "../../lib/i18n";
 
 /** Same page with some query parameters changed (paging state dropped). */
 export function hrefWith(base: string, params: URLSearchParams, patch: Record<string, string | null>) {
@@ -25,14 +25,21 @@ export function hrefWith(base: string, params: URLSearchParams, patch: Record<st
  */
 export function CategoryTabs({ base, category, channel = "all", layoutId, size = "md", className = "" }: { base: string; category: CategoryKey | null; channel?: ChannelKey; layoutId: string; size?: "md" | "sm"; className?: string }) {
   const [params] = useSearchParams();
+  const { t } = useI18n();
+
   const items = [
-    { key: "all", label: "全部", to: hrefWith(base, params, { category: null, channel: null }) },
-    { key: "firstParty", label: CHANNEL_LABELS.firstParty, to: hrefWith(base, params, { category: null, channel: "firstParty" }) },
-    ...CATEGORY_KEYS.map((k) => ({ key: k, label: CATEGORY_LABELS[k], to: hrefWith(base, params, { category: k, channel: null }) })),
+    { key: "all", label: t("category.all"), to: hrefWith(base, params, { category: null, channel: null }) },
+    { key: "firstParty", label: t("category.firstParty"), to: hrefWith(base, params, { category: null, channel: "firstParty" }) },
+    ...CATEGORY_KEYS.map((k) => ({
+      key: k,
+      label: t(`category.${k}` as TranslationKey),
+      to: hrefWith(base, params, { category: k, channel: null }),
+    })),
   ];
   const active = channel === "firstParty" ? "firstParty" : (category ?? "all");
-  return <PillTabs items={items} active={active} layoutId={layoutId} label="筛选" size={size} className={className} />;
+  return <PillTabs items={items} active={active} layoutId={layoutId} label={t("feed.filter_label")} size={size} className={className} />;
 }
+
 
 function useSlashFocus(ref: React.RefObject<HTMLInputElement | null>) {
   useEffect(() => {
@@ -55,6 +62,7 @@ export function SearchField({ action = "/all", defaultValue = "", keep = {}, var
   const [value, setValue] = useState(defaultValue);
   const navigation = useNavigation();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
   useEffect(() => setValue(defaultValue), [defaultValue]);
   useSlashFocus(inputRef);
   useEffect(() => {
@@ -68,27 +76,27 @@ export function SearchField({ action = "/all", defaultValue = "", keep = {}, var
       <Form method="get" action={action} role="search" className="flex gap-2">
         {hidden}
         <label className="relative flex-1">
-          <span className="sr-only">搜索标题、摘要与正文</span>
+          <span className="sr-only">{t("feed.search_label")}</span>
           <IconSearch size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-4" />
           <input
             ref={inputRef}
             name="q"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="搜索标题、摘要…"
+            placeholder={t("feed.search_placeholder")}
             maxLength={200}
             autoComplete="off"
             enterKeyHint="search"
             className="h-11 w-full rounded-full border border-line-strong bg-surface pl-10 pr-9 text-[15px] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-ink-4 focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)]"
           />
           {value && (
-            <button type="button" aria-label="清空" onClick={() => { setValue(""); inputRef.current?.focus(); }} className="absolute right-2.5 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-ink-4">
+            <button type="button" aria-label={t("feed.search_clear")} onClick={() => { setValue(""); inputRef.current?.focus(); }} className="absolute right-2.5 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-ink-4">
               <IconClose size={15} />
             </button>
           )}
         </label>
         <button type="submit" className={`h-11 shrink-0 rounded-full bg-accent px-5 text-[14.5px] font-semibold text-accent-contrast transition-[background-color,transform] active:scale-[0.98] ${searching ? "opacity-60" : ""}`}>
-          搜索
+          {t("feed.search_button")}
         </button>
       </Form>
     );
@@ -98,7 +106,7 @@ export function SearchField({ action = "/all", defaultValue = "", keep = {}, var
     <Form method="get" action={action} role="search" className="group relative w-full shrink-0 lg:w-60">
       {hidden}
       <label htmlFor="site-search" className="sr-only">
-        搜索标题、摘要与正文
+        {t("feed.search_label")}
       </label>
       <IconSearch size={16} className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${searching ? "text-accent" : "text-ink-4 group-focus-within:text-ink-3"}`} />
       <input
@@ -107,7 +115,7 @@ export function SearchField({ action = "/all", defaultValue = "", keep = {}, var
         name="q"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="搜索标题、摘要…"
+        placeholder={t("feed.search_placeholder")}
         maxLength={200}
         autoComplete="off"
         className="h-[42px] w-full rounded-full bg-bg-sunk pl-10 pr-10 text-[14px] text-ink outline-none ring-1 ring-inset ring-line-soft transition-[background-color,box-shadow] placeholder:text-ink-4 hover:ring-line-strong focus:bg-surface focus:shadow-[0_0_0_3px_var(--accent-soft)] focus:ring-accent dark:bg-bg-muted/60 dark:focus:bg-surface"
@@ -115,7 +123,7 @@ export function SearchField({ action = "/all", defaultValue = "", keep = {}, var
       {value ? (
         <button
           type="button"
-          aria-label="清空"
+          aria-label={t("feed.search_clear")}
           onClick={() => {
             setValue("");
             inputRef.current?.focus();
@@ -130,6 +138,7 @@ export function SearchField({ action = "/all", defaultValue = "", keep = {}, var
     </Form>
   );
 }
+
 
 /** Mobile home: the search icon at the end of the category row opens search on 全部动态. */
 export function SearchIconLink() {

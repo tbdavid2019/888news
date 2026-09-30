@@ -282,6 +282,11 @@ export default function AboutPage() {
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-[12.5px] text-ink-4">
         <span>{SITE.footerNote}</span>
         <nav className="flex gap-5" aria-label="规则与隐私">
+          {SITE.githubUrl && (
+            <a href={SITE.githubUrl} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent">
+              GitHub
+            </a>
+          )}
           <Link to="/terms" className="transition-colors hover:text-accent">
             使用规则
           </Link>

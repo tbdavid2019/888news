@@ -10,6 +10,7 @@ import { Timeline } from "../features/feed/Timeline";
 import { HotTopics } from "../features/feed/HotTopics";
 import { CategoryTabs, SearchField, SearchIconLink } from "../features/feed/Filters";
 import { beijingDate, beijingWeekday } from "../lib/format";
+import { useI18n } from "../lib/i18n";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -22,7 +23,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   const category = categoryParam && isCategoryKey(categoryParam) ? categoryParam : null;
   const tag = url.searchParams.get("tag")?.trim() || null;
   const upstream = new Headers();
-  const data = await loadOr404<TimelineResponse>(`/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag })}`, { responseHeaders: upstream, signal: request.signal });
+  const data = await loadOr404<TimelineResponse>(
+    `/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag })}`,
+    { request, responseHeaders: upstream, signal: request.signal }
+  );
   return withHeaders({ data, filters: { channel, category, tag, topic: null } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
 }
 
@@ -37,18 +41,32 @@ export function headers({ loaderHeaders }: Route.HeadersArgs) {
 }
 
 function TodayLabel() {
+  const { locale } = useI18n();
   const today = beijingDate(Date.now());
   const [, m, d] = today.split("-").map(Number) as [number, number, number];
+
+  if (locale === "en") {
+    const formatted = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    return (
+      <span className="text-[12.5px] text-ink-4" suppressHydrationWarning>
+        {formatted}
+      </span>
+    );
+  }
+
+  const weekdayLabel = beijingWeekday(today).replace("星期", locale === "zh-TW" ? "週" : "周");
   return (
     <span className="text-[12.5px] text-ink-4" suppressHydrationWarning>
-      {m}月{d}日 · {beijingWeekday(today).replace("星期", "周")}
+      {m}月{d}日 · {weekdayLabel}
     </span>
   );
 }
 
 export default function Home() {
   const { data, filters } = useLoaderData<typeof loader>();
-  const title = filters.tag ? `#${filters.tag}` : "精选";
+  const { t } = useI18n();
+  const title = filters.tag ? `#${filters.tag}` : t("nav.featured");
+
   return (
     <div className="pb-6">
       {/* Phones: brand bar, today's hot topics, then the feed under "最新精选". */}
@@ -66,7 +84,7 @@ export default function Home() {
 
       {data.hot && <HotTopics entries={data.hot} />}
 
-      <h2 className="mt-6 text-[20px] font-bold text-ink lg:hidden">{filters.tag ? title : "最新精选"}</h2>
+      <h2 className="mt-6 text-[20px] font-bold text-ink lg:hidden">{filters.tag ? title : t("nav.featured")}</h2>
       <div className="-mx-4 mt-3 flex items-center gap-2 pl-4 pr-2 lg:hidden">
         <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat-mobile" size="sm" className="min-w-0 flex-1" />
         <SearchIconLink />
