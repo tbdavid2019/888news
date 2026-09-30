@@ -4,11 +4,14 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { config } from "../config.ts";
+import { config, credential } from "../config.ts";
 import { sql } from "../db.ts";
 import { sha256 } from "../lib/ids.ts";
 import { loadContact, type ContactSettings } from "../site/contact.ts";
 import { audit } from "./auth.ts";
+import { invalidateSlackCache, sendSlackAlert } from "../notify/slack.ts";
+import { invalidateDiscordCache, sendDiscordAlert } from "../notify/discord.ts";
+import { invalidateTelegramCache, sendTelegramAlert } from "../notify/telegram.ts";
 
 const MAX_QR_BYTES = 2 * 1024 * 1024;
 
@@ -68,4 +71,104 @@ export async function updateBudget(service: string, input: { perMinute: number; 
     RETURNING service, per_minute, per_hour, per_day`;
   await audit(actor, "budget.update", `budget:${service}`, input.reason, before ?? null, after);
   return after;
+}
+
+export interface WebhookChannelInfo {
+  configured: boolean;
+  source: "env" | "db" | "none";
+  valueMasked: string | null;
+  extraMasked?: string | null;
+}
+
+export interface WebhooksSettings {
+  slack: WebhookChannelInfo;
+  discord: WebhookChannelInfo;
+  telegram: WebhookChannelInfo;
+}
+
+export async function getWebhookSettings(): Promise<WebhooksSettings> {
+  let db: Record<string, string> = {};
+  try {
+    const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
+    if (row?.value) db = row.value;
+  } catch {}
+
+  const slackUrl = db.slackWebhookUrl || credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL || null;
+  const discordUrl = db.discordWebhookUrl || credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL || null;
+  const tgToken = db.telegramBotToken || credential("integrations", "TELEGRAM_BOT_TOKEN") || process.env.TELEGRAM_BOT_TOKEN || null;
+  const tgChatId = db.telegramChatId || credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID || null;
+
+  const mask = (s: string | null, keep = 6) => {
+    if (!s) return null;
+    if (s.length <= keep * 2) return `${s.slice(0, 3)}***${s.slice(-3)}`;
+    return `${s.slice(0, keep)}...${s.slice(-keep)}`;
+  };
+
+  return {
+    slack: {
+      configured: Boolean(slackUrl),
+      source: db.slackWebhookUrl ? "db" : slackUrl ? "env" : "none",
+      valueMasked: mask(slackUrl, 18),
+    },
+    discord: {
+      configured: Boolean(discordUrl),
+      source: db.discordWebhookUrl ? "db" : discordUrl ? "env" : "none",
+      valueMasked: mask(discordUrl, 22),
+    },
+    telegram: {
+      configured: Boolean(tgToken && tgChatId),
+      source: db.telegramBotToken ? "db" : tgToken ? "env" : "none",
+      valueMasked: mask(tgToken, 6),
+      extraMasked: tgChatId ? String(tgChatId) : null,
+    },
+  };
+}
+
+export async function saveWebhookSettings(
+  input: { slackWebhookUrl?: string; discordWebhookUrl?: string; telegramBotToken?: string; telegramChatId?: string },
+  reason: string,
+  actor: string,
+): Promise<WebhooksSettings> {
+  if (!reason?.trim()) throw new Error("reason is required");
+  const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
+  const before = row?.value ?? {};
+  const next = { ...before };
+
+  if (input.slackWebhookUrl !== undefined) next.slackWebhookUrl = input.slackWebhookUrl.trim();
+  if (input.discordWebhookUrl !== undefined) next.discordWebhookUrl = input.discordWebhookUrl.trim();
+  if (input.telegramBotToken !== undefined) next.telegramBotToken = input.telegramBotToken.trim();
+  if (input.telegramChatId !== undefined) next.telegramChatId = input.telegramChatId.trim();
+
+  await sql`
+    INSERT INTO settings (key, value, updated_by) VALUES ('webhook_channels', ${sql.json(next)}, ${actor})
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = now()
+  `;
+
+  invalidateSlackCache();
+  invalidateDiscordCache();
+  invalidateTelegramCache();
+
+  await audit(actor, "settings.webhooks", "settings:webhook_channels", reason, before, next);
+  return getWebhookSettings();
+}
+
+export async function testWebhookChannel(channel: "slack" | "discord" | "telegram"): Promise<{ ok: boolean; error?: string }> {
+  const title = `🧪 888news 通知連線測試 (${channel.toUpperCase()})`;
+  const lines = [
+    `這是一則來自 888news 後台管理系統的即時連線測試訊息。`,
+    `頻道: ${channel.toUpperCase()}`,
+    `時間: ${new Date().toISOString()}`,
+    `狀態: 連線測試正常，後續系統告警與反饋將能順暢推播。`,
+  ];
+
+  if (channel === "slack") {
+    return sendSlackAlert(title, lines, "now");
+  }
+  if (channel === "discord") {
+    return sendDiscordAlert(title, lines, "now");
+  }
+  if (channel === "telegram") {
+    return sendTelegramAlert(title, lines, "now");
+  }
+  return { ok: false, error: "unknown channel" };
 }

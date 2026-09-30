@@ -1,7 +1,29 @@
-// Telegram Bot API notification delivery.
 import { credential } from "../config.ts";
+import { sql } from "../db.ts";
+
+let cachedTgConfig: { botToken: string | null; chatId: string | null } | undefined = undefined;
+
+export function invalidateTelegramCache() {
+  cachedTgConfig = undefined;
+}
+
+export async function getTelegramConfig(): Promise<{ botToken: string | null; chatId: string | null }> {
+  if (cachedTgConfig !== undefined) return cachedTgConfig;
+  let botToken: string | null = null;
+  let chatId: string | null = null;
+  try {
+    const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
+    if (row?.value?.telegramBotToken) botToken = row.value.telegramBotToken;
+    if (row?.value?.telegramChatId) chatId = row.value.telegramChatId;
+  } catch {}
+  if (!botToken) botToken = credential("integrations", "TELEGRAM_BOT_TOKEN") || process.env.TELEGRAM_BOT_TOKEN || null;
+  if (!chatId) chatId = credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID || null;
+  cachedTgConfig = { botToken, chatId };
+  return cachedTgConfig;
+}
 
 export function isTelegramConfigured(): boolean {
+  if (cachedTgConfig?.botToken && cachedTgConfig?.chatId) return true;
   const token = credential("integrations", "TELEGRAM_BOT_TOKEN") || process.env.TELEGRAM_BOT_TOKEN;
   const chat = credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID;
   return Boolean(token && chat);
@@ -11,8 +33,9 @@ export async function sendTelegramMessage(
   text: string,
   opts?: { chatId?: string; parseMode?: "HTML" | "MarkdownV2"; disableWebPreview?: boolean },
 ): Promise<{ ok: boolean; status: number; error?: string }> {
-  const token = credential("integrations", "TELEGRAM_BOT_TOKEN") || process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = opts?.chatId || credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID;
+  const cfg = await getTelegramConfig();
+  const token = cfg.botToken;
+  const chatId = opts?.chatId || cfg.chatId;
   if (!token || !chatId) return { ok: false, status: 0, error: "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured" };
 
   try {

@@ -1,5 +1,5 @@
-// Discord webhook delivery.
 import { credential } from "../config.ts";
+import { sql } from "../db.ts";
 
 export interface DiscordEmbed {
   title?: string;
@@ -18,15 +18,34 @@ export interface DiscordMessagePayload {
   embeds?: DiscordEmbed[];
 }
 
+let cachedDbDiscordUrl: string | null | undefined = undefined;
+
+export function invalidateDiscordCache() {
+  cachedDbDiscordUrl = undefined;
+}
+
+export async function getDiscordWebhookUrl(): Promise<string | null> {
+  if (cachedDbDiscordUrl !== undefined) return cachedDbDiscordUrl;
+  try {
+    const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
+    if (row?.value?.discordWebhookUrl) {
+      cachedDbDiscordUrl = row.value.discordWebhookUrl;
+      return cachedDbDiscordUrl;
+    }
+  } catch {}
+  cachedDbDiscordUrl = credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL || null;
+  return cachedDbDiscordUrl;
+}
+
 export function isDiscordConfigured(): boolean {
-  return Boolean(credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL);
+  return Boolean(cachedDbDiscordUrl || credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL);
 }
 
 export async function sendDiscordWebhook(
   payload: DiscordMessagePayload,
   webhookUrl?: string,
 ): Promise<{ ok: boolean; status: number; error?: string }> {
-  const url = webhookUrl || credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL;
+  const url = webhookUrl || (await getDiscordWebhookUrl());
   if (!url) return { ok: false, status: 0, error: "DISCORD_WEBHOOK_URL not configured" };
 
   try {
@@ -52,7 +71,7 @@ export async function sendDiscordAlert(
   lines: string[],
   level: "now" | "today" | "digest" = "now",
 ): Promise<{ ok: boolean; error?: string }> {
-  const url = credential("integrations", "DISCORD_ALERT_WEBHOOK_URL") || credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL;
+  const url = credential("integrations", "DISCORD_ALERT_WEBHOOK_URL") || (await getDiscordWebhookUrl());
   if (!url) return { ok: false, error: "Discord not configured" };
 
   const color = level === "now" ? 0xED4245 : level === "today" ? 0xFEE75C : 0x57F287; // Red, Yellow, Green
@@ -80,7 +99,7 @@ export async function sendDiscordFeedback(fb: {
   screenshotUrl?: string | null;
   createdAt: Date;
 }): Promise<{ ok: boolean; error?: string }> {
-  const url = credential("integrations", "DISCORD_FEEDBACK_WEBHOOK_URL") || credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL;
+  const url = credential("integrations", "DISCORD_FEEDBACK_WEBHOOK_URL") || (await getDiscordWebhookUrl());
   if (!url) return { ok: false, error: "Discord not configured" };
 
   const fields = [

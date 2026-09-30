@@ -1,8 +1,6 @@
-// Unified multi-channel notification dispatcher.
-// Concurrently broadcasts alerts, feedbacks, and briefings across Slack, Discord, Telegram, and Feishu.
-import { isSlackConfigured, sendSlackAlert, sendSlackFeedback } from "./slack.ts";
-import { isDiscordConfigured, sendDiscordAlert, sendDiscordFeedback } from "./discord.ts";
-import { isTelegramConfigured, sendTelegramAlert, sendTelegramFeedback } from "./telegram.ts";
+import { getSlackWebhookUrl, isSlackConfigured, sendSlackAlert, sendSlackFeedback } from "./slack.ts";
+import { getDiscordWebhookUrl, isDiscordConfigured, sendDiscordAlert, sendDiscordFeedback } from "./discord.ts";
+import { getTelegramConfig, isTelegramConfigured, sendTelegramAlert, sendTelegramFeedback } from "./telegram.ts";
 import { feishuInternalEnabled, sendAlert as sendFeishuAlert } from "./feishu.ts";
 
 export type AlertLevel = "now" | "today" | "digest";
@@ -29,9 +27,15 @@ export async function dispatchAlert(
   lines: string[],
   level: AlertLevel = "now",
 ): Promise<DispatchAlertResult> {
+  const [slackUrl, discordUrl, tgConfig] = await Promise.all([
+    getSlackWebhookUrl(),
+    getDiscordWebhookUrl(),
+    getTelegramConfig(),
+  ]);
+
   const tasks: Array<Promise<{ channel: string; ok: boolean; error?: string }>> = [];
 
-  if (isSlackConfigured()) {
+  if (slackUrl) {
     tasks.push(
       sendSlackAlert(title, lines, level)
         .then((r) => ({ channel: "slack", ok: r.ok, error: r.error }))
@@ -39,7 +43,7 @@ export async function dispatchAlert(
     );
   }
 
-  if (isDiscordConfigured()) {
+  if (discordUrl) {
     tasks.push(
       sendDiscordAlert(title, lines, level)
         .then((r) => ({ channel: "discord", ok: r.ok, error: r.error }))
@@ -47,7 +51,7 @@ export async function dispatchAlert(
     );
   }
 
-  if (isTelegramConfigured()) {
+  if (tgConfig.botToken && tgConfig.chatId) {
     tasks.push(
       sendTelegramAlert(title, lines, level)
         .then((r) => ({ channel: "telegram", ok: r.ok, error: r.error }))
@@ -86,9 +90,15 @@ export async function dispatchAlert(
  * Dispatches a user feedback submission to all configured channels in parallel.
  */
 export async function dispatchFeedback(fb: FeedbackNotification): Promise<DispatchAlertResult> {
+  const [slackUrl, discordUrl, tgConfig] = await Promise.all([
+    getSlackWebhookUrl(),
+    getDiscordWebhookUrl(),
+    getTelegramConfig(),
+  ]);
+
   const tasks: Array<Promise<{ channel: string; ok: boolean; error?: string }>> = [];
 
-  if (isSlackConfigured()) {
+  if (slackUrl) {
     tasks.push(
       sendSlackFeedback(fb)
         .then((r) => ({ channel: "slack", ok: r.ok, error: r.error }))
@@ -96,7 +106,7 @@ export async function dispatchFeedback(fb: FeedbackNotification): Promise<Dispat
     );
   }
 
-  if (isDiscordConfigured()) {
+  if (discordUrl) {
     tasks.push(
       sendDiscordFeedback(fb)
         .then((r) => ({ channel: "discord", ok: r.ok, error: r.error }))
@@ -104,7 +114,7 @@ export async function dispatchFeedback(fb: FeedbackNotification): Promise<Dispat
     );
   }
 
-  if (isTelegramConfigured()) {
+  if (tgConfig.botToken && tgConfig.chatId) {
     tasks.push(
       sendTelegramFeedback(fb)
         .then((r) => ({ channel: "telegram", ok: r.ok, error: r.error }))

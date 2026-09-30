@@ -1,5 +1,5 @@
-// Slack incoming webhook delivery.
 import { credential } from "../config.ts";
+import { sql } from "../db.ts";
 
 export interface SlackMessagePayload {
   text: string;
@@ -14,15 +14,34 @@ export interface SlackMessagePayload {
   }>;
 }
 
+let cachedDbSlackUrl: string | null | undefined = undefined;
+
+export function invalidateSlackCache() {
+  cachedDbSlackUrl = undefined;
+}
+
+export async function getSlackWebhookUrl(): Promise<string | null> {
+  if (cachedDbSlackUrl !== undefined) return cachedDbSlackUrl;
+  try {
+    const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
+    if (row?.value?.slackWebhookUrl) {
+      cachedDbSlackUrl = row.value.slackWebhookUrl;
+      return cachedDbSlackUrl;
+    }
+  } catch {}
+  cachedDbSlackUrl = credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL || null;
+  return cachedDbSlackUrl;
+}
+
 export function isSlackConfigured(): boolean {
-  return Boolean(credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL);
+  return Boolean(cachedDbSlackUrl || credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL);
 }
 
 export async function sendSlackWebhook(
   payload: SlackMessagePayload,
   webhookUrl?: string,
 ): Promise<{ ok: boolean; status: number; error?: string }> {
-  const url = webhookUrl || credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL;
+  const url = webhookUrl || (await getSlackWebhookUrl());
   if (!url) return { ok: false, status: 0, error: "SLACK_WEBHOOK_URL not configured" };
 
   try {
@@ -48,7 +67,7 @@ export async function sendSlackAlert(
   lines: string[],
   level: "now" | "today" | "digest" = "now",
 ): Promise<{ ok: boolean; error?: string }> {
-  const url = credential("integrations", "SLACK_ALERT_WEBHOOK_URL") || credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL;
+  const url = credential("integrations", "SLACK_ALERT_WEBHOOK_URL") || (await getSlackWebhookUrl());
   if (!url) return { ok: false, error: "Slack not configured" };
 
   const color = level === "now" ? "#E01E5A" : level === "today" ? "#ECB22E" : "#2EB886";
@@ -76,7 +95,7 @@ export async function sendSlackFeedback(fb: {
   screenshotUrl?: string | null;
   createdAt: Date;
 }): Promise<{ ok: boolean; error?: string }> {
-  const url = credential("integrations", "SLACK_FEEDBACK_WEBHOOK_URL") || credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL;
+  const url = credential("integrations", "SLACK_FEEDBACK_WEBHOOK_URL") || (await getSlackWebhookUrl());
   if (!url) return { ok: false, error: "Slack not configured" };
 
   const fields = [
