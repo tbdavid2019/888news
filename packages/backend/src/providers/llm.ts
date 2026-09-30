@@ -301,6 +301,16 @@ async function executeSingleModel<S extends z.ZodType>(
   return { data: parsed, receiptId: receipt.receiptId, reused: receipt.reused, model: spec.key, usage: response.usage ?? null };
 }
 
+const lastFallbackAlertAt = new Map<string, number>();
+
+function shouldSendFallbackAlert(modelKey: string, cooldownMs = 5 * 60 * 1000): boolean {
+  const now = Date.now();
+  const last = lastFallbackAlertAt.get(modelKey) ?? 0;
+  if (now - last < cooldownMs) return false;
+  lastFallbackAlertAt.set(modelKey, now);
+  return true;
+}
+
 export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): Promise<ChatJsonResult<z.infer<S>>> {
   if (!config.modelCallsEnabled) throw new Error("Model calls are disabled (MODEL_CALLS_ENABLED=false)");
 
@@ -348,16 +358,18 @@ export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): P
       if (i < candidates.length - 1) {
         const nextCandidate = candidates[i + 1]!;
         console.warn(`[LLM Fallback] Model ${candidateKey} failed: ${err instanceof Error ? err.message : String(err)}. Falling back to ${nextCandidate}`);
-        void dispatchAlert(
-          "🚨 LLM 模型調用異常並觸發 Fallback 備援",
-          [
-            `故障模型：${candidateKey} (${spec.model || "default"})`,
-            `錯誤訊息：${err instanceof Error ? err.message : String(err)}`,
-            `切換備援至：${nextCandidate}`,
-            `調用目的：${opts.purpose} (${opts.subject})`,
-          ],
-          "now",
-        ).catch(() => {});
+        if (shouldSendFallbackAlert(candidateKey)) {
+          void dispatchAlert(
+            "🚨 LLM 模型調用異常並觸發 Fallback 備援",
+            [
+              `故障模型：${candidateKey} (${spec.model || "default"})`,
+              `錯誤訊息：${err instanceof Error ? err.message : String(err)}`,
+              `切換備援至：${nextCandidate}`,
+              `調用目的：${opts.purpose} (${opts.subject})`,
+            ],
+            "now",
+          ).catch(() => {});
+        }
       }
     }
   }

@@ -39,7 +39,11 @@ export async function sendTelegramMessage(
 }
 
 function escapeHtml(str: string): string {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 export async function sendTelegramAlert(
@@ -51,7 +55,7 @@ export async function sendTelegramAlert(
   if (!chatId) return { ok: false, error: "Telegram chatId not configured" };
 
   const icon = level === "now" ? "🚨" : level === "today" ? "⚠️" : "📋";
-  const formattedText = `<b>${icon} ${escapeHtml(title)}</b>\n\n${lines.map((l) => escapeHtml(l)).join("\n")}`;
+  const formattedText = `<b>${icon} ${escapeHtml(title)}</b>\n\n${lines.map((l) => escapeHtml(l)).join("\n")}`.slice(0, 4000);
 
   const res = await sendTelegramMessage(formattedText, { chatId, parseMode: "HTML" });
   return { ok: res.ok, error: res.error };
@@ -68,7 +72,8 @@ export async function sendTelegramFeedback(fb: {
   const chatId = credential("integrations", "TELEGRAM_FEEDBACK_CHAT_ID") || credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID;
   if (!chatId) return { ok: false, error: "Telegram chatId not configured" };
 
-  let formatted = `<b>💬 收到新使用者反饋 #${fb.id}</b>\n\n${escapeHtml(fb.content)}`;
+  const safeContent = fb.content.length > 3500 ? `${fb.content.slice(0, 3500)}... (內容過長已截斷)` : fb.content;
+  let formatted = `<b>💬 收到新使用者反饋 #${fb.id}</b>\n\n${escapeHtml(safeContent)}`;
   if (fb.email) formatted += `\n\n📧 聯絡信箱: <code>${escapeHtml(fb.email)}</code>`;
   if (fb.pageUrl) formatted += `\n🔗 來源網址: <a href="${escapeHtml(fb.pageUrl)}">${escapeHtml(fb.pageUrl)}</a>`;
 

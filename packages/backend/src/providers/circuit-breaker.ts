@@ -17,6 +17,7 @@ export interface ProviderCircuit {
   cooldownMs: number;
   inFlightCanary: boolean;
   activeCount: number;
+  waitQueue: Array<() => void>;
 }
 
 const circuits = new Map<string, ProviderCircuit>();
@@ -32,6 +33,7 @@ function getCircuit(key: string, opts?: CircuitBreakerOptions): ProviderCircuit 
       cooldownMs: opts?.cooldownMs ?? 60_000,
       inFlightCanary: false,
       activeCount: 0,
+      waitQueue: [],
     };
     circuits.set(key, c);
   }
@@ -127,6 +129,7 @@ export function resetCircuit(key?: string): void {
 
 /**
  * Asynchronous Semaphore to limit in-flight concurrency on fallback providers.
+ * Uses a strict FIFO queue to prevent oversubscription, race conditions, and busy polling.
  */
 export async function withConcurrencyLimit<T>(
   key: string,
@@ -135,22 +138,24 @@ export async function withConcurrencyLimit<T>(
 ): Promise<T> {
   const c = getCircuit(key);
   if (c.activeCount >= maxConcurrency) {
-    // Wait until an active slot frees up
+    // Wait until an active slot is released
     await new Promise<void>((resolve) => {
-      const check = setInterval(() => {
-        if (c.activeCount < maxConcurrency) {
-          clearInterval(check);
-          resolve();
-        }
-      }, 50);
+      c.waitQueue.push(resolve);
     });
+  } else {
+    c.activeCount += 1;
   }
 
-  c.activeCount += 1;
   try {
     return await fn();
   } finally {
-    c.activeCount = Math.max(0, c.activeCount - 1);
+    const next = c.waitQueue.shift();
+    if (next) {
+      // Directly transfer execution slot to the next waiting promise (activeCount stays invariant)
+      next();
+    } else {
+      c.activeCount = Math.max(0, c.activeCount - 1);
+    }
   }
 }
 

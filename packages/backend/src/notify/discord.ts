@@ -88,11 +88,13 @@ export async function sendDiscordFeedback(fb: {
     ...(fb.pageUrl ? [{ name: "來源網址", value: fb.pageUrl, inline: true }] : []),
   ];
 
+  const safeDescription = fb.content.length > 3800 ? `${fb.content.slice(0, 3800)}... (內容過長已截斷)` : fb.content;
+
   const payload: DiscordMessagePayload = {
     embeds: [
       {
         title: `💬 收到新使用者反饋 #${fb.id}`,
-        description: fb.content,
+        description: safeDescription,
         color: 0x5865F2, // Discord Blurple
         fields: fields.length ? fields : undefined,
         timestamp: fb.createdAt.toISOString(),
