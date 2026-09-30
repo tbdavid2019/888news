@@ -51,7 +51,6 @@ export function getSidebar(t: (key: TranslationKey) => string, locale: string = 
       items: [
         { to: "/agent", label: t("nav.agent"), icon: IconPlug },
         { to: "/about", label: t("nav.about"), icon: IconHeart },
-        { to: "/changelog", label: t("nav.changelog"), icon: IconHistory, changelog: true },
         { to: "/feedback", label: t("nav.feedback"), icon: IconMessage },
       ],
     },
@@ -63,7 +62,7 @@ export function getTabBar(t: (key: TranslationKey) => string): NavItem[] {
     { to: "/", label: t("nav.featured"), icon: IconBolt, end: true },
     { to: "/all", label: t("nav.all_short"), icon: IconList },
     { to: "/daily", label: t("nav.daily_short"), icon: IconDoc },
-    { to: "/more", label: t("nav.more"), icon: IconApps, changelog: true },
+    { to: "/more", label: t("nav.more"), icon: IconApps },
   ];
 }
 
@@ -72,7 +71,7 @@ export const SIDEBAR = getSidebar((k) => k);
 export const TABBAR = getTabBar((k) => k);
 
 /** Pages reached from the mobile "更多" tab keep that tab highlighted. */
-export const MORE_PATHS = ["/more", "/hot", "/topics", "/starred", "/leaderboard", "/codex-reset", "/agent", "/about", "/changelog", "/feedback", "/terms", "/privacy"];
+export const MORE_PATHS = ["/more", "/hot", "/topics", "/starred", "/leaderboard", "/agent", "/about", "/feedback", "/terms", "/privacy"];
 
 export function tabIsActive(item: NavItem, pathname: string): boolean {
   if (item.end) return pathname === item.to;

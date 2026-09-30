@@ -156,15 +156,11 @@ function Maker({ maker, contact }: { maker: NonNullable<typeof ABOUT.maker>; con
             <p key={line}>{line}</p>
           ))}
           <p className="text-ink-3">
-            它一直在改，改了什么都写在
-            <Link to="/changelog" className="text-accent hover:underline">
-              更新日志
-            </Link>
-            里；有想法、遇到问题，去
+            有想法、遇到問題，歡迎隨時前往
             <Link to="/feedback" className="text-accent hover:underline">
-              反馈页
+              反饋頁
             </Link>
-            告诉我。
+            告訴我們。
           </p>
         </div>
       </div>

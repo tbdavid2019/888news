@@ -58,7 +58,6 @@ export default function MorePage() {
       title: t("nav.section.more"),
       rows: [
         { to: "/about", label: `${t("nav.about")} ${SITE.name}`, icon: <IconHeart size={18} /> },
-        { to: "/changelog", label: t("nav.changelog"), icon: <IconHistory size={18} /> },
         { to: "/feedback", label: t("nav.feedback"), icon: <IconMessage size={18} /> },
       ],
     },
@@ -76,7 +75,6 @@ export default function MorePage() {
                   <span className="text-ink-3">{r.icon}</span>
                   <span className="flex flex-1 items-center gap-2">
                     {r.label}
-                    {r.to === "/changelog" && changelogDot && <span className="size-1.5 rounded-full bg-hot" aria-label={t("nav.new_update")} />}
                   </span>
                   <IconChevronRight size={16} className="text-ink-4" />
                 </Link>
