@@ -117,6 +117,9 @@ export interface XFetch extends Omit<XRead, "tweets"> {
  * fetch) one page is read: its import is bounded anyway.
  */
 export async function readXSearch(base: string, opts: { lastId: string | null; backlog: XBacklog[]; subject: string; type?: "Latest" | "Top" }): Promise<XRead> {
+  if (!credential("collectors", "SOCIALDATA_API_KEY")) {
+    return { tweets: [], lastId: opts.lastId, backlog: [], pages: 0, truncated: false, backlogPages: 0, dropped: 0 };
+  }
   const { lastId } = opts;
   const backlog = opts.backlog.map((b) => ({ ...b }));
   const window = windowKey();

@@ -120,7 +120,7 @@ export interface SdArticle {
  */
 export async function getArticle(tweetId: string, opts: { purpose: string; subject: string }): Promise<SdArticle | null> {
   const key = credential("collectors", "SOCIALDATA_API_KEY");
-  if (!key) throw new Error("SOCIALDATA_API_KEY is not configured");
+  if (!key) return null;
   const receipt = await paidRequest(
     { service: "socialdata", purpose: opts.purpose, subject: opts.subject, identity: { article: tweetId }, requestSummary: { article: tweetId } },
     async () => {
@@ -148,7 +148,7 @@ export async function getArticle(tweetId: string, opts: { purpose: string; subje
 /** One tweet by id (context for replies and quotes). Paid; the receipt makes retries free. */
 export async function getTweet(id: string, opts: { purpose: string; subject: string }): Promise<SdTweet | null> {
   const key = credential("collectors", "SOCIALDATA_API_KEY");
-  if (!key) throw new Error("SOCIALDATA_API_KEY is not configured");
+  if (!key) return null;
   const receipt = await paidRequest(
     { service: "socialdata", purpose: opts.purpose, subject: opts.subject, identity: { tweet: id }, requestSummary: { tweet: id } },
     async () => {
