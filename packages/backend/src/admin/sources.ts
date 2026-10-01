@@ -132,7 +132,7 @@ const PUBLICATION_FIELDS: string[] = ["participation_mode", "site_fulltext", "sy
 
 const CreateSchema = z
   .object({
-    id: z.string().regex(/^[a-z0-9][a-z0-9-]{2,79}$/),
+    id: z.string().regex(/^[a-z0-9][a-z0-9-_]{1,79}$/),
     name: z.string().min(1).max(200),
     kind: z.enum(["rss", "web_list", "json_list", "x_search", "mp_account", "external"]),
     config: z.record(z.string(), z.unknown()),
@@ -150,8 +150,9 @@ const CreateSchema = z
 export function sourceIdentity(kind: string, config: Record<string, unknown>): string | null {
   const raw = (config.feedUrl ?? config.url ?? config.listUrl ?? config.endpoint ?? null) as string | null;
   if (kind === "x_search") {
-    const m = /from:([A-Za-z0-9_]{1,15})/.exec(String(config.query ?? ""));
-    return m ? `x:${m[1]!.toLowerCase()}` : null;
+    const handle = (typeof config.handle === "string" ? config.handle.trim().replace(/^@/, "") : null) ??
+      /from:([A-Za-z0-9_]{1,20})/i.exec(String(config.query ?? ""))?.[1];
+    return handle ? `x:${handle.toLowerCase()}` : null;
   }
   if (!raw) return null;
   try {

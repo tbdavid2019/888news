@@ -56,8 +56,21 @@ export function useAdminAction() {
           return null;
         }
         const text = await res.text();
-        const json = text ? JSON.parse(text) : null;
-        if (!res.ok) throw new AdminError(res.status, json?.detail ?? `請求失敗（${res.status}）`);
+        let json: Record<string, unknown> | null = null;
+        try {
+          json = text ? (JSON.parse(text) as Record<string, unknown>) : null;
+        } catch {
+          json = null;
+        }
+        if (!res.ok) {
+          const detail =
+            (json?.detail as string) ||
+            (json?.message as string) ||
+            (typeof json?.error === "string" ? json.error : null) ||
+            text.slice(0, 100) ||
+            `請求失敗（${res.status}）`;
+          throw new AdminError(res.status, detail);
+        }
         keys.current.delete(label);
         if (opts.success) toast(opts.success, "ok");
         if (opts.revalidate !== false) revalidator.revalidate();

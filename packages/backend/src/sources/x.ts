@@ -5,6 +5,8 @@ import { ProviderRejectedError } from "../providers/receipts.ts";
 import type { XPostData } from "../content/materials.ts";
 import { sha256 } from "../lib/ids.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
+import { readPageAsMarkdown } from "../providers/reader.ts";
+import { credential } from "../config.ts";
 
 function avatar(url: string | undefined): string | null {
   // Larger avatar than the default 48px thumbnail.
@@ -180,17 +182,158 @@ export async function readXSearch(base: string, opts: { lastId: string | null; b
   return { tweets, lastId: maxId, backlog, pages, truncated, backlogPages, dropped };
 }
 
-/** One account's own search (its first fetch, a query of its own, or a manual run from the admin). */
+export function extractHandle(source: Pick<SourceRow, "id" | "config" | "name">): string | null {
+  if (typeof source.config?.handle === "string" && source.config.handle.trim()) {
+    return source.config.handle.trim().replace(/^@/, "");
+  }
+  const query = String(source.config?.query ?? "");
+  const m = /from:([A-Za-z0-9_]{1,20})/i.exec(query);
+  if (m && m[1]) return m[1];
+  if (typeof source.config?.url === "string") {
+    const urlMatch = /x\.com\/([A-Za-z0-9_]{1,20})/i.exec(source.config.url);
+    if (urlMatch && urlMatch[1] && !["home", "explore", "search"].includes(urlMatch[1])) return urlMatch[1];
+  }
+  if (source.id.startsWith("x-")) return source.id.replace(/^x-/, "");
+  return null;
+}
+
+/** Crawls recent tweets from an X profile using 2md.aiurl.tw without requiring paid API keys. */
+export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
+  const handle = extractHandle(source);
+  if (!handle) throw new FetchError(`無法從信源 ${source.id} 判斷 X / Twitter 帳號 handle`);
+
+  const page = await readPageAsMarkdown(`https://x.com/${handle}`);
+  const statusRegex = new RegExp(`https://x\\.com/${handle}/status/(\\d+)`, "gi");
+  const allMatches = Array.from(page.raw.matchAll(statusRegex));
+  const seenIds = new Set<string>();
+  const tweetIds: string[] = [];
+  for (const m of allMatches) {
+    const id = m[1]!;
+    if (!seenIds.has(id)) {
+      seenIds.add(id);
+      tweetIds.push(id);
+    }
+  }
+
+  const candidates: Candidate[] = [];
+  const blocks = page.markdown.split(/\n(?=\*\s+)/);
+
+  for (const block of blocks) {
+    const statusMatch = new RegExp(`https://x\\.com/${handle}/status/(\\d+)`, "i").exec(block);
+    if (!statusMatch) continue;
+    const tweetId = statusMatch[1]!;
+    if (candidates.some((c) => c.identityKey === `x:${tweetId}`)) continue;
+
+    let text = block
+      .replace(/\*?\s*\[!\[Image.*?\]\(.*?\)\]\(.*?\)/g, "")
+      .replace(/\[!\[Image.*?\]\(.*?\)\]/g, "")
+      .replace(/!\[.*?\]\(.*?\)/g, "")
+      .replace(/\[(?:Log in|Sign up|Continue with.*?|Video \d+)\]\(.*?\)/gi, "")
+      .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/${handle}\\)`, "gi"), "")
+      .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/${handle}/status/\\d+\\)`, "gi"), "")
+      .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/hashtag/.*?\\)`, "gi"), "")
+      .trim();
+
+    text = text.replace(/^[^\n]*?@[A-Za-z0-9_]+\s*(?:\[\w+\])?\s*/i, "").trim();
+
+    const mediaUrls = Array.from(block.matchAll(/https:\/\/pbs\.twimg\.com\/(?:media|amplify_video_thumb)\/[A-Za-z0-9_-]+\.(?:jpg|png|webp)/g), (m) => m[0]);
+    const media = Array.from(new Set(mediaUrls)).map((url) => ({
+      kind: "image" as const,
+      url,
+      width: null,
+      height: null,
+      poster: null,
+    }));
+
+    if (!text && media.length === 0) continue;
+
+    const firstLine = text.split("\n").find((l) => l.trim()) ?? text;
+    const title = firstLine.length > 140 ? `${firstLine.slice(0, 137)}...` : firstLine || `${source.name || handle} 於 X 發布動態`;
+
+    candidates.push({
+      url: `https://x.com/${handle}/status/${tweetId}`,
+      identityKey: `x:${tweetId}`,
+      title,
+      author: handle,
+      language: null,
+      publishedAt: new Date(),
+      bodyText: text,
+      bodyStatus: "ok",
+      xPost: {
+        tweetId,
+        authorName: source.name || handle,
+        handle,
+        avatarUrl: null,
+        text,
+        lang: null,
+        replyTo: null,
+        media,
+        quoted: null,
+      },
+      media,
+      raw: {},
+    });
+  }
+
+  for (const id of tweetIds.slice(0, 10)) {
+    if (!candidates.some((c) => c.identityKey === `x:${id}`)) {
+      candidates.push({
+        url: `https://x.com/${handle}/status/${id}`,
+        identityKey: `x:${id}`,
+        title: `${source.name || handle} 的推文 (${id})`,
+        author: handle,
+        language: null,
+        publishedAt: new Date(),
+        bodyText: "",
+        bodyStatus: "ok",
+        xPost: {
+          tweetId: id,
+          authorName: source.name || handle,
+          handle,
+          avatarUrl: null,
+          text: "",
+          lang: null,
+          replyTo: null,
+          media: [],
+          quoted: null,
+        },
+        media: [],
+        raw: {},
+      });
+    }
+  }
+
+  return {
+    candidates,
+    lastId: candidates[0]?.xPost?.tweetId ?? null,
+    backlog: [],
+    pages: 1,
+    truncated: false,
+    backlogPages: 0,
+    dropped: 0,
+  };
+}
+
+/** One account's own search (supports 2md.aiurl.tw zero-cost reader and SocialData API). */
 export async function fetchXSearch(source: SourceRow): Promise<XFetch> {
-  const base = String(source.config.query ?? "");
-  if (!base) throw new FetchError("query missing");
-  const { tweets, ...read } = await readXSearch(base, {
-    lastId: source.cursor?.lastTweetId ?? null,
-    backlog: Array.isArray(source.cursor?.xBacklog) ? source.cursor.xBacklog : [],
-    subject: `source:${source.id}`,
-    type: source.config.searchType ?? "Latest",
-  });
-  return { candidates: tweets.map(tweetToCandidate), ...read };
+  const hasSocialDataKey = Boolean(credential("collectors", "SOCIALDATA_API_KEY"));
+  if (!hasSocialDataKey) {
+    return fetchXVia2md(source);
+  }
+  try {
+    const base = String(source.config.query ?? "");
+    if (!base) return fetchXVia2md(source);
+    const { tweets, ...read } = await readXSearch(base, {
+      lastId: source.cursor?.lastTweetId ?? null,
+      backlog: Array.isArray(source.cursor?.xBacklog) ? source.cursor.xBacklog : [],
+      subject: `source:${source.id}`,
+      type: source.config.searchType ?? "Latest",
+    });
+    return { candidates: tweets.map(tweetToCandidate), ...read };
+  } catch (err) {
+    console.warn(`[X Collector] SocialData unavailable or error, falling back to 2md.aiurl.tw:`, err);
+    return fetchXVia2md(source);
+  }
 }
 
 // --- Shards: plain account queries read together ------------------------------------------------

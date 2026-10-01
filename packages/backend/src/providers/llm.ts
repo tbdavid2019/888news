@@ -320,7 +320,8 @@ async function executeSingleModel<S extends z.ZodType>(
   }
 
   const temperature = opts.temperature ?? 0.2;
-  const maxTokens = Math.max(opts.maxTokens ?? 2048, 2048) + (spec.key.endsWith("-think") ? 4000 : 0);
+  const isReasoning = spec.key.endsWith("-think") || /r1|qwq|o1|o3|oss|reasoning/i.test(modelName);
+  const maxTokens = Math.max(opts.maxTokens ?? 2048, 2048) + (isReasoning ? 4096 : 0);
   const userText = typeof opts.user === "string" ? opts.user : JSON.stringify(opts.user);
   const body: Record<string, unknown> = {
     model: modelName,
@@ -333,6 +334,7 @@ async function executeSingleModel<S extends z.ZodType>(
     temperature,
     max_tokens: maxTokens,
     ...(spec.jsonMode && opts.json !== false ? { response_format: { type: "json_object" } } : {}),
+    ...(isReasoning && /groq/i.test(baseUrl) ? { reasoning_format: "hidden" } : {}),
     ...(spec.extra ?? {}),
   };
 

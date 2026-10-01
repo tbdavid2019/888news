@@ -48,7 +48,7 @@ export default function NewSource() {
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <Card title="信源定义">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="ID" hint="小写字母、数字和连字符，创建后不可改">
+            <Field label="ID" hint="小寫字母、數字、連字號與底線（_），建立後不可改">
               <Input value={form.id} onChange={(e) => setForm({ ...form, id: e.target.value.toLowerCase() })} placeholder="openai-blog" />
             </Field>
             <Field label="名称">

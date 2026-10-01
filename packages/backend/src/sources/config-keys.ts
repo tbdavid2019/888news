@@ -17,8 +17,8 @@ const KEYS: Record<SourceRow["kind"], string[]> = {
     "titlePaths", "summaryPaths", "summaryIsBody", "authorPaths", "publishedAtPath", "publishedAtUnit", "externalIdPath",
     "urlTemplate", "urlTemplateFallback", "rawDropKeys", "requireBoolean", "minNumeric",
   ],
-  // X accounts are mostly read in shards, which apply only these.
-  x_search: ["_aihot", "ingestNoiseFilter", "itemUrlPrefixRewrite", "query", "searchType"],
+  // X accounts are mostly read in shards or via 2md.aiurl.tw.
+  x_search: ["_aihot", "ingestNoiseFilter", "itemUrlPrefixRewrite", "query", "searchType", "handle"],
   mp_account: ["wxid", "ghid", "nickname"],
   external: [],
 };

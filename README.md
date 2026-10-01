@@ -26,15 +26,23 @@
 
 ---
 
-## 致謝原作者 (Special Thanks)
+---
 
-**888news** 的核心架構與情報處理引擎深深受益於 **數字生命卡茲克** 所開創的 [AIHOT](https://github.com/KKKKhazix/AIHOT) 開源專案。
+## 致謝原作者與分支區隔 (Special Thanks & Differentiation)
 
-在此由衷感謝原作者無私開源這套兼具設計美感與高工程品質的行業熱點框架，將自動化信源採集、多模型評分、事件向量聚類與日報生成的「火種」交到社群手中。
+**888news** 的核心架構與情報處理引擎深深受益於 **數字生命卡茲克** 所開創的 [AIHOT](https://github.com/KKKKhazix/AIHOT) 開源專案。在此由衷感謝原作者無私開源這套優秀的行業熱點框架，將自動化信源採集、多模型評分、事件向量聚類與日報生成的火種交到社群手中。
 
-遵照開源規範與原作者聲明：
-- 本專案採用全新的獨立識別 **888news**。
-- 本專案基於原版架構進行了現代化多語系國際化擴展（繁體中文/台灣用語在地化、English 國際化、智慧語系偵測）、開放參數化設定與客製化升級。
+遵照開源規範與原作者聲明，**888news** 作為全新的獨立分支專案，在設計與工程層面進行了深度的**國際化與台灣在地化重構**，與原版做出明確區隔：
+
+| 特性維度 | 原版 AIHOT | 888news（本專案分支） |
+|---|---|---|
+| **預設語系** | 簡體中文 (`zh-CN`) | **台灣繁體中文 (`zh-TW`)**，支援 `twp` 台灣用語伺服端動態轉換 |
+| **計費與幣別** | 預設人民幣 (CNY ¥) | **預設美元 (USD $) 並支援新台幣 (TWD NT$)**，徹底剔除人民幣依賴 |
+| **即時告警與廣播** | 僅支援飛書 (Feishu) | **Slack、Discord、Telegram** 國際化即時 Webhook 告警與廣播 |
+| **X (Twitter) 採集** | 必須付費訂閱 SocialData API | **原生整合 `2md.aiurl.tw`**，免 API Key 即刻抓取 X 推文與多媒體 |
+| **行動端與 PWA** | 一般響應式網頁 | **完整 PWA 化**，支援 Android / iOS Safari「加到主畫面」獨立安裝與離線快取 |
+| **Docker 鏡像** | 需本機自行編譯 | **官方 GHCR 多架構預編譯映像檔** (`ghcr.io/tbdavid2019/888news`)，隨拉即跑 |
+| **自動化部署** | 手動拉取更新 | **GitHub Actions 矩陣建置 + Watchtower** 無感自動輪詢熱更新 |
 
 ---
 
@@ -46,42 +54,39 @@
 1. **盯住海量信源**：官方部落格、科技媒體、X / Twitter、GitHub Releases、研究機構等。
 2. **兩次獨立模型評分**：先預篩剔除雜訊，再由獨立大模型評分，只有跨越門檻的高價值情報才能入選。
 3. **事件聚類與熱度榜**：運用向量相似度與模型二次驗證，將多篇報導同一事件的內容歸組為單一事件，計算獨立討論源，真實反映熱點排行。
-4. **全平台交付**：提供網頁、深淺色切換、RSS 訂閱、RESTful OpenAPI、MCP (Model Context Protocol) 以及 `llms.txt`。
+4. **全平台交付**：提供網頁、PWA 應用、深淺色切換、RSS 訂閱、RESTful OpenAPI、MCP (Model Context Protocol) 以及 `llms.txt`。
 
 ---
 
 ## 核心特色
 
-### 🌐 1. 全方位多語系支援 (Multi-Language)
-- **繁 | EN | 简 平滑切換**：提供繁體中文（`zh-TW`）、英文（`en`）、簡體中文（`zh-CN`）完整介面字典支援。
-- **瀏覽器語系自動偵測**：首次造訪依使用者環境自動適配，非中文環境預設自動 Fallback 顯示英文。
-- **動態內文繁體在地化（台灣詞彙）**：整合伺服端 OpenCC（`cn` $\rightarrow$ `twp` 詞庫），自動將新聞內文的標題、摘要、推薦理由轉化為在地化用語（如「網絡」$\rightarrow$「網路」、「内存」$\rightarrow$「記憶體」），且完全在 Node.js SSR 處理，零前端資源負擔。
+### 🌐 1. 全方位多語系與台灣在地化 (Multi-Language & Localization)
+- **繁 | EN | 简 平滑切換**：以台灣繁體中文（`zh-TW`）為核心，提供繁中、英文（`en`）、簡中（`zh-CN`）完整介面字典支援。
+- **動態內文繁體在地化（台灣詞彙）**：整合伺服端 OpenCC（`cn` $\rightarrow$ `twp` 詞庫），自動將新聞內文的標題、摘要、推薦理由轉化為在地化用語（如「網絡」$\rightarrow$「網路」、「内存」$\rightarrow$「記憶體」、「服務器」$\rightarrow$「伺服器」）。
+- **美元與新台幣切換**：完全移除人民幣顯示，預設採用美元（USD $），並提供即時匯率轉換切換為新台幣（NT$）。
 
-### 🤖 2. 智慧情報管線
+### 📱 2. 完整 PWA 支援 (Progressive Web App)
+- **原生 App 級安裝體驗**：完整配置 Web Manifest、Apple Mobile Web App Meta 標籤與高解析向量圖示。
+- 在 Android Chrome / Edge 及 iPhone Safari 上點擊「加入主畫面」，即可安裝為獨立全螢幕 App。
+- 內建 Service Worker (`/sw.js`)，支援核心靜態資源離線快取與網路優先導航策略。
+
+### 🤖 3. 智慧情報管線與免金鑰 X (Twitter) 採集
 - **六種信源相容**：支援 RSS / Atom、網頁列表 (Web List)、JSON API、X (Twitter)、微信公眾號及外部腳本推播。
-- **動態調整頻率**：一手信源與活躍源高頻巡邏，產出低的信源自動降低頻率。
+- **免金鑰 X (Twitter) 抓取**：深度整合 `2md.aiurl.tw`，即使沒有 SocialData 付費 API 金鑰，也能直接透過 2md Reader 解析 Twitter 個人動態與推文，點擊即預覽、即時入庫。
 - **大模型寫作**：自動提煉「答案先行」的高密度中文摘要、核心觀點與入選推薦理由。
 
-### 🔥 3. 事件歸組與真實熱點演算法
+### 🔥 4. 事件歸組與真實熱點演算法
 - **同一件事只看一次**：不論多少家媒體轉載、社群如何討論，同一事件彙整為一個主卡片，後續發展串聯在事件時間軸上。
 - **防灌水熱度評分**：單一媒體發十篇僅計一次權重，結合 48 小時時間衰減演算法，精準呈現真正引起全網關注的重要趨勢。
 
-### 🛡️ 4. 全球頂級 LLM 支援、多級熔斷防驚群 Fallback
-- **廣泛服務商相容**：原生預設整合 Groq（Llama 3.3 70B, DeepSeek R1）、Google Gemini（2.5 Flash, 2.5 Pro）、OpenAI（GPT-4o, GPT-4o-mini）以及任何相容 OpenAI 的 API 端點。
+### 🛡️ 5. 全球頂級 LLM 支援、多級熔斷防驚群 Fallback
+- **廣泛服務商相容**：原生預設整合 Groq（Llama 3.3 70B, DeepSeek R1, GPT-OSS）、Google Gemini（2.5 Flash, 2.5 Pro）、OpenAI（GPT-4o, GPT-4o-mini）以及任何相容 OpenAI 的 API 端點。
 - **三級容災架構 (`Primary` $\rightarrow$ `Fallback 1` $\rightarrow$ `Fallback 2`)**：遇到 Rate Limit (HTTP 429) 或 5xx 故障時自動無縫降級，保障 24/7 流水線不停擺。
-- **熔斷器 (Circuit Breaker) & 防驚群效應 (Anti-Thundering Herd)**：
-  - 故障連續觸發時進入 `OPEN` 熔斷狀態，冷卻期內立即短路，拒絕盲目重試。
-  - 冷卻後採用單一探針（Canary Probe）進行 `HALF-OPEN` 恢復探測。
-  - 降級請求具備**隨機抖動退避（Randomized Jitter Backoff）**與**併發限制信號量（Concurrency Semaphore）**，徹底消除峰值流量瞬間壓垮備用 LLM 的驚群效應。
-- **降級即時告警**：每次觸發 Fallback 降級均會自動發送警報至管理員頻道。
+- **熔斷器 (Circuit Breaker) & 防驚群效應 (Anti-Thundering Herd)**：具備隨機抖動退避與併發限制信號量，徹底消除峰值流量瞬間壓垮備用 LLM 的驚群效應。
 
-### 📡 5. 多渠道 Webhook 通知 (Slack / Discord / Telegram)
+### 📡 6. 多渠道 Webhook 通知 (Slack / Discord / Telegram)
 - 揮別單一通訊軟體限制，全方位支援 **Slack**、**Discord**、**Telegram** 即時 Webhook 與 Bot 通知。
-- 系統告警（如 LLM 降級觸發、採集靜默警報、每日情報摘要）與使用者提交之意見反饋（Feedback）均可即時、非同步並行廣播至指定頻道。
-
-### 🕷️ 6. 動態反爬蟲 Universal Web Reader
-- 整合 `2md.aiurl.tw` (888-url2md) 高效 Markdown 渲染器，輕鬆穿透 SPA 與動態反爬頁面。
-- 具備雙層防護機制，若有設定 `JINA_API_KEY` 時亦可平滑自動容災切換。
+- 系統告警（如 LLM 降級觸發、採集靜默警報、每日情報摘要）與使用者提交之意見反饋均可即時、非同步並行廣播至指定頻道。
 
 ### 🔌 7. 為 AI Agent 與開放生態而生
 - **Model Context Protocol (MCP)**：內建 MCP Server，任何 AI Agent（如 Claude Desktop、Cursor、Cline）均可直接掛載為工具，呼叫最新情報與搜尋。
@@ -94,9 +99,41 @@
 ### 系統需求
 - [Docker](https://docs.docker.com/get-docker/) 與 Docker Compose
 - Node.js 24+（後端原生執行 TypeScript）
-- 一組 OpenAI 相容的大模型 API Key（OpenAI, Groq, Gemini, DeepSeek, 千問等均可）
+- 一組大模型 API Key（OpenAI, Groq, Gemini, DeepSeek 等均可）
 
-### 一鍵啟動
+### 🚀 方式一：直接使用官方預編譯 Docker 映像檔（推薦）
+
+本專案提供 GitHub Container Registry (GHCR) 官方預編譯多架構映像檔（原生支援 `linux/amd64` 與 `linux/arm64`）：
+`ghcr.io/tbdavid2019/888news:latest`
+
+你完全不需要在本機安裝 Node.js 或進行漫長編譯，直接拉取即可啟動：
+
+```bash
+# 1. 複製倉庫配置
+git clone https://github.com/tbdavid2019/888news.git
+cd 888news
+
+# 2. 複製設定檔範本並填入你的大模型 API KEY
+cp .env.example .env
+
+# 3. 直接拉取預編譯鏡像並啟動所有容器
+docker compose pull
+docker compose up -d
+```
+
+啟動後即可造訪：
+- 前端站點：<http://localhost:3000>
+- 管理後台：<http://localhost:3000/admin>（預設管理密碼請見 `.env` 的 `ADMIN_PASSWORD`）
+
+#### 🔄 搭配 Watchtower 實現全自動無感升級
+本專案的 `docker-compose.yml` 內建專屬範圍的 Watchtower 自動更新服務。當專案發布新版本時，伺服器會自動偵測 GHCR 新鏡像、拉取並平滑重啟容器，無需手動維護：
+```bash
+docker compose up -d watchtower
+```
+
+---
+
+### 🛠️ 方式二：從原始碼自行編譯啟動
 
 ```bash
 # 1. 複製專案庫
@@ -106,13 +143,9 @@ cd 888news
 # 2. 初始化環境設定檔
 node scripts/init-env.ts --llm-key <你的大模型 API KEY>
 
-# 3. 啟動所有容器服務（Web、API、Worker、PostgreSQL、Caddy）
+# 3. 編譯並啟動所有容器服務（Web、API、Worker、PostgreSQL、Caddy）
 docker compose up -d --build
 ```
-
-啟動後造訪：
-- 前端站點：<http://localhost:3000>
-- 管理後台：<http://localhost:3000/admin>（預設管理密碼請見 `.env` 的 `ADMIN_PASSWORD`）
 
 ---
 
