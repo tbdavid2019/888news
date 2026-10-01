@@ -5,6 +5,8 @@ x-app: &app
   image: ${DOCKER_IMAGE:-ghcr.io/tbdavid2019/888news:latest}
   env_file: .env
   restart: unless-stopped
+  labels:
+    - "com.centurylinklabs.watchtower.enable=true"
   environment: &app-env
     NODE_ENV: production
     DATABASE_URL: postgres://aihot:${POSTGRES_PASSWORD:-aihot}@db:5432/aihot
@@ -37,6 +39,8 @@ services:
   setup:
     <<: *app
     restart: "no"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
     command: ["sh", "-c", "node scripts/migrate.ts && node scripts/seed.ts"]
 
   api:
@@ -87,6 +91,20 @@ services:
       - caddy:/data
     depends_on:
       - web
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: 888news-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_POLL_INTERVAL=300
+      - WATCHTOWER_TIMEOUT=210s
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+      - TZ=Asia/Taipei
 
 volumes:
   db: {}
