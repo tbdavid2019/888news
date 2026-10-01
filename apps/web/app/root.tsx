@@ -27,7 +27,7 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", type: "image/png", href: "/icon.png" },
   { rel: "apple-touch-icon", href: "/apple-icon.png" },
   { rel: "manifest", href: "/manifest.webmanifest" },
-  { rel: "alternate", type: "application/rss+xml", title: `${SITE.name} — 精选`, href: "/feed.xml" },
+  { rel: "alternate", type: "application/rss+xml", title: `${SITE.name} — 精選`, href: "/feed.xml" },
 ];
 
 interface SiteMeta {
@@ -75,7 +75,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export function meta({ error }: Route.MetaArgs) {
   if (!error) return [];
   const notFound = isRouteErrorResponse(error) && error.status === 404;
-  return [{ title: titled(notFound ? "页面不存在" : "暂时无法加载") }, { name: "robots", content: "noindex" }];
+  return [{ title: titled(notFound ? "頁面不存在" : "暫時無法載入") }, { name: "robots", content: "noindex" }];
 }
 
 /** Sidebar, main column and phone tab bar around a page (or an error). */
@@ -122,39 +122,48 @@ export default function App() {
   );
 }
 
+function ErrorView({ status, notFound }: { status: number; notFound: boolean }) {
+  const { t } = useI18n();
+  return (
+    <div className="flex min-h-[70vh] items-center justify-center px-2 py-16">
+      <div className="max-w-sm text-center">
+        <RingMark className="mx-auto mb-5 size-10 text-accent" />
+        <div className="mono text-[12px] text-ink-4">{status}</div>
+        <h1 className="mt-1.5 text-[20px] font-bold text-ink">
+          {notFound ? t("error.not_found_title") : t("error.unavailable_title")}
+        </h1>
+        <p className="mt-2 text-[13.5px] leading-relaxed text-ink-3">
+          {notFound ? t("error.not_found_desc") : t("error.unavailable_desc")}
+        </p>
+        <div className="mt-6 flex justify-center gap-2.5">
+          <Link to="/" className={buttonClass("primary")}>
+            {t("error.back_home")}
+          </Link>
+          <Link to="/all" className={buttonClass("secondary")}>
+            {t("error.browse_all")}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ErrorBoundary() {
   const error = useRouteError();
   const site = useRouteLoaderData<typeof loader>("root");
   const { pathname } = useLocation();
   const status = isRouteErrorResponse(error) ? error.status : 500;
   const notFound = status === 404;
-  const locale = site?.locale ?? "en";
+  const locale = site?.locale ?? (typeof window !== "undefined" ? detectLocale() : "zh-TW");
 
-  const body = (
-    <div className="flex min-h-[70vh] items-center justify-center px-2 py-16">
-      <div className="max-w-sm text-center">
-        <RingMark className="mx-auto mb-5 size-10 text-accent" />
-        <div className="mono text-[12px] text-ink-4">{status}</div>
-        <h1 className="mt-1.5 text-[20px] font-bold text-ink">{notFound ? "这里没有内容" : "暂时无法加载"}</h1>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-ink-3">
-          {notFound ? "你访问的页面不存在，或内容已不再公开。" : "服务暂时繁忙，请稍后再试。已经加载过的内容不受影响。"}
-        </p>
-        <div className="mt-6 flex justify-center gap-2.5">
-          <Link to="/" className={buttonClass("primary")}>
-            回到精选
-          </Link>
-          <Link to="/all" className={buttonClass("secondary")}>
-            浏览全部动态
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  const content = <ErrorView status={status} notFound={notFound} />;
   // Admin errors stay inside the admin's own chrome.
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) return body;
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return <LocaleProvider locale={locale}>{content}</LocaleProvider>;
+  }
   return (
     <LocaleProvider locale={locale}>
-      <SiteShell changelogVersion={site?.changelogVersion ?? null}>{body}</SiteShell>
+      <SiteShell changelogVersion={site?.changelogVersion ?? null}>{content}</SiteShell>
     </LocaleProvider>
   );
 }

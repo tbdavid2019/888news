@@ -14,11 +14,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return [{ title: titled("页面不存在") }];
+  if (!loaderData) return [{ title: titled("頁面不存在") }];
   const { source } = loaderData;
   const path = `/leaderboard/sources/${source.key}`;
   return pageMeta({
-    title: `${source.name} · 评测来源`,
+    title: `${source.name} · 評測來源`,
     description: source.description,
     path,
     image: "/og/pages/leaderboard.png",
@@ -34,7 +34,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
       },
       breadcrumbLd([
         { name: "模型榜", path: "/leaderboard" },
-        { name: "评测来源", path: "/leaderboard/sources" },
+        { name: "評測來源", path: "/leaderboard/sources" },
         { name: source.name, path },
       ]),
     ],
@@ -60,7 +60,7 @@ export default function LeaderboardSourcePage() {
   return (
     <div className="pb-12">
       <Link to="/leaderboard/sources" className="mt-4 inline-flex items-center gap-1.5 py-2 text-[13px] text-ink-3 transition-colors hover:text-accent lg:mt-0">
-        <IconArrowLeft size={14} /> 评测来源
+        <IconArrowLeft size={14} /> 評測來源
       </Link>
 
       <header className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -81,7 +81,7 @@ export default function LeaderboardSourcePage() {
             rel="noopener noreferrer"
             className="inline-flex h-8 shrink-0 items-center gap-1.5 self-start rounded-full border border-line-strong bg-surface px-3 text-[12.5px] text-ink-2 transition-colors hover:border-ink-4 hover:text-ink"
           >
-            官方评测 <IconArrowUpRight size={13} />
+            官方評測 <IconArrowUpRight size={13} />
           </a>
         )}
       </header>
@@ -93,36 +93,36 @@ export default function LeaderboardSourcePage() {
             <StatusChip status={source.status} large />
           </span>
         </div>
-        <Stat label="证据预算">{source.budget !== null ? pct(source.budget) : <span className="font-sans text-[14px] font-normal text-ink-3">不计分</span>}</Stat>
-        <Stat label="上游数据时间">{d.collected ? shortStamp(d.upstreamAt) : <span className="font-sans text-[14px] font-normal text-ink-3">待核实</span>}</Stat>
+        <Stat label="證據預算">{source.budget !== null ? pct(source.budget) : <span className="font-sans text-[14px] font-normal text-ink-3">不計分</span>}</Stat>
+        <Stat label="上游資料時間">{d.collected ? shortStamp(d.upstreamAt) : <span className="font-sans text-[14px] font-normal text-ink-3">待核實</span>}</Stat>
         <Stat label="最近成功同步">
-          {d.collected ? shortStamp(d.syncedAt) : <span className="font-sans text-[14px] font-normal text-ink-3">{source.status === "awaiting" ? "等待可比成绩" : "尚未开始采集"}</span>}
+          {d.collected ? shortStamp(d.syncedAt) : <span className="font-sans text-[14px] font-normal text-ink-3">{source.status === "awaiting" ? "等待可比成績" : "尚未開始採集"}</span>}
         </Stat>
       </section>
 
       <section className="mt-6 grid gap-6 md:grid-cols-2 md:gap-10">
         <div>
-          <h2 className="text-[14px] font-semibold text-ink">它测什么，怎么测</h2>
+          <h2 className="text-[14px] font-semibold text-ink">它測什麼，怎麼測</h2>
           <p className="mt-2 text-[13px] leading-[1.8] text-ink-3">{source.what}</p>
         </div>
         <div>
-          <h2 className="text-[14px] font-semibold text-ink">如何使用这份证据</h2>
+          <h2 className="text-[14px] font-semibold text-ink">如何使用這份證據</h2>
           <p className="mt-2 text-[13px] leading-[1.8] text-ink-3">{source.usage}</p>
         </div>
       </section>
 
       {d.collected && d.rows.length > 0 && (
         <section className="mt-10">
-          <h2 className="text-[18px] font-bold text-ink">评测成绩</h2>
+          <h2 className="text-[18px] font-bold text-ink">評測成績</h2>
           {d.rowsNote && <p className="mt-1 text-[12.5px] text-ink-3">{d.rowsNote}</p>}
           <div className="card mt-4 overflow-x-auto">
             <table className="w-full min-w-[560px] text-[13.5px]">
               <thead className="bg-[rgba(28,39,51,0.04)] text-[12px] text-ink-4 dark:bg-white/[0.03]">
                 <tr className="border-b border-line">
                   <th scope="col" className="w-24 whitespace-nowrap px-4 py-2.5 text-left font-medium lg:px-[22px]">原榜名次</th>
-                  <th scope="col" className="px-3 py-2.5 text-left font-medium">原榜型号</th>
-                  <th scope="col" className="px-3 py-2.5 text-left font-medium">原始成绩</th>
-                  <th scope="col" className="px-4 py-2.5 text-left font-medium lg:px-[22px]">{d.systemRows ? "运行配置" : "代表配置"}</th>
+                  <th scope="col" className="px-3 py-2.5 text-left font-medium">原榜型號</th>
+                  <th scope="col" className="px-3 py-2.5 text-left font-medium">原始成績</th>
+                  <th scope="col" className="px-4 py-2.5 text-left font-medium lg:px-[22px]">{d.systemRows ? "執行配置" : "代表配置"}</th>
                 </tr>
               </thead>
               <tbody>
@@ -151,13 +151,13 @@ export default function LeaderboardSourcePage() {
 
       <details className="disclosure group mt-6 border-y border-line">
         <summary className="flex items-center justify-between py-4 text-[14px] font-semibold text-ink">
-          评测局限与数据署名
+          評測侷限與資料署名
           <IconChevronDown size={16} className="text-ink-4 transition-transform duration-200 group-open:rotate-180" />
         </summary>
         <div className="space-y-2 pb-5 text-[13px] leading-relaxed text-ink-3">
           <p>{source.limits}</p>
           <p>
-            <span className="text-ink-4">数据许可：</span>
+            <span className="text-ink-4">資料許可：</span>
             {source.license}
           </p>
           <p className="text-ink-4">{source.attribution}</p>

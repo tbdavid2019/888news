@@ -17,20 +17,20 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return [{ title: titled("页面不存在") }];
+  if (!loaderData) return [{ title: titled("頁面不存在") }];
   const { model } = loaderData;
   const path = `/leaderboard/${model.slug}`;
   return pageMeta({
-    title: `${model.name} 排名与各榜成绩`,
-    description: `查看 ${model.name} 的 ${SITE.name} 共识分、当前排名，以及它在各家公开评测榜单中的名次和原始分数。`,
+    title: `${model.name} 排名與各榜成績`,
+    description: `檢視 ${model.name} 的 ${SITE.name} 共識分、當前排名，以及它在各家公開評測榜單中的名次和原始分數。`,
     path,
     image: "/og/pages/leaderboard.png",
     jsonLd: [
       {
         "@context": "https://schema.org",
         "@type": "Dataset",
-        name: `${model.name} 在 ${SITE.name} 模型榜的成绩`,
-        description: `${model.name} 的共识指数、分类名次与各项公开评测的原始成绩。`,
+        name: `${model.name} 在 ${SITE.name} 模型榜的成績`,
+        description: `${model.name} 的共識指數、分類名次與各項公開評測的原始成績。`,
         url: `${siteUrl()}${path}`,
         creator: { "@type": "Organization", name: SITE.name, url: siteUrl() },
         isAccessibleForFree: true,
@@ -74,7 +74,7 @@ function Stat({ label, children, foot }: { label: string; children: ReactNode; f
 function Capability({ d, from }: { d: LbModelDetail; from: string }) {
   return (
     <section className="mt-12">
-      <SectionHead eyebrow="CAPABILITY PROFILE" title="各有所长，看得更清楚。" sub="每项能力单独计算。没有足够的实测，就留空。" />
+      <SectionHead eyebrow="CAPABILITY PROFILE" title="各有所長，看得更清楚。" sub="每項能力單獨計算。沒有足夠的實測，就留空。" />
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {d.categories.map((c) => (
           <Link
@@ -87,24 +87,24 @@ function Capability({ d, from }: { d: LbModelDetail; from: string }) {
               {c.rank !== null ? (
                 <span className={`mono text-[11.5px] font-semibold ${c.onBoard ? "text-accent" : "text-ink-4"}`}>{c.onBoard ? `#${c.rank}` : "30 名之外"}</span>
               ) : (
-                <span className="text-[11px] text-ink-4">证据待补齐</span>
+                <span className="text-[11px] text-ink-4">證據待補齊</span>
               )}
             </span>
             {c.score !== null ? (
               <>
                 <span className="mono mt-4 text-[32px] font-medium leading-none tracking-[-0.03em] text-ink">{c.score.toFixed(1)}</span>
-                <span className="mt-auto pt-4 text-[12px] text-ink-3">{c.sourceCount} 项评测支持</span>
+                <span className="mt-auto pt-4 text-[12px] text-ink-3">{c.sourceCount} 項評測支援</span>
               </>
             ) : (
               <>
                 <span className="mono mt-4 text-[32px] font-medium leading-none text-ink-4">—</span>
-                <span className="mt-auto pt-4 text-[12px] text-ink-4">暂无足够的可比成绩</span>
+                <span className="mt-auto pt-4 text-[12px] text-ink-4">暫無足夠的可比成績</span>
               </>
             )}
           </Link>
         ))}
       </div>
-      <p className="mt-3 text-[12px] text-ink-4">不同分类的分数反映各自参照组中的排序支持，不能直接相加或用来比较不同能力的绝对高低。</p>
+      <p className="mt-3 text-[12px] text-ink-4">不同分類的分數反映各自參照組中的排序支援，不能直接相加或用來比較不同能力的絕對高低。</p>
     </section>
   );
 }
@@ -115,10 +115,10 @@ function Stability({ d }: { d: LbModelDetail }) {
   if (!s || rank === null) return null;
   return (
     <section className="mt-12">
-      <SectionHead eyebrow="UNDERSTANDING THE RANK" title="综合名次，有多稳定？" sub="依次移除一项评测或一家机构、调整单项权重与误差处理，观察排名怎样变化。" />
+      <SectionHead eyebrow="UNDERSTANDING THE RANK" title="綜合名次，有多穩定？" sub="依次移除一項評測或一家機構、調整單項權重與誤差處理，觀察排名怎樣變化。" />
       <div className="mt-5 grid gap-5 border-b border-line pb-6 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] lg:gap-10">
         <div>
-          <span className="text-[12px] text-ink-4">重新检查资格后的名次</span>
+          <span className="text-[12px] text-ink-4">重新檢查資格後的名次</span>
           <span className="mt-1 block text-[30px] font-bold leading-tight text-ink">{s.from === s.to ? `第 ${s.from} 名` : `${s.from}—${s.to} 名`}</span>
           {d.overall.confidence && (
             <span className="mt-1 block">
@@ -128,8 +128,8 @@ function Stability({ d }: { d: LbModelDetail }) {
         </div>
         <div className="min-w-0">
           <p className="text-[13px] leading-relaxed text-ink-3">
-            {s.unavailable > 0 ? `${s.unavailable} 个情景下参评证据不足。` : s.incomplete > 0 ? `${s.incomplete} 个对照未完成。` : "已完成的对照中均具备参评资格。"}
-            保持原候选不变时为 {s.fixedFrom}—{s.fixedTo} 名。这个范围不是置信区间，也不包含从未公开的成绩。
+            {s.unavailable > 0 ? `${s.unavailable} 個情景下參評證據不足。` : s.incomplete > 0 ? `${s.incomplete} 個對照未完成。` : "已完成的對照中均具備參評資格。"}
+            保持原候選不變時為 {s.fixedFrom}—{s.fixedTo} 名。這個範圍不是置信區間，也不包含從未公開的成績。
           </p>
         </div>
       </div>
@@ -150,13 +150,13 @@ function Comparisons({ d }: { d: LbModelDetail }) {
   return (
     <div className="border-b border-line">
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between py-4 text-left">
-        <span className="text-[13.5px] font-semibold text-ink">查看与附近模型的共同证据</span>
+        <span className="text-[13.5px] font-semibold text-ink">檢視與附近模型的共同證據</span>
         <span className={`text-[18px] leading-none text-ink-4 transition-transform duration-300 ${open ? "rotate-45" : ""}`}>
           +
         </span>
       </button>
       <Collapse open={open} duration={300}>
-        <p className="text-[13px] text-ink-3">净支持只看双方共同参加的评测。全局排序还需处理其他模型间的冲突，因此非相邻名次可能与单独比较不同。</p>
+        <p className="text-[13px] text-ink-3">淨支援只看雙方共同參加的評測。全域性排序還需處理其他模型間的衝突，因此非相鄰名次可能與單獨比較不同。</p>
         <ul className="-mx-3 divide-y divide-line-soft pb-3 pt-2">
           {d.comparisons.map((c) => <ComparisonRow key={c.model.slug} c={c} name={d.model.name} />)}
         </ul>
@@ -167,14 +167,14 @@ function Comparisons({ d }: { d: LbModelDetail }) {
 
 function ComparisonRow({ c, name }: { c: LbComparison; name: string }) {
   const [open, setOpen] = useState(false);
-  const favours = c.net > 1e-9 ? "共同证据支持本模型" : c.net < -1e-9 ? "共同证据支持对方" : "共同证据持平";
+  const favours = c.net > 1e-9 ? "共同證據支援本模型" : c.net < -1e-9 ? "共同證據支援對方" : "共同證據持平";
   return (
     <li>
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center gap-3 rounded-tile px-3 py-3 text-left transition-colors hover:bg-bg-sunk">
         <BrandMark brand={c.model.brand} size={26} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[14px] font-medium text-ink">{c.model.name} <span className="num text-[12px] text-ink-4">#{c.rank}</span></span>
-          <span className="text-[12px] text-ink-3">{c.sharedCount} 项共同评测 · {favours}</span>
+          <span className="text-[12px] text-ink-3">{c.sharedCount} 項共同評測 · {favours}</span>
         </span>
         <NetValue net={c.net} />
         <span className={`text-ink-4 transition-transform duration-300 ${open ? "rotate-180" : ""}`}><IconChevronDown size={15} /></span>
@@ -182,16 +182,16 @@ function ComparisonRow({ c, name }: { c: LbComparison; name: string }) {
       <Collapse open={open} duration={300}>
         <div className="px-3 pb-4">
           <p className="text-[12.5px] leading-relaxed text-ink-3">
-            双方共同拥有当前榜单 {pctFixed(c.sharedWeight)} 的名义票权。下表展示各项评测采用的成绩，已知误差的软化处理会影响净支持，不只数赢了几项。
+            雙方共同擁有當前榜單 {pctFixed(c.sharedWeight)} 的名義票權。下表展示各項評測採用的成績，已知誤差的軟化處理會影響淨支援，不只數贏了幾項。
           </p>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[420px] text-[12.5px]">
               <thead className="text-ink-4">
                 <tr className="border-b border-line">
-                  <th className="py-2 text-left font-medium">共同评测</th>
+                  <th className="py-2 text-left font-medium">共同評測</th>
                   <th className="py-2 text-right font-medium">{name}</th>
                   <th className="py-2 text-right font-medium">{c.model.name}</th>
-                  <th className="py-2 text-right font-medium">票权</th>
+                  <th className="py-2 text-right font-medium">票權</th>
                 </tr>
               </thead>
               <tbody>
@@ -208,7 +208,7 @@ function ComparisonRow({ c, name }: { c: LbComparison; name: string }) {
           </div>
           {c.hasPage && (
             <Link to={`/leaderboard/${c.model.slug}`} className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-accent">
-              查看 {c.model.name} 的完整证据 <IconArrowRight size={13} />
+              檢視 {c.model.name} 的完整證據 <IconArrowRight size={13} />
             </Link>
           )}
         </div>
@@ -238,7 +238,7 @@ function EvidenceCard({ it }: { it: LbEvidenceItem }) {
       <Collapse open={open} duration={300}>
         <dl className="grid gap-3 border-t border-line-soft px-4 py-4 text-[12.5px] sm:grid-cols-2 lg:px-5">
           <div>
-            <dt className="text-ink-4">原榜型号</dt>
+            <dt className="text-ink-4">原榜型號</dt>
             <dd className="mt-0.5 break-all font-mono text-[12px] text-ink-2">{it.sourceModelName ?? "—"}{it.sourceRank !== null && <span className="ml-1.5 font-sans text-ink-4">原榜第 {it.sourceRank} 名</span>}</dd>
           </div>
           <div>
@@ -247,10 +247,10 @@ function EvidenceCard({ it }: { it: LbEvidenceItem }) {
           </div>
           {it.selectionReason && <p className="text-ink-3 sm:col-span-2">{it.selectionReason}</p>}
           <div className="sm:col-span-2">
-            <dt className="text-ink-4">本轮采用记录</dt>
+            <dt className="text-ink-4">本輪採用記錄</dt>
             <dd className="num mt-0.5 text-ink-2">
-              来源数据 {shortStamp(it.upstreamAt)} · 核验 {shortStamp(it.verifiedAt)} · {it.measuredAt ? `实测 ${shortStamp(it.measuredAt)}` : "实测日期未公开"}
-              {it.carriedForward && " · 沿用最近一次已核验记录"}
+              來源資料 {shortStamp(it.upstreamAt)} · 核驗 {shortStamp(it.verifiedAt)} · {it.measuredAt ? `實測 ${shortStamp(it.measuredAt)}` : "實測日期未公開"}
+              {it.carriedForward && " · 沿用最近一次已核驗記錄"}
             </dd>
           </div>
           {it.components.length > 0 && (
@@ -267,9 +267,9 @@ function EvidenceCard({ it }: { it: LbEvidenceItem }) {
             </div>
           )}
           <div className="flex gap-4 sm:col-span-2">
-            <Link to={`/leaderboard/sources/${it.sourceKey}`} className="inline-flex items-center gap-1 font-medium text-accent">查看这项评测 <IconArrowRight size={13} /></Link>
+            <Link to={`/leaderboard/sources/${it.sourceKey}`} className="inline-flex items-center gap-1 font-medium text-accent">檢視這項評測 <IconArrowRight size={13} /></Link>
             {it.officialUrl && (
-              <a href={it.officialUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-ink-3 hover:text-accent">官方来源 <IconExternal size={12} /></a>
+              <a href={it.officialUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-ink-3 hover:text-accent">官方來源 <IconExternal size={12} /></a>
             )}
           </div>
         </dl>
@@ -282,7 +282,7 @@ export default function LeaderboardModelPage() {
   const d = useLoaderData<typeof loader>();
   const [params] = useSearchParams();
   // The server page is shared by every ?from= (a CDN caches it once), so the board to return
-  // to is applied after hydration; server HTML and the first client render both say "总榜".
+  // to is applied after hydration; server HTML and the first client render both say "總榜".
   const [fromParam, setFromParam] = useState<string | null>(null);
   useEffect(() => setFromParam(params.get("from")), [params]);
   const from = fromParam && (LEADERBOARD_PUBLIC_BOARDS as readonly string[]).includes(fromParam) ? fromParam : "overall";
@@ -300,55 +300,55 @@ export default function LeaderboardModelPage() {
           <div className="min-w-0">
             <h1 className="text-[24px] font-semibold leading-[1.3] tracking-[-0.02em] text-ink">{model.name}</h1>
             <p className="num mt-1 text-[12.5px] text-ink-3">
-              {model.provider ?? "—"} · {model.releasedAt ? `${model.releasedAt} 发布` : "发布日期待核实"} · {shortStamp(d.run.generatedAt)} 更新
+              {model.provider ?? "—"} · {model.releasedAt ? `${model.releasedAt} 釋出` : "釋出日期待核實"} · {shortStamp(d.run.generatedAt)} 更新
             </p>
           </div>
         </div>
         <div className="sm:text-right">
-          <span className="block text-[12px] text-ink-4">综合共识指数</span>
+          <span className="block text-[12px] text-ink-4">綜合共識指數</span>
           <strong className="mono block text-[48px] font-medium leading-[1.25] tracking-[-0.055em] text-accent lg:text-[55px]">{overall.score !== null ? overall.score.toFixed(1) : "—"}</strong>
           <b className={`text-[12px] font-medium ${overall.onBoard ? "text-ink-3" : "text-ink-4"}`}>
-            {overall.rank === null ? "未进入综合榜" : overall.onBoard ? `综合榜第 ${overall.rank} 名` : "综合榜前 30 名之外"}
+            {overall.rank === null ? "未進入綜合榜" : overall.onBoard ? `綜合榜第 ${overall.rank} 名` : "綜合榜前 30 名之外"}
           </b>
         </div>
       </header>
 
-      <section className="grid grid-cols-2 gap-x-4 gap-y-6 border-y border-line py-6 lg:grid-cols-4" aria-label="模型概览">
-        <Stat label="分类成绩">
+      <section className="grid grid-cols-2 gap-x-4 gap-y-6 border-y border-line py-6 lg:grid-cols-4" aria-label="模型概覽">
+        <Stat label="分類成績">
           {withScores}
-          <small className="ml-1 font-sans text-[11px] font-normal text-ink-4">/ 4 项分类</small>
+          <small className="ml-1 font-sans text-[11px] font-normal text-ink-4">/ 4 項分類</small>
         </Stat>
-        <Stat label="已有成绩">
+        <Stat label="已有成績">
           {d.metricCount}
-          <small className="ml-1 font-sans text-[11px] font-normal text-ink-4">项评测</small>
+          <small className="ml-1 font-sans text-[11px] font-normal text-ink-4">項評測</small>
         </Stat>
-        <Stat label="上下文窗口">
+        <Stat label="上下文視窗">
           {tokensWan(model.contextWindowTokens)}
           <small className="ml-1 font-sans text-[11px] font-normal text-ink-4">Token</small>
         </Stat>
         <Stat
-          label="API 输入 / 输出 · 每百万 Token"
+          label="API 輸入 / 輸出 · 每百萬 Token"
           foot={
             price ? (
               <span className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
-                {price.cachedCny !== null && <span className="num">缓存 {yuan(price.cachedCny)}</span>}
+                {price.cachedCny !== null && <span className="num">快取 {yuan(price.cachedCny)}</span>}
                 {price.currency === "USD" && (
                   <span className="num text-ink-4">
-                    原价 {listPrice(price.input, "USD")} / {listPrice(price.output, "USD")}
+                    原價 {listPrice(price.input, "USD")} / {listPrice(price.output, "USD")}
                   </span>
                 )}
                 {price.officialUrl && (
                   <a href={price.officialUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-accent hover:text-accent-ink">
-                    厂商官方价格 <IconArrowUpRight size={12} />
+                    廠商官方價格 <IconArrowUpRight size={12} />
                   </a>
                 )}
               </span>
             ) : (
-              "尚未核到厂商官网价格"
+              "尚未核到廠商官網價格"
             )
           }
         >
-          {price ? `${yuan(price.inputCny)} / ${yuan(price.outputCny)}` : <span className="font-sans text-[15px] font-normal text-ink-4">待核验</span>}
+          {price ? `${yuan(price.inputCny)} / ${yuan(price.outputCny)}` : <span className="font-sans text-[15px] font-normal text-ink-4">待核驗</span>}
         </Stat>
       </section>
 
@@ -356,12 +356,12 @@ export default function LeaderboardModelPage() {
       <Stability d={d} />
 
       <section className="mt-12">
-        <SectionHead eyebrow="BEHIND THE SCORE" title="每一项成绩，都有来处。" sub="下面是该模型的公开汇总成绩。展开可查看运行配置与采用方式。" />
+        <SectionHead eyebrow="BEHIND THE SCORE" title="每一項成績，都有來處。" sub="下面是該模型的公開彙總成績。展開可檢視執行配置與採用方式。" />
         {d.evidence.map((g) => (
           <div key={g.key} className="mt-6">
             <h3 className="flex items-baseline gap-2 text-[14px] font-semibold text-ink">
               {g.name}
-              <span className="num text-[11.5px] font-normal text-ink-4">{g.items.length} 项</span>
+              <span className="num text-[11.5px] font-normal text-ink-4">{g.items.length} 項</span>
             </h3>
             <ul className="mt-2.5 space-y-2">
               {g.items.map((it) => (
@@ -372,8 +372,8 @@ export default function LeaderboardModelPage() {
         ))}
         {d.unmeasured.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-[14px] font-semibold text-ink">没有测到的计分评测</h3>
-            <p className="mt-1 text-[12.5px] text-ink-3">这些评测没有公开该模型的成绩，缺测不记零分。</p>
+            <h3 className="text-[14px] font-semibold text-ink">沒有測到的計分評測</h3>
+            <p className="mt-1 text-[12.5px] text-ink-3">這些評測沒有公開該模型的成績，缺測不記零分。</p>
             <div className="mt-2.5 flex flex-wrap gap-1.5">
               {d.unmeasured.map((u) => (
                 <Link key={u.key} to={`/leaderboard/sources/${u.key}`} className="chip">
@@ -386,10 +386,10 @@ export default function LeaderboardModelPage() {
       </section>
 
       <section className="mt-10 border-t border-line pt-6">
-        <h2 className="text-[15px] font-semibold text-ink">还有一些未知</h2>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-ink-3">缺失的评测不会记成零分。模型的名次会随新证据变化，分数相近时不宜过度解读细小差距。</p>
+        <h2 className="text-[15px] font-semibold text-ink">還有一些未知</h2>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-ink-3">缺失的評測不會記成零分。模型的名次會隨新證據變化，分數相近時不宜過度解讀細小差距。</p>
         <Link to="/leaderboard/rules" className="mt-2.5 inline-flex items-center gap-1 text-[13px] font-medium text-accent hover:text-accent-ink">
-          了解计算方法 →
+          瞭解計算方法 →
         </Link>
       </section>
     </div>

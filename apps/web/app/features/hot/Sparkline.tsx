@@ -26,7 +26,7 @@ export function Sparkline({ values, className = "h-6 w-[88px]", area = false, st
   while (last >= 0 && values[last] === null) last--;
   const gaps = seen.length < values.length;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={stretch ? "none" : undefined} className={`overflow-visible ${className}`} role="img" aria-label={`近 24 小时热度走势${gaps ? "，部分时段缺少可比数据" : ""}`}>
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio={stretch ? "none" : undefined} className={`overflow-visible ${className}`} role="img" aria-label={`近 24 小時熱度走勢${gaps ? "，部分時段缺少可比資料" : ""}`}>
       {area &&
         runs.map((pts) => {
           const xs = pts.split(" ").map((p) => p.split(",")[0]);

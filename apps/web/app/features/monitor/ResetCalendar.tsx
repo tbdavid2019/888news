@@ -43,14 +43,14 @@ function gridDays(month: string): string[] {
 
 function statusChip(e: CodexResetEvent, now: number) {
   const s = e.presentation?.status ?? (e.status === "confirmed" ? "confirmed" : "announced");
-  if (s === "confirmed") return { text: e.confirmationBasis === "receipt_review" ? "已核实到账" : "Tibo 已确认", tone: "text-ok-ink" };
-  if (s === "likely_completed") return { text: "应已生效 · 未见确认帖", tone: "text-ok-ink" };
+  if (s === "confirmed") return { text: e.confirmationBasis === "receipt_review" ? "已核實到賬" : "Tibo 已確認", tone: "text-ok-ink" };
+  if (s === "likely_completed") return { text: "應已生效 · 未見確認帖", tone: "text-ok-ink" };
   if (s === "expired_unconfirmed") {
     const through = (e.estimate ?? e.schedule)?.through;
-    return { text: through ? `晚于预计 ${durationText(now - Date.parse(through))} · 等待确认` : "晚于预计 · 等待确认", tone: "text-amber-ink" };
+    return { text: through ? `晚於預計 ${durationText(now - Date.parse(through))} · 等待確認` : "晚於預計 · 等待確認", tone: "text-amber-ink" };
   }
-  if (s === "in_progress") return { text: "正在发放", tone: "text-amber-ink" };
-  return { text: "已宣布 · 等待生效", tone: "text-amber-ink" };
+  if (s === "in_progress") return { text: "正在發放", tone: "text-amber-ink" };
+  return { text: "已宣佈 · 等待生效", tone: "text-amber-ink" };
 }
 
 export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, selectedDate, version }: { selectedDate: string; version: string; marks: CodexCalendarMark[]; events: CodexResetEvent[]; today: string; historyFrom: string | null; now: number; avatar: string | null }) {
@@ -91,8 +91,8 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
   }, [selected, version, marks, daysLoaded]);
   const inMonth = marks.filter((m) => monthOf(m.date) === month);
   const summary = [
-    [inMonth.filter((m) => m.type === "direct_reset" && m.state !== "pending").length, "次额度重置"],
-    [inMonth.filter((m) => m.type === "reset_credit" && m.state !== "pending").length, "次发重置卡"],
+    [inMonth.filter((m) => m.type === "direct_reset" && m.state !== "pending").length, "次額度重置"],
+    [inMonth.filter((m) => m.type === "reset_credit" && m.state !== "pending").length, "次發重置卡"],
     [inMonth.filter((m) => m.state === "pending").length, "次等待生效"],
   ].filter(([n]) => (n as number) > 0);
   const days = gridDays(month);
@@ -115,11 +115,11 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
   return (
     <section className="mt-8" aria-labelledby="calendar-title">
       <h2 id="calendar-title" className="text-[18px] font-bold text-ink">
-        重置日历
+        重置日曆
       </h2>
-      <p className="mt-1 text-[12.5px] text-ink-3">点日期查看当天的重置、发卡和 Tibo 原帖。</p>
+      <p className="mt-1 text-[12.5px] text-ink-3">點日期檢視當天的重置、髮卡和 Tibo 原帖。</p>
 
-      <noscript><nav aria-label="历史重置记录">{[...new Set(marks.map((m) => m.date))].sort().reverse().map((d) => <a key={d} href={`/codex-reset/history/${d}`} className="mr-3 inline-block">{d}</a>)}</nav></noscript>
+      <noscript><nav aria-label="歷史重置記錄">{[...new Set(marks.map((m) => m.date))].sort().reverse().map((d) => <a key={d} href={`/codex-reset/history/${d}`} className="mr-3 inline-block">{d}</a>)}</nav></noscript>
       <div className="mt-4 overflow-hidden rounded-card border border-line-strong bg-surface lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,1fr)] xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,1fr)]">
         <div className="px-3 py-[18px] sm:p-6">
           <div className="flex items-center justify-between gap-3">
@@ -132,10 +132,10 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                   回到最近
                 </button>
               )}
-              <button type="button" onClick={() => setMonth(shiftMonth(month, -1))} disabled={month <= minMonth} aria-label="上个月" className="grid size-8 place-items-center rounded-full text-ink-3 transition-colors hover:bg-bg-sunk hover:text-ink disabled:opacity-35">
+              <button type="button" onClick={() => setMonth(shiftMonth(month, -1))} disabled={month <= minMonth} aria-label="上個月" className="grid size-8 place-items-center rounded-full text-ink-3 transition-colors hover:bg-bg-sunk hover:text-ink disabled:opacity-35">
                 <IconChevronRight size={15} className="rotate-180" />
               </button>
-              <button type="button" onClick={() => setMonth(shiftMonth(month, 1))} disabled={month >= maxMonth} aria-label="下个月" className="grid size-8 place-items-center rounded-full text-ink-3 transition-colors hover:bg-bg-sunk hover:text-ink disabled:opacity-35">
+              <button type="button" onClick={() => setMonth(shiftMonth(month, 1))} disabled={month >= maxMonth} aria-label="下個月" className="grid size-8 place-items-center rounded-full text-ink-3 transition-colors hover:bg-bg-sunk hover:text-ink disabled:opacity-35">
                 <IconChevronRight size={15} />
               </button>
             </div>
@@ -152,11 +152,11 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                 ))}
               </>
             ) : (
-              "本月没有记录"
+              "本月沒有記錄"
             )}
           </p>
 
-          <div ref={gridRef} role="grid" aria-label={`${month.slice(0, 4)} 年 ${Number(month.slice(5))} 月重置记录，方向键可切换日期`} onKeyDown={onKey}>
+          <div ref={gridRef} role="grid" aria-label={`${month.slice(0, 4)} 年 ${Number(month.slice(5))} 月重置記錄，方向鍵可切換日期`} onKeyDown={onKey}>
             <div className="grid h-[26px] grid-cols-7 items-center gap-[3px] text-center text-[12px] text-ink-4 sm:gap-1" role="row">
               {WEEKDAYS.map((w) => (
                 <span key={w} role="columnheader">
@@ -202,15 +202,15 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
             <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-ink-4">
               <li className="inline-flex items-center gap-1.5">
                 <span className="size-3 rounded-mark bg-cal-key-confirmed" aria-hidden="true" />
-                已生效（官方确认或到账核实）
+                已生效（官方確認或到賬核實）
               </li>
               <li className="inline-flex items-center gap-1.5">
                 <span className="size-3 rounded-mark border border-dashed border-ok-ink" aria-hidden="true" />
-                应已生效（按预计时间，未见确认帖）
+                應已生效（按預計時間，未見確認帖）
               </li>
               <li className="inline-flex items-center gap-1.5">
                 <span className="size-3 rounded-mark bg-cal-key-announced" aria-hidden="true" />
-                已宣布，等待生效
+                已宣佈，等待生效
               </li>
             </ul>
           </div>
@@ -225,9 +225,9 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
             <span className="num text-[12px] text-ink-4">{selected.slice(0, 4)}</span>
           </div>
           <p className="sr-only">
-            已选择 {selected}，{selectedMarks.length} 条记录。
+            已選擇 {selected}，{selectedMarks.length} 則記錄。
           </p>
-          {selectedMarks.length > 0 && !daysLoaded[selected] && <p className="text-[13px] text-ink-3">{failed ? <a href={`/codex-reset/history/${selected}`} className="text-accent">重新读取当天记录</a> : "正在读取当天记录…"}</p>}
+          {selectedMarks.length > 0 && !daysLoaded[selected] && <p className="text-[13px] text-ink-3">{failed ? <a href={`/codex-reset/history/${selected}`} className="text-accent">重新讀取當天記錄</a> : "正在讀取當天記錄…"}</p>}
           {selectedMarks.map((m, i) => {
             const e = eventById.get(m.eventId);
             if (!e) return null;
@@ -241,23 +241,23 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                   {chip.text}
                 </span>
                 <h4 className="mb-1 mt-2 text-[15px] font-bold leading-[1.6] text-ink">
-                  {e.type === "reset_credit" ? "重置卡发放" : e.displayLabel === "额度重置" ? "Codex 额度重置" : e.displayLabel}
+                  {e.type === "reset_credit" ? "重置卡發放" : e.displayLabel === "額度重置" || e.displayLabel === "額度重置" ? "Codex 額度重置" : e.displayLabel}
                 </h4>
                 {e.confirmedAt && (
                   <p className="num mb-1 text-[13px] font-medium text-ink">
-                    确认帖 {stamp(e.confirmedAt)}
-                    <span className="ml-1 font-normal text-ink-4">（不是精确到账时间）</span>
+                    確認貼 {stamp(e.confirmedAt)}
+                    <span className="ml-1 font-normal text-ink-4">（不是精確到帳時間）</span>
                   </p>
                 )}
-                {!e.confirmedAt && e.occurredOn && <p className="num mb-1 text-[13px] font-medium text-ink">核实到账 {monthDay(e.occurredOn)}</p>}
+                {!e.confirmedAt && e.occurredOn && <p className="num mb-1 text-[13px] font-medium text-ink">核實到帳 {monthDay(e.occurredOn)}</p>}
                 {window && e.status !== "confirmed" && (
                   <p className="mb-1 text-[13px] font-medium leading-[1.5] text-ink">
-                    <span className="num">预计 {windowText(window.from, window.through, today)}</span>
+                    <span className="num">預計 {windowText(window.from, window.through, today)}</span>
                     {e.estimate?.reason && <span className="mt-0.5 block text-[12.5px] font-normal leading-[1.6] text-ink-3">{e.estimate.reason}</span>}
                   </p>
                 )}
                 <p className="text-[12px] leading-[1.7] text-ink-4">
-                  适用范围：{e.presentation?.audienceZh ?? e.presentation?.scopeLabel ?? "原帖未说明适用人群"}
+                  適用範圍：{e.presentation?.audienceZh ?? e.presentation?.scopeLabel ?? "原貼未說明適用人群"}
                   {e.presentation?.productsZh ? ` · ${e.presentation.productsZh}` : ""}
                 </p>
                 {post && (
@@ -267,7 +267,7 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                 )}
                 {e.posts.length > 1 && (
                   <p className="text-[12px] text-ink-4">
-                    这件事共有 {e.posts.length} 条相关原帖{bjDate(e.posts.at(-1)!.publishedAt ?? "") ? `，最早 ${stamp(e.posts.at(-1)!.publishedAt)}` : ""}。
+                    這件事共有 {e.posts.length} 則相關原貼{bjDate(e.posts.at(-1)!.publishedAt ?? "") ? `，最早 ${stamp(e.posts.at(-1)!.publishedAt)}` : ""}。
                   </p>
                 )}
               </article>
@@ -279,8 +279,8 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                 <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
                 <path d="M3.5 9.5h17M8 3v4M16 3v4" />
               </svg>
-              <h4 className="mt-4 text-[15px] font-semibold text-ink">这一天没有记录</h4>
-              <p className="mb-5 mt-3 max-w-[280px] text-[12px] leading-[1.8] text-ink-4">这天没有 Tibo 宣布或确认的重置，也没有发放重置卡。点日历上带标签的日期查看记录。</p>
+              <h4 className="mt-4 text-[15px] font-semibold text-ink">這一天沒有記錄</h4>
+              <p className="mb-5 mt-3 max-w-[280px] text-[12px] leading-[1.8] text-ink-4">這天沒有 Tibo 宣佈或確認的重置，也沒有發放重置卡。點日曆上帶標籤的日期檢視記錄。</p>
             </div>
           )}
         </aside>

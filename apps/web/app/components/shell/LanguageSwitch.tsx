@@ -3,7 +3,7 @@ import { useI18n, type Locale } from "../../lib/i18n";
 const OPTIONS: Array<{ key: Locale; label: string; short: string }> = [
   { key: "zh-TW", label: "繁體中文", short: "繁" },
   { key: "en", label: "English", short: "EN" },
-  { key: "zh-CN", label: "简体中文", short: "简" },
+  { key: "zh-CN", label: "簡體中文", short: "簡" },
 ];
 
 export function LanguageSwitch({ className = "" }: { className?: string }) {

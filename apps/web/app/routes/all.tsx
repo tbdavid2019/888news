@@ -37,8 +37,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
   const q = f?.q;
   const page = loaderData?.data.page ?? 1;
   return pageMeta({
-    title: q ? `搜索：${q}` : `全部${withSubject("动态")}`,
-    description: `${SITE.name} 收录的全部${withSubject("动态")}，可按类别与标签筛选，支持中英文搜索。`,
+    title: q ? `搜尋：${q}` : `全部${withSubject("動態")}`,
+    description: `${SITE.name} 收錄的全部${withSubject("動態")}，可按類別與標籤篩選，支援中英文搜尋。`,
     path: listPath("/all", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, q, tab: f?.tab === "relevance" ? "relevance" : null, page: page > 1 ? page : null }),
     noindex: !!q,
   });
@@ -73,12 +73,12 @@ export default function AllPage() {
     else sp.delete("tab");
     return `/all?${sp}`;
   };
-  const title = f.q ? `搜索“${f.q}”` : f.tag ? `#${f.tag}` : null;
+  const title = f.q ? `搜尋“${f.q}”` : f.tag ? `#${f.tag}` : null;
   const updated = new Date(data.freshness).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Shanghai" });
 
   return (
     <div className="pb-6">
-      {/* Desktop, as on 精选: the title, then one filter row with the search field aligned on the right. */}
+      {/* Desktop, as on 精選: the title, then one filter row with the search field aligned on the right. */}
       <div className="hidden lg:block">
         <div className="flex items-center justify-between">
           <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">{title ?? `全部${withSubject("動態")}`}</h1>
@@ -99,7 +99,7 @@ export default function AllPage() {
         </div>
       </div>
 
-      {/* Phones: title with today's count, the search bar, then the same filter row as 精选. */}
+      {/* Phones: title with today's count, the search bar, then the same filter row as 精選. */}
       <div className="lg:hidden">
         <div className="flex items-baseline justify-between pb-3 pt-5">
           <div className="flex items-center gap-2">

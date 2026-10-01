@@ -10,7 +10,7 @@ export function BoardTabs() {
   return (
     <PillTabs
       layoutId="lb-board"
-      label="榜单"
+      label="榜單"
       active={active}
       items={LEADERBOARD_PUBLIC_BOARDS.map((k) => ({ key: k, label: LEADERBOARD_BOARD_LABELS[k], to: boardHref(k) }))}
     />

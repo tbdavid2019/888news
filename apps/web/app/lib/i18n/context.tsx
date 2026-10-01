@@ -3,6 +3,7 @@ import type { Locale, TranslationKey } from "./types.ts";
 import { zhTW } from "./locales/zh-TW.ts";
 import { en } from "./locales/en.ts";
 import { zhCN } from "./locales/zh-CN.ts";
+import { AutoTraditionalConverter } from "./AutoConverter.tsx";
 
 
 const DICTIONARIES: Record<Locale, Record<TranslationKey, string>> = {
@@ -56,7 +57,12 @@ export function LocaleProvider({
 
   const value = useMemo(() => ({ locale, setLocale, t }), [locale, t]);
 
-  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+  return (
+    <LocaleContext.Provider value={value}>
+      <AutoTraditionalConverter locale={locale} />
+      {children}
+    </LocaleContext.Provider>
+  );
 }
 
 export function useI18n(): I18nContextValue {

@@ -20,10 +20,10 @@ export default function LeaderboardFrame() {
         </div>
         <div className="flex gap-2">
           <Link to="/leaderboard/sources" className={chip}>
-            评测来源 <IconArrowUpRight size={13} />
+            評測來源 <IconArrowUpRight size={13} />
           </Link>
           <Link to="/leaderboard/rules" className={chip}>
-            排名怎么算 <IconArrowUpRight size={13} />
+            排名怎麼算 <IconArrowUpRight size={13} />
           </Link>
         </div>
       </header>

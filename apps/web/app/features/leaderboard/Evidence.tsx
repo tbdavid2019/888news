@@ -57,12 +57,12 @@ export function EvidenceBadge({ confidence, stability, rank }: { confidence: LbC
           style={at}
           className="pointer-events-none fixed z-[60] w-56 rounded-tile border border-line bg-raised p-3 text-left text-[12px] leading-relaxed text-ink-2 shadow-[var(--shadow-pop)]"
         >
-          <span className="block text-[11px] text-ink-4">名次浮动范围</span>
+          <span className="block text-[11px] text-ink-4">名次浮動範圍</span>
           <span className="num block text-[15px] font-semibold text-ink">{rangeText(stability)}</span>
           <span className="mt-1.5 block text-ink-3">
-            在 {stability.scenarios} 个对照情景中重新检查资格后的名次。
-            {stability.unavailable > 0 && ` ${stability.unavailable} 个情景下参评证据不足。`}
-            不是置信区间。
+            在 {stability.scenarios} 個對照情景中重新檢查資格後的名次。
+            {stability.unavailable > 0 && ` ${stability.unavailable} 個情景下參評證據不足。`}
+            不是置信區間。
           </span>
         </span>, document.body
       )}

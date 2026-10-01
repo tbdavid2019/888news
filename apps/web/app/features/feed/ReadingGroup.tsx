@@ -1,5 +1,5 @@
-// Reading-group expansions on a feed item: the other sources of the card's fact ("另有 N 家信源报道")
-// and the event's developments ("展开 N 条进展"). Each loads on first open and pages on demand.
+// Reading-group expansions on a feed item: the other sources of the card's fact ("另有 N 家信源報道")
+// and the event's developments ("展開 N 條進展"). Each loads on first open and pages on demand.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { Collapse } from "../../components/ui/Presence";
@@ -148,7 +148,7 @@ function LoadState({ loading, error, next, onMore, onRetry, empty }: { loading: 
   return null;
 }
 
-/** "另有 N 家信源报道": other reports of the fact the card stands for. */
+/** "另有 N 家信源報道": other reports of the fact the card stands for. */
 export function GroupSources({ group, filters, parentId }: { group: GroupInfo; filters?: TimelineFilters; parentId: string }) {
   const { open, setOpen, state, load } = useGroupState<GroupReport>(
     `sources|${group.factId}|${parentId}`,
@@ -189,7 +189,7 @@ export function GroupSources({ group, filters, parentId }: { group: GroupInfo; f
   );
 }
 
-/** "展开 N 条进展": the other facts of the card's event, newest first. */
+/** "展開 N 條進展": the other facts of the card's event, newest first. */
 export function GroupDevelopments({ group, filters, parentId }: { group: GroupInfo & { story: NonNullable<GroupInfo["story"]> }; filters?: TimelineFilters; parentId: string }) {
   const { open, setOpen, state, load } = useGroupState<Development>(
     `developments|${group.story.publicId}|${parentId}`,
@@ -232,7 +232,7 @@ export function GroupDevelopments({ group, filters, parentId }: { group: GroupIn
   );
 }
 
-/** "最新进展 · 9月27日 01:21 · …": why a folded event card sits where it does. */
+/** "最新進展 · 9月27日 01:21 · …": why a folded event card sits where it does. */
 export function LatestDevelopment({ group }: { group: GroupInfo }) {
   const { t } = useI18n();
   if (!group.latestDevelopment || group.developmentCount <= 1) return null;

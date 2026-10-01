@@ -39,11 +39,11 @@ export function meta({ loaderData }: Route.MetaArgs) {
   const s = loaderData.story;
   return pageMeta({
     title: s.title,
-    description: (s.digest ?? s.summary)?.slice(0, 150) ?? `${s.sourceCount} 个报道来源 ${s.reportCount} 篇报道，完整时间线与最新进展。`,
+    description: (s.digest ?? s.summary)?.slice(0, 150) ?? `${s.sourceCount} 個報道來源 ${s.reportCount} 篇報道，完整時間線與最新進展。`,
     path: `/story/${s.publicId}`,
     image: `/og/stories/${s.publicId}.png`,
     type: "article",
-    jsonLd: breadcrumbLd([{ name: SITE.name, path: "/" }, { name: "热点榜", path: "/hot" }, { name: s.title, path: `/story/${s.publicId}` }]),
+    jsonLd: breadcrumbLd([{ name: SITE.name, path: "/" }, { name: "熱點榜", path: "/hot" }, { name: s.title, path: `/story/${s.publicId}` }]),
   });
 }
 
@@ -138,7 +138,7 @@ function TimelineRow({ r }: { r: StoryReportView }) {
       </time>
       <div className="min-w-0">
         <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-[12px] leading-[20px] text-ink-4 lg:mt-0">
-          <span className="min-w-0 truncate">{r.source.name.replace(/（RSS）|（网页）|（API）/g, "")}</span>
+          <span className="min-w-0 truncate">{r.source.name.replace(/（RSS）|（網頁）|（API）/g, "")}</span>
           {r.selected && <SelectedBadge />}
         </div>
         <Link to={`/items/${r.id}`} prefetch="intent" className="mt-1 block text-[16px] font-[650] leading-[1.6] text-ink transition-colors hover:text-accent lg:text-[15.5px]">
@@ -313,7 +313,7 @@ export default function StoryPage() {
           <Panel
             id={SECTIONS.reports}
             title="報導時間線"
-            sub="沿著報導，了解事件的不同面向。"
+            sub="沿著報導，瞭解事件的不同面向。"
             className="order-4"
             right={
               <Select value={order} onChange={(e) => setOrder(e.target.value as "desc" | "asc")} aria-label="排序">
@@ -401,7 +401,7 @@ export default function StoryPage() {
           )}
           {story.officialReports.length > 0 && (
             <RailCard title="官方一手" right={`${counts.official || story.officialReports.length} 篇`}>
-              <p className="text-[12px] text-ink-4">直接了解當事方的說法</p>
+              <p className="text-[12px] text-ink-4">直接瞭解當事方的說法</p>
               <ul className="mt-1 divide-y divide-line-soft">
                 {story.officialReports.slice(0, 5).map((r) => (
                   <li key={r.id} className="py-3">

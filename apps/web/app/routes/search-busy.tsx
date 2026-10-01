@@ -3,7 +3,7 @@ import { SITE, withSubject } from "@aihot/industry/site";
 import { SearchBusy } from "./all";
 
 export function meta() {
-  return [{ title: titled("搜索繁忙") }, { name: "robots", content: "noindex, follow" }];
+  return [{ title: titled("搜尋繁忙") }, { name: "robots", content: "noindex, follow" }];
 }
 
 export function headers() {

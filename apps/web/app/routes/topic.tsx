@@ -29,16 +29,16 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return [{ title: titled("主题不存在") }, { name: "robots", content: "noindex" }];
+  if (!loaderData) return [{ title: titled("主題不存在") }, { name: "robots", content: "noindex" }];
   const { topic, page } = loaderData.data;
   const path = page > 1 ? `/topics/${topic.slug}/page/${page}` : `/topics/${topic.slug}`;
   return pageMeta({
-    title: page > 1 ? `${topic.name} · 第 ${page} 页` : topic.name,
+    title: page > 1 ? `${topic.name} · 第 ${page} 頁` : topic.name,
     description: topic.definition,
     path,
     image: `/og/topics/${topic.slug}.png`,
     noindex: !topic.indexable,
-    jsonLd: breadcrumbLd([{ name: SITE.name, path: "/" }, { name: "主题", path: "/topics" }, { name: topic.name, path: `/topics/${topic.slug}` }]),
+    jsonLd: breadcrumbLd([{ name: SITE.name, path: "/" }, { name: "主題", path: "/topics" }, { name: topic.name, path: `/topics/${topic.slug}` }]),
   });
 }
 
@@ -54,17 +54,17 @@ export default function TopicPage() {
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-[22px] font-bold leading-[1.35] text-ink">{topic.name}</h1>
           <span className="hidden pt-2 lg:block">
-            <MoreLink to="/topics">全部主题</MoreLink>
+            <MoreLink to="/topics">全部主題</MoreLink>
           </span>
         </div>
         <p className="mt-1 max-w-[640px] text-[13px] leading-relaxed text-ink-3">{topic.definition}</p>
         <div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-1">
           <span className="text-[12.5px] text-ink-4">
-            <span className="num mr-1 text-[20px] font-bold text-ink">{topic.total.toLocaleString("zh-CN")}</span>条精选
+            <span className="num mr-1 text-[20px] font-bold text-ink">{topic.total.toLocaleString("zh-CN")}</span>條精選
           </span>
           {topic.related.length > 0 && (
             <span className="flex flex-wrap items-center gap-1.5 text-[12.5px]">
-              <span className="text-ink-4">相关主题</span>
+              <span className="text-ink-4">相關主題</span>
               {topic.related.map((r) => (
                 <Link key={r.slug} to={`/topics/${r.slug}`} className="chip">
                   {r.name}
@@ -76,16 +76,16 @@ export default function TopicPage() {
       </header>
 
       <div className="mb-1 mt-2 flex items-baseline justify-between">
-        <h2 className="text-[18px] font-bold text-ink">最新精选</h2>
+        <h2 className="text-[18px] font-bold text-ink">最新精選</h2>
         {items.length > 0 && (
           <span className="num text-[12px] text-ink-4">
-            第 {first}–{last} 条 · 共 {topic.total.toLocaleString("zh-CN")} 条
+            第 {first}–{last} 條 · 共 {topic.total.toLocaleString("zh-CN")} 條
           </span>
         )}
       </div>
       {items.length === 0 ? (
         <div className="lg:card">
-          <EmptyState title="这个主题暂时还没有精选内容" />
+          <EmptyState title="這個主題暫時還沒有精選內容" />
         </div>
       ) : (
         <DayList items={items} />

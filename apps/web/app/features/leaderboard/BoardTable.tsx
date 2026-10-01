@@ -59,7 +59,7 @@ function SortHeader({ k, children, sort, dir, onSort, align = "left", className 
   );
 }
 
-const unit = <span className="block text-[10.5px] font-normal text-ink-4">人民币 / 百万 Token</span>;
+const unit = <span className="block text-[10.5px] font-normal text-ink-4">人民幣 / 百萬 Token</span>;
 
 export function BoardTable({ entries, board }: { entries: LbBoardEntry[]; board: string }) {
   const [sort, setSort] = useState<SortKey>("rank");
@@ -90,9 +90,9 @@ export function BoardTable({ entries, board }: { entries: LbBoardEntry[]; board:
       setDir(1);
     }
   };
-  // No official price yet reads "待核验"; a price without that tier (no cache pricing) reads "—".
+  // No official price yet reads "待核驗"; a price without that tier (no cache pricing) reads "—".
   const price = (e: LbBoardEntry, v: number | null | undefined) =>
-    !e.price ? <span className="text-[12px] text-ink-4">待核验</span> : v == null ? <span className="text-ink-4">—</span> : yuan(v);
+    !e.price ? <span className="text-[12px] text-ink-4">待核驗</span> : v == null ? <span className="text-ink-4">—</span> : yuan(v);
 
   return (
     <table className="w-full border-collapse text-[14px]">
@@ -105,19 +105,19 @@ export function BoardTable({ entries, board }: { entries: LbBoardEntry[]; board:
             </button>
           </th>
           <th scope="col" className="px-2 py-2.5 text-left font-medium lg:px-3">模型</th>
-          <SortHeader k="released" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">上线日期</SortHeader>
-          <SortHeader k="coverage" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">评测证据</SortHeader>
-          <SortHeader k="cached" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">缓存价格{unit}</SortHeader>
-          <SortHeader k="input" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">输入价格{unit}</SortHeader>
-          <SortHeader k="output" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">输出价格{unit}</SortHeader>
+          <SortHeader k="released" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">上線日期</SortHeader>
+          <SortHeader k="coverage" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">評測證據</SortHeader>
+          <SortHeader k="cached" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">快取價格{unit}</SortHeader>
+          <SortHeader k="input" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">輸入價格{unit}</SortHeader>
+          <SortHeader k="output" sort={sort} dir={dir} onSort={onSort} className="hidden lg:table-cell">輸出價格{unit}</SortHeader>
           <th scope="col" className="py-2.5 pl-2 pr-4 text-right font-medium lg:pl-3 lg:pr-[22px]">
             <button
               type="button"
               onClick={() => onSort("rank")}
-              title="共识指数把支持原排名的证据差异换算为 0—100，不是正确率。"
+              title="共識指數把支援原排名的證據差異換算為 0—100，不是正確率。"
               className={`inline-flex items-center gap-1 whitespace-nowrap transition-colors hover:text-ink ${sort === "rank" ? "text-accent" : ""}`}
             >
-              共识指数 <span className="inline-flex size-3.5 items-center justify-center rounded-full border border-current text-[9px] leading-none">i</span>
+              共識指數 <span className="inline-flex size-3.5 items-center justify-center rounded-full border border-current text-[9px] leading-none">i</span>
             </button>
           </th>
         </tr>
@@ -140,13 +140,13 @@ export function BoardTable({ entries, board }: { entries: LbBoardEntry[]; board:
                 {/* Phones: the desktop columns as three short lines under the whole name block. */}
                 <span className="mt-1.5 block text-[12px] leading-[1.7] text-ink-3 lg:hidden">
                   <span className="block">
-                    上线 <span className="num">{e.model.releasedAt ?? "—"}</span> · {LB_CONFIDENCE_LABELS[e.confidence]}
+                    上線 <span className="num">{e.model.releasedAt ?? "—"}</span> · {LB_CONFIDENCE_LABELS[e.confidence]}
                   </span>
                   <span className="block">
-                    缓存输入 <span className="num">{e.price ? yuan(e.price.cachedCny) : "—"}</span>
+                    快取輸入 <span className="num">{e.price ? yuan(e.price.cachedCny) : "—"}</span>
                   </span>
                   <span className="block">
-                    输入 <span className="num">{e.price ? yuan(e.price.inputCny) : "—"}</span> · 输出 <span className="num">{e.price ? yuan(e.price.outputCny) : "—"}</span>
+                    輸入 <span className="num">{e.price ? yuan(e.price.inputCny) : "—"}</span> · 輸出 <span className="num">{e.price ? yuan(e.price.outputCny) : "—"}</span>
                   </span>
                 </span>
               </Link>
@@ -155,14 +155,14 @@ export function BoardTable({ entries, board }: { entries: LbBoardEntry[]; board:
               <time dateTime={e.model.releasedAt ?? undefined}>{e.model.releasedAt ?? "—"}</time>
             </td>
             <td className="relative z-10 hidden px-3 py-3 lg:table-cell">
-              <span className="num block text-[13px] text-ink-2">{e.sourceCount} 项评测</span>
+              <span className="num block text-[13px] text-ink-2">{e.sourceCount} 項評測</span>
               <EvidenceBadge confidence={e.confidence} stability={e.stability} rank={e.rank} />
             </td>
             <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, e.price?.cachedCny)}</td>
             <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, e.price?.inputCny)}</td>
             <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, e.price?.outputCny)}</td>
             <td className="py-3 pl-2 pr-4 text-right align-middle lg:pl-3 lg:pr-[22px]">
-              <strong className={`mono inline-block text-[20px] font-semibold leading-7 tracking-[-0.02em] ${e.rank <= 3 ? "text-accent" : "text-ink"}`} aria-label={`${e.model.name} 共识指数 ${e.score.toFixed(1)}`}>
+              <strong className={`mono inline-block text-[20px] font-semibold leading-7 tracking-[-0.02em] ${e.rank <= 3 ? "text-accent" : "text-ink"}`} aria-label={`${e.model.name} 共識指數 ${e.score.toFixed(1)}`}>
                 {e.score.toFixed(1)}
               </strong>
             </td>

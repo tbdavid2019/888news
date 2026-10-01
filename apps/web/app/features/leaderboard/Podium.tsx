@@ -27,7 +27,7 @@ export function Podium({ entries, board }: { entries: LbBoardEntry[]; board: str
             <span className="flex items-center justify-between gap-3">
               <span className={`mono text-[11px] font-bold tracking-[0.16em] ${RANK_TEXT[i]}`}>NO.{String(e.rank).padStart(2, "0")}</span>
               <span className="flex items-center gap-2 text-[11.5px] text-ink-4">
-                <span className="num">{e.sourceCount} 项评测</span>
+                <span className="num">{e.sourceCount} 項評測</span>
                 <EvidenceBadge confidence={e.confidence} stability={e.stability} rank={e.rank} />
               </span>
             </span>
@@ -38,7 +38,7 @@ export function Podium({ entries, board }: { entries: LbBoardEntry[]; board: str
                 <span className="block truncate text-[12px] text-ink-4">{e.model.provider ?? "—"}</span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block text-[11px] leading-none text-ink-4">共识指数</span>
+                <span className="block text-[11px] leading-none text-ink-4">共識指數</span>
                 <span className="mono mt-1 block text-[26px] font-semibold leading-none tracking-[-0.03em] text-ink">{e.score.toFixed(1)}</span>
               </span>
             </span>

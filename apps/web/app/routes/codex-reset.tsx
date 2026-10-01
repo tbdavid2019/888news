@@ -20,8 +20,8 @@ export async function loader({ request, params }: { request: Request; params: { 
 
 export function meta() {
   return pageMeta({
-    title: "Tibo重置监控",
-    description: "跟踪 Tibo 公布的 Codex 额度重置与重置卡发放：推算的北京时间生效窗口、适用范围、中文原帖与历史日历。",
+    title: "Tibo重置監控",
+    description: "跟蹤 Tibo 公佈的 Codex 額度重置與重置卡發放：推算的北京時間生效視窗、適用範圍、中文原帖與歷史日曆。",
     path: "/codex-reset",
     image: "/og/pages/codex-reset.png",
   });
@@ -66,7 +66,7 @@ function useVersionPolling(version: string) {
 }
 
 function scopeText(e: CodexResetEvent) {
-  const who = e.presentation?.audienceZh ?? e.presentation?.scopeLabel ?? "Tibo 未说明适用范围";
+  const who = e.presentation?.audienceZh ?? e.presentation?.scopeLabel ?? "Tibo 未說明適用範圍";
   return e.presentation?.productsZh ? `${who} · ${e.presentation.productsZh}` : who;
 }
 
@@ -82,16 +82,16 @@ function Hero({ d, now }: { d: CodexResetSitePage; now: number }) {
         <div className="min-w-0">
           <p className={`inline-flex items-center gap-2 text-[13px] font-medium ${last ? "text-ok-ink" : "text-ink-4"}`}>
             <span className="cr-dot" aria-hidden="true" />
-            当前没有等待生效的重置
+            當前沒有等待生效的重置
           </p>
           <h2 className="mt-3 text-[20px] font-[650] leading-[1.25] text-ink sm:text-[24px]">
-            {d.stats.lastResetDate ? `上一次额度重置在 ${monthDay(d.stats.lastResetDate)}` : "暂无重置记录"}
+            {d.stats.lastResetDate ? `上一次額度重置在 ${monthDay(d.stats.lastResetDate)}` : "暫無重置記錄"}
           </h2>
-          <p className="mt-2 text-[13px] leading-[1.75] text-ink-4">不预测尚未宣布的下一次重置。Tibo 一旦宣布，这里会显示预计生效时间与原帖。</p>
+          <p className="mt-2 text-[13px] leading-[1.75] text-ink-4">不預測尚未宣佈的下一次重置。Tibo 一旦宣佈，這裡會顯示預計生效時間與原帖。</p>
           {d.outage && (
             <p className="mt-4 border-t border-line pt-4 text-[13px] leading-[1.75] text-ink-3">
-              线索：{dayWord(bjDate(d.outage.publishedAt!), d.today)} {bjTime(d.outage.publishedAt!)} Tibo 确认 Codex 故障
-              {d.outage.recoveredAt ? `，${bjTime(d.outage.recoveredAt)} 恢复` : ""}。故障不等于重置。
+              線索：{dayWord(bjDate(d.outage.publishedAt!), d.today)} {bjTime(d.outage.publishedAt!)} Tibo 確認 Codex 故障
+              {d.outage.recoveredAt ? `，${bjTime(d.outage.recoveredAt)} 恢復` : ""}。故障不等於重置。
             </p>
           )}
         </div>
@@ -112,12 +112,12 @@ function Hero({ d, now }: { d: CodexResetSitePage; now: number }) {
   const through = window?.through ? Date.parse(window.through) : null;
   const from = window?.from ? Date.parse(window.from) : null;
   const credit = e.type === "reset_credit";
-  const headline = status === "in_progress" ? (credit ? "重置卡正在发放" : "额度重置正在进行") : credit ? "等待重置卡到账" : "等待额度重置生效";
+  const headline = status === "in_progress" ? (credit ? "重置卡正在發放" : "額度重置正在進行") : credit ? "等待重置卡到賬" : "等待額度重置生效";
   let timing: string | null = null;
-  if (status === "expired_unconfirmed" && through) timing = `已比预计晚 ${durationText(now - through)}，仍在等待确认`;
-  else if (status === "announced" && from && now < from) timing = `距预计时段还有 ${durationText(from - now)}`;
-  else if (status === "announced" && through && now < through) timing = "正处在预计时间段内";
-  else if (status === "in_progress" && e.presentation?.reportedAt) timing = `Tibo ${stamp(e.presentation.reportedAt)} 表示正在进行`;
+  if (status === "expired_unconfirmed" && through) timing = `已比預計晚 ${durationText(now - through)}，仍在等待確認`;
+  else if (status === "announced" && from && now < from) timing = `距預計時段還有 ${durationText(from - now)}`;
+  else if (status === "announced" && through && now < through) timing = "正處在預計時間段內";
+  else if (status === "in_progress" && e.presentation?.reportedAt) timing = `Tibo ${stamp(e.presentation.reportedAt)} 表示正在進行`;
   const outage = d.outage && d.outage.resetEventId === e.id ? d.outage : null;
   const post = e.posts[0];
   return (
@@ -128,12 +128,12 @@ function Hero({ d, now }: { d: CodexResetSitePage; now: number }) {
       <div className="min-w-0">
         <p className={`inline-flex items-center gap-2 text-[13px] font-medium ${status === "expired_unconfirmed" ? "text-hot" : "text-amber-ink"}`}>
           <span className="cr-dot cr-dot-live" aria-hidden="true" />
-          {typeName(e.type)} · Tibo 已宣布
+          {typeName(e.type)} · Tibo 已宣佈
         </p>
         <h2 className="mt-3 text-[20px] font-[650] leading-[1.25] text-ink sm:text-[24px]">{headline}</h2>
         {window?.from && (
           <p className="num mt-4 text-[24px] font-[650] leading-[1.3] tracking-[-0.01em] text-amber-ink lg:text-[clamp(24px,2.6vw,32px)]">
-            预计 {windowText(window.from, window.through, d.today).replace("–", " – ")}
+            預計 {windowText(window.from, window.through, d.today).replace("–", " – ")}
           </p>
         )}
         {(timing || e.estimate?.reason) && (
@@ -144,15 +144,15 @@ function Hero({ d, now }: { d: CodexResetSitePage; now: number }) {
           </p>
         )}
         <ul className="mt-4 grid gap-2 border-t border-line pt-4 text-[13px] leading-[1.75] text-ink-3">
-          <li>适用范围：{scopeText(e)}</li>
+          <li>適用範圍：{scopeText(e)}</li>
           {outage?.publishedAt && (
             <li>
-              起因：{dayWord(bjDate(outage.publishedAt), d.today)} {bjTime(outage.publishedAt)} Tibo 确认 Codex 故障{outage.recoveredAt ? `，${bjTime(outage.recoveredAt)} 恢复` : ""}
+              起因：{dayWord(bjDate(outage.publishedAt), d.today)} {bjTime(outage.publishedAt)} Tibo 確認 Codex 故障{outage.recoveredAt ? `，${bjTime(outage.recoveredAt)} 恢復` : ""}
             </li>
           )}
         </ul>
         <p className="mt-4 text-[13px] leading-[1.75] text-ink-3">
-          {credit ? "重置卡到账后由你自己决定何时使用。卡片余额以 Codex 内显示为准。" : "剩余额度可以放心用，生效后会恢复满额。以你 Codex 里显示的用量为准。"}
+          {credit ? "重置卡到賬後由你自己決定何時使用。卡片餘額以 Codex 內顯示為準。" : "剩餘額度可以放心用，生效後會恢復滿額。以你 Codex 裡顯示的用量為準。"}
         </p>
       </div>
       {post && (
@@ -173,7 +173,7 @@ const USUAL_FROM = 7 * 60 + 30;
 const USUAL_TO = 12 * 60 + 30;
 const inUsual = (m: number) => m >= USUAL_FROM && m <= USUAL_TO;
 
-const MONITOR_WORDS = { healthy: "监控正常", delayed: "检查有延迟", attention: "监控需要处理", unknown: "监控状态未知" } as const;
+const MONITOR_WORDS = { healthy: "監控正常", delayed: "檢查有延遲", attention: "監控需要處理", unknown: "監控狀態未知" } as const;
 const MONITOR_DOT = { healthy: "bg-ok-ink", delayed: "bg-amber-ink", attention: "bg-amber-ink", unknown: "bg-ink-4" } as const;
 
 export default function CodexResetPage() {
@@ -184,10 +184,10 @@ export default function CodexResetPage() {
     <div className="pb-8">
       <header className="flex flex-col gap-1 pb-4 pt-5 lg:flex-row lg:items-end lg:justify-between lg:pt-1">
         <div>
-          <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">Tibo重置监控</h1>
-          <p className="mt-1.5 text-[13px] text-ink-3">Codex 额度重置与重置卡发放：什么时候生效、给谁、Tibo 原话</p>
+          <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">Tibo重置監控</h1>
+          <p className="mt-1.5 text-[13px] text-ink-3">Codex 額度重置與重置卡發放：什麼時候生效、給誰、Tibo 原話</p>
         </div>
-        <p className="text-[12px] text-ink-4">全部为北京时间 · UTC+8</p>
+        <p className="text-[12px] text-ink-4">全部為北京時間 · UTC+8</p>
       </header>
 
       <LiveMonitor d={d} />
@@ -196,15 +196,15 @@ export default function CodexResetPage() {
         <summary className="flex items-center justify-between gap-3 py-[18px] text-[13px] text-ink-3 transition-colors hover:text-ink">
           <span className="inline-flex items-center gap-1.5">
             <IconChevronRight size={13} className="text-ink-4 transition-transform duration-200 group-open:rotate-90" />
-            时间是怎么推算的？
+            時間是怎麼推算的？
           </span>
-          <span className="text-[12px] text-ink-4">来源与规则</span>
+          <span className="text-[12px] text-ink-4">來源與規則</span>
         </summary>
         <div className="grid gap-x-8 gap-y-[18px] pb-6 pt-1.5 text-[12px] leading-[1.9] text-ink-4 md:grid-cols-2">
-          <p><strong className="font-semibold text-ink-3">有原话就按原话。</strong>Tibo 写了时间（如 “6pm PST”“next hour”“end of day”），按太平洋时间换算成北京时间，并多留一两个小时——他的确认帖通常比说的时间晚一点。只写了日期的，按他以往的习惯落在当天太平洋时间傍晚。</p>
-          <p><strong className="font-semibold text-ink-3">没写时间就按习惯。</strong>Tibo 多在太平洋时间 16:30–21:30 按下重置按钮，也就是北京时间第二天早上 07:30–12:30。{d.confirmMinutes.length ? `近 ${d.confirmMinutes.length} 次确认中有 ${d.confirmMinutes.filter(inUsual).length} 次在这个时段。` : ""}推算只是参考，以 Tibo 的确认和你 Codex 里的用量为准。</p>
-          <p><strong className="font-semibold text-ink-3">已生效、应已生效、等待中。</strong>Tibo 发帖确认才算“已生效”；预计时间过去几个小时仍没有确认帖，显示“应已生效”——他宣布过的重置以往都兑现了，只是常常不再发确认。重置卡与额度重置分开记录，发卡不代表额度已恢复。</p>
-          <p><strong className="font-semibold text-ink-3">持續追蹤 Tibo 的公開貼文。</strong>平時每 5 分鐘檢查一次，Tibo 確認故障或宣布重置後改為每 3 分鐘。只有明確的重置或發卡消息才會推播至通知頻道。個人額度與重置卡餘額請在 Codex 內查看。</p>
+          <p><strong className="font-semibold text-ink-3">有原話就按原話。</strong>Tibo 寫了時間（如 “6pm PST”“next hour”“end of day”），按太平洋時間換算成北京時間，並多留一兩個小時——他的確認帖通常比說的時間晚一點。只寫了日期的，按他以往的習慣落在當天太平洋時間傍晚。</p>
+          <p><strong className="font-semibold text-ink-3">沒寫時間就按習慣。</strong>Tibo 多在太平洋時間 16:30–21:30 按下重置按鈕，也就是北京時間第二天早上 07:30–12:30。{d.confirmMinutes.length ? `近 ${d.confirmMinutes.length} 次確認中有 ${d.confirmMinutes.filter(inUsual).length} 次在這個時段。` : ""}推算只是參考，以 Tibo 的確認和你 Codex 裡的用量為準。</p>
+          <p><strong className="font-semibold text-ink-3">已生效、應已生效、等待中。</strong>Tibo 發帖確認才算“已生效”；預計時間過去幾個小時仍沒有確認帖，顯示“應已生效”——他宣佈過的重置以往都兌現了，只是常常不再發確認。重置卡與額度重置分開記錄，髮卡不代表額度已恢復。</p>
+          <p><strong className="font-semibold text-ink-3">持續追蹤 Tibo 的公開貼文。</strong>平時每 5 分鐘檢查一次，Tibo 確認故障或宣佈重置後改為每 3 分鐘。只有明確的重置或發卡訊息才會推播至通知頻道。個人額度與重置卡餘額請在 Codex 內檢視。</p>
         </div>
       </details>
 
@@ -213,21 +213,21 @@ export default function CodexResetPage() {
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
               <span className={`size-1.5 rounded-full ${MONITOR_DOT[m.status]}`} />
-              {MONITOR_WORDS[m.status]} · 最近检查 <span className="num">{stamp(m.lastVerifiedAt)}</span>
+              {MONITOR_WORDS[m.status]} · 最近檢查 <span className="num">{stamp(m.lastVerifiedAt)}</span>
               <IconChevronDown size={13} className="text-ink-4 transition-transform group-open:rotate-180" />
             </summary>
             <dl className="num mt-2 grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 pl-4 text-[12px] text-ink-4">
-              <dt>最近尝试</dt><dd>{stamp(m.lastAttemptAt)}</dd>
-              <dt>最近采集</dt><dd>{stamp(m.lastCollectedAt)}</dd>
-              <dt>最近完整核验</dt><dd>{stamp(m.lastVerifiedAt)}</dd>
-              {m.pendingCount > 0 && <><dt>待处理帖子</dt><dd>{m.pendingCount}</dd></>}
-              {m.heldWindowCount > 0 && <><dt>待核实窗口</dt><dd>{m.heldWindowCount}</dd></>}
+              <dt>最近嘗試</dt><dd>{stamp(m.lastAttemptAt)}</dd>
+              <dt>最近採集</dt><dd>{stamp(m.lastCollectedAt)}</dd>
+              <dt>最近完整核驗</dt><dd>{stamp(m.lastVerifiedAt)}</dd>
+              {m.pendingCount > 0 && <><dt>待處理帖子</dt><dd>{m.pendingCount}</dd></>}
+              {m.heldWindowCount > 0 && <><dt>待核實視窗</dt><dd>{m.heldWindowCount}</dd></>}
             </dl>
           </details>
         ) : (
-          <span>监控状态暂不可用</span>
+          <span>監控狀態暫不可用</span>
         )}
-        <span>{SITE.name} 整理 · 非 OpenAI 官方页面</span>
+        <span>{SITE.name} 整理 · 非 OpenAI 官方頁面</span>
       </footer>
     </div>
   );

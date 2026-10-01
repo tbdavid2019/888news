@@ -10,7 +10,7 @@ const TIERS = [
 
 import { useI18n } from "../../lib/i18n";
 
-/** "AI 评分 · 88" on desktop cards; `compact` keeps only the number (phones). */
+/** "AI 評分 · 88" on desktop cards; `compact` keeps only the number (phones). */
 export function ScoreLabel({ score, compact = false }: { score: number | null; compact?: boolean }) {
   if (score === null) return null;
   const { t } = useI18n();

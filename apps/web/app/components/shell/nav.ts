@@ -19,8 +19,8 @@ export interface NavItem {
 
 export function getSidebar(t: (key: TranslationKey) => string, locale: string = "zh-TW"): Array<{ title: string; items: NavItem[] }> {
   const isEn = locale === "en";
-  const allLabel = isEn ? "All Stories" : `全部${withSubject(locale === "zh-TW" ? "動態" : "动态")}`;
-  const dailyLabel = isEn ? "Daily Brief" : withSubject(locale === "zh-TW" ? "日報" : "日报");
+  const allLabel = isEn ? "All Stories" : `全部${withSubject(locale === "zh-TW" ? "動態" : "動態")}`;
+  const dailyLabel = isEn ? "Daily Brief" : withSubject(locale === "zh-TW" ? "日報" : "日報");
 
   return [
     {

@@ -18,8 +18,8 @@ export async function loader({ request }: { request: Request }) {
 
 export function meta() {
   return pageMeta({
-    title: withSubject("热点榜"),
-    description: "过去 48 小时 AI 圈讨论最多的 10 个事件：热度指数、趋势与组成热度的公开来源。",
+    title: withSubject("熱點榜"),
+    description: "過去 48 小時 AI 圈討論最多的 10 個事件：熱度指數、趨勢與組成熱度的公開來源。",
     path: "/hot",
     image: "/og/pages/hot.png",
   });
@@ -186,7 +186,7 @@ function Runner({ e }: { e: HotEntryView }) {
 function Row({ e }: { e: HotEntryView }) {
   return (
     <li className="group relative grid grid-cols-[30px_minmax(0,1fr)] items-start gap-x-3 px-4 py-3 transition-colors hover:bg-bg-sunk/70 sm:px-5 lg:grid-cols-[44px_minmax(0,1fr)_auto_104px_76px] lg:items-center lg:gap-x-6 lg:px-6 lg:py-3.5 dark:hover:bg-bg-muted/40">
-      <span className={`mono text-[16px] font-semibold leading-[24px] lg:text-[17px] ${rankColor(e.rank)}`} aria-label={`热度排名第 ${e.rank} 位`}>
+      <span className={`mono text-[16px] font-semibold leading-[24px] lg:text-[17px] ${rankColor(e.rank)}`} aria-label={`熱度排名第 ${e.rank} 位`}>
         {pad(e.rank)}
       </span>
       <div className="min-w-0">
@@ -202,7 +202,7 @@ function Row({ e }: { e: HotEntryView }) {
         <div className="mt-2 flex items-center gap-2.5 lg:hidden">
           <Faces participants={e.participants} total={e.participantCount} size={20} />
           <span className="text-[12px] text-ink-4">
-            <span className="num">{e.sourceCount}</span> 个来源
+            <span className="num">{e.sourceCount}</span> 個來源
           </span>
           <span className="ml-auto flex items-center gap-2">
             <span className="mono text-[17px] font-semibold leading-none text-ink">{Math.round(e.heat)}</span>
@@ -288,7 +288,7 @@ export default function HotPage() {
           <IconInfo size={15} />
           熱度是怎麼算的？
           <span className="ml-auto inline-flex items-center gap-0.5">
-            <span className="group-open/method:hidden">了解榜單</span>
+            <span className="group-open/method:hidden">瞭解榜單</span>
             <span className="hidden group-open/method:inline">收起</span>
             <IconChevronDown size={13} className="transition-transform duration-200 group-open/method:rotate-180" />
           </span>
@@ -297,7 +297,7 @@ export default function HotPage() {
           <p>熱度來自參與同一事件的獨立帳號與機構，重複採集只算一次，並按 24 小時半衰期衰減。它衡量討論活躍程度，不是報導質量評分。</p>
           <p>榜單統計過去 48 小時。趨勢只比較持續覆蓋的同一組信源；它反映我們的監測範圍，不代表全網人數。缺少可比歷史時，不展示趨勢線。</p>
           <p>
-            信源名單只展示可公開閱讀的報導來源；討論參與者還包括只計入熱度的帳號與機構。同一機構的多個渠道可能合併計數，因此參與者不一定多於信源數。點擊事件可查看各方報導與觀點。
+            信源名單只展示可公開閱讀的報導來源；討論參與者還包括只計入熱度的帳號與機構。同一機構的多個渠道可能合併計數，因此參與者不一定多於信源數。點選事件可檢視各方報導與觀點。
           </p>
           <dl className="flex flex-wrap gap-x-5 gap-y-1.5 pt-1">
             {Object.values(BADGES).map((b) => (

@@ -62,22 +62,22 @@ export function Lightbox({ images, index, onIndex, onClose }: { images: Lightbox
         ref={dialog}
         role="dialog"
         aria-modal="true"
-        aria-label={many && index !== null ? `图片 ${index + 1} / ${images.length}` : "图片"}
+        aria-label={many && index !== null ? `圖片 ${index + 1} / ${images.length}` : "圖片"}
         onClick={onClose}
         className="fixed inset-0 z-[80] grid cursor-zoom-out place-items-center bg-black/85 p-4 sm:p-10"
       >
         {current && (
           <img key={current.src} src={current.src} decoding="async" alt={current.alt ?? ""} className="lightbox-img anim-zoom-in min-h-0 min-w-0 max-h-[calc(100dvh-5rem)] max-w-full rounded-control object-contain shadow-2xl" />
         )}
-        <button ref={closeButton} type="button" aria-label="关闭" onClick={onClose} className="absolute right-4 top-4 grid size-9 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20">
+        <button ref={closeButton} type="button" aria-label="關閉" onClick={onClose} className="absolute right-4 top-4 grid size-9 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20">
           <IconClose size={18} />
         </button>
         {many && index !== null && (
           <>
-            <button type="button" aria-label="上一张" onClick={(e) => { e.stopPropagation(); onIndex((index - 1 + images.length) % images.length); }} className={`${nav} left-3 sm:left-5`}>
+            <button type="button" aria-label="上一張" onClick={(e) => { e.stopPropagation(); onIndex((index - 1 + images.length) % images.length); }} className={`${nav} left-3 sm:left-5`}>
               <IconArrowLeft size={18} />
             </button>
-            <button type="button" aria-label="下一张" onClick={(e) => { e.stopPropagation(); onIndex((index + 1) % images.length); }} className={`${nav} right-3 sm:right-5`}>
+            <button type="button" aria-label="下一張" onClick={(e) => { e.stopPropagation(); onIndex((index + 1) % images.length); }} className={`${nav} right-3 sm:right-5`}>
               <IconArrowRight size={18} />
             </button>
             <span className="num pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-2.5 py-0.5 text-[12px] text-white/85">

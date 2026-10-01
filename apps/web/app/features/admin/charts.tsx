@@ -46,7 +46,7 @@ export function LineChart({ labels, series, height = 200, format = (v: number) =
   const ih = height - PAD.top - PAD.bottom;
   const x = (i: number) => PAD.left + (n <= 1 ? iw / 2 : (i / (n - 1)) * iw);
   const y = (v: number) => PAD.top + ih - (v / max) * ih;
-  if (!n) return <div className="py-10 text-center text-[13px] text-ink-4">暂无数据</div>;
+  if (!n) return <div className="py-10 text-center text-[13px] text-ink-4">暫無資料</div>;
   const ticks = [0, 0.5, 1].map((t) => t * max);
   const step = Math.max(1, Math.ceil(n / 8));
   return (
@@ -127,7 +127,7 @@ export function StackedBars({ labels, series, height = 180, format = num }: { la
   const bw = Math.max(2, (iw / Math.max(1, n)) * 0.7);
   const x = (i: number) => PAD.left + (i + 0.5) * (iw / Math.max(1, n));
   const h = (v: number) => (v / max) * ih;
-  if (!n) return <div className="py-10 text-center text-[13px] text-ink-4">暂无数据</div>;
+  if (!n) return <div className="py-10 text-center text-[13px] text-ink-4">暫無資料</div>;
   const step = Math.max(1, Math.ceil(n / 8));
   return (
     <div>

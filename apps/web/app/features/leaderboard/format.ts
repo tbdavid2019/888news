@@ -15,7 +15,7 @@ export function listPrice(v: number | null, currency: LbPrice["currency"]): stri
 
 /** "09/26 20:00" in Beijing time, as the leaderboard has always shown update times. */
 export function shortStamp(iso: string | null | undefined): string {
-  if (!iso) return "待核实";
+  if (!iso) return "待核實";
   return `${beijingDate(iso).slice(5).replace("-", "/")} ${beijingTime(iso)}`;
 }
 
@@ -32,7 +32,7 @@ export function pctFixed(weight: number): string {
 export function tokensWan(n: number | null): string {
   if (!n) return "—";
   const w = n / 10000;
-  return `${Number(w >= 100 ? w.toFixed(1) : w.toFixed(1))}万`.replace(".0万", "万");
+  return `${Number(w >= 100 ? w.toFixed(1) : w.toFixed(1))}萬`.replace(".0萬", "萬");
 }
 
 export function boardHref(key: string): string {

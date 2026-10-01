@@ -1,4 +1,4 @@
-// The day-grouped feed (精选 home, topics): a time rail with cards on desktop, dated rows under grey
+// The day-grouped feed (精選 home, topics): a time rail with cards on desktop, dated rows under grey
 // day bars on phones. Keeps its place across back navigation and loads further pages. There is no
 // "new items" prompt: readers refresh for the latest head (feedback #1199).
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -38,7 +38,7 @@ function fromResponse(r: TimelineResponse): ListState {
   return { cards: r.cards, nextCursor: r.nextCursor, dayCounts: r.dayCounts, collapsed: [], batches: 1 };
 }
 
-const WEEKDAY_SHORT = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+const WEEKDAY_SHORT = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
 
 /** Sticky day header: a quiet row on desktop, a grey full-width bar on phones. */
 export function DayHeader({ day, today, count, collapsed, onToggle }: { day: string; today: string; count: number | null; collapsed?: boolean; onToggle?: () => void }) {
@@ -85,7 +85,7 @@ export function DayHeader({ day, today, count, collapsed, onToggle }: { day: str
           {count !== null && (
             <>
               {" · "}
-              <span className="num">{count}</span> {locale === "en" ? (count === 1 ? "item" : "items") : (locale === "zh-TW" ? "則" : "条")}
+              <span className="num">{count}</span> {locale === "en" ? (count === 1 ? "item" : "items") : (locale === "zh-TW" ? "則" : "條")}
             </>
           )}
         </span>
@@ -282,7 +282,7 @@ export function Timeline({ initial, filters }: { initial: TimelineResponse; filt
     <div className="relative">
       {days.length === 0 && (
         <div className="lg:card">
-          <EmptyState title="这个筛选下还没有精选内容">换个类别看看，或者去全部动态里找找。</EmptyState>
+          <EmptyState title="這個篩選下還沒有精選內容">換個類別看看，或者去全部動態裡找找。</EmptyState>
         </div>
       )}
 
@@ -315,7 +315,7 @@ export function Timeline({ initial, filters }: { initial: TimelineResponse; filt
   );
 }
 
-/** The foot of a paged list: loading, retry, "加载更多" after a few automatic pages, or the end. */
+/** The foot of a paged list: loading, retry, "載入更多" after a few automatic pages, or the end. */
 export function FeedEnd({ loading, error, hasMore, manual, empty, onMore }: { loading: boolean; error: boolean; hasMore: boolean; manual: boolean; empty: boolean; onMore: () => void }) {
   const { t } = useI18n();
 

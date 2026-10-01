@@ -5,7 +5,7 @@ import { MoreLink } from "../../components/ui/Page";
 import { relativeTime, shortSourceName } from "../../lib/format";
 
 /**
- * "事件后续": the other developments of the event this report belongs to, newest first, with a link to
+ * "事件後續": the other developments of the event this report belongs to, newest first, with a link to
  * the whole event. Loaded after the page so the article renders without waiting for it.
  */
 export function StoryFollowups({ story, currentId }: { story: StoryRef; currentId: string }) {
@@ -35,7 +35,7 @@ export function StoryFollowups({ story, currentId }: { story: StoryRef; currentI
     return () => { observer?.disconnect(); controller.abort(); };
   }, [story.publicId, currentId]);
   return <div ref={anchor}>
-    <noscript><a href={`/story/${story.publicId}`}>查看事件全部後續</a></noscript>
+    <noscript><a href={`/story/${story.publicId}`}>檢視事件全部後續</a></noscript>
     {items && items.length > 0 && <Followups items={items} more={more} story={story} />}
   </div>;
 }
@@ -47,7 +47,7 @@ function Followups({items, more, story}: {items: StoryFollowup[]; more: boolean;
         <h2 className="text-[14px] font-semibold text-ink">
           事件後續 <span className="num font-normal text-ink-4">· {items.length}{more ? "+" : ""}</span>
         </h2>
-        <MoreLink to={`/story/${story.publicId}`}>查看完整事件</MoreLink>
+        <MoreLink to={`/story/${story.publicId}`}>檢視完整事件</MoreLink>
       </div>
       <ul className="divide-y divide-line-soft">
         {items.map((d) => (

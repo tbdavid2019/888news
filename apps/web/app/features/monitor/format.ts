@@ -33,8 +33,8 @@ export function durationText(ms: number): string {
   const minutes = Math.max(1, Math.round(ms / 60_000));
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  if (!h) return `${m} 分钟`;
-  return m ? `${h} 小时 ${m} 分` : `${h} 小时`;
+  if (!h) return `${m} 分鐘`;
+  return m ? `${h} 小時 ${m} 分` : `${h} 小時`;
 }
 
 /** "9/26 21:40" */
@@ -44,5 +44,5 @@ export function stamp(iso: string | null | undefined): string {
 }
 
 export function typeName(type: "direct_reset" | "reset_credit"): string {
-  return type === "reset_credit" ? "重置卡发放" : "Codex 额度重置";
+  return type === "reset_credit" ? "重置卡發放" : "Codex 額度重置";
 }

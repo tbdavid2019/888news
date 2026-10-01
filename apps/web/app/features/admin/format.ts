@@ -10,17 +10,17 @@ export function bj(iso: string | Date | null | undefined, withYear = false): str
 }
 
 export function ago(iso: string | Date | null | undefined, now = Date.now()): string {
-  if (!iso) return "从未";
+  if (!iso) return "從未";
   const ms = now - new Date(iso).getTime();
   if (!Number.isFinite(ms)) return "—";
   const future = ms < 0;
   const a = Math.abs(ms);
   const text =
     a < 60_000 ? `${Math.max(1, Math.round(a / 1000))} 秒`
-    : a < 3600_000 ? `${Math.round(a / 60_000)} 分钟`
-    : a < 86400_000 ? `${Math.round(a / 3600_000)} 小时`
+    : a < 3600_000 ? `${Math.round(a / 60_000)} 分鐘`
+    : a < 86400_000 ? `${Math.round(a / 3600_000)} 小時`
     : `${Math.round(a / 86400_000)} 天`;
-  return future ? `${text}后` : `${text}前`;
+  return future ? `${text}後` : `${text}前`;
 }
 
 export function num(n: number | string | null | undefined, digits = 0): string {

@@ -4,7 +4,7 @@ import { beijingWeekday } from "../../lib/format";
 
 export const KINDS: ReportKind[] = ["daily", "weekly", "monthly"];
 export const KIND_PATH: Record<ReportKind, string> = { daily: "/daily", weekly: "/weekly", monthly: "/monthly" };
-export const KIND_LABEL: Record<ReportKind, string> = { daily: "日报", weekly: "周报", monthly: "月报" };
+export const KIND_LABEL: Record<ReportKind, string> = { daily: "日報", weekly: "週報", monthly: "月報" };
 
 export function kindFromPath(pathname: string): ReportKind {
   if (pathname.startsWith("/weekly")) return "weekly";
@@ -33,10 +33,10 @@ export function monthRange(key: string): [string, string] {
   return [`${key}-01`, ymd(new Date(Date.UTC(y, m, 0)))];
 }
 
-/** "这一天的 4 件 AI 大事" / "本周的 12 件 AI 大事" / "8 月的 20 件 AI 大事". */
+/** "這一天的 4 件 AI 大事" / "本週的 12 件 AI 大事" / "8 月的 20 件 AI 大事". */
 export function headline(kind: ReportKind, key: string, count: number): string {
-  if (kind === "daily") return `这一天的 ${count} 件 AI 大事`;
-  if (kind === "weekly") return `本周的 ${count} 件 AI 大事`;
+  if (kind === "daily") return `這一天的 ${count} 件 AI 大事`;
+  if (kind === "weekly") return `本週的 ${count} 件 AI 大事`;
   return `${Number(key.slice(5, 7))} 月的 ${count} 件 AI 大事`;
 }
 
@@ -125,27 +125,27 @@ export function dateMark(kind: ReportKind, key: string): { figure: string; top: 
 }
 
 /** When each kind comes out (F10), for the masthead. */
-export const EDITION: Record<ReportKind, string> = { daily: "每天 08:00 出刊", weekly: "每周一出刊", monthly: "每月 1 日出刊" };
+export const EDITION: Record<ReportKind, string> = { daily: "每天 08:00 出刊", weekly: "每週一齣刊", monthly: "每月 1 日出刊" };
 
 /** The masthead's figures, in the order a reader wants them; zero model releases is left out. */
 const METRICS: Array<[key: string, unit: string]> = [
   ["totalEvents", "件大事"],
   ["totalStories", "件大事"],
-  ["sourcesCount", "个来源"],
-  ["firstPartyEvents", "件一手发布"],
-  ["modelsReleased", "个新模型"],
-  ["selectedCount", "条精选"],
-  ["reportsCovered", "期日报"],
+  ["sourcesCount", "個來源"],
+  ["firstPartyEvents", "件一手發布"],
+  ["modelsReleased", "個新模型"],
+  ["selectedCount", "則精選"],
+  ["reportsCovered", "期日報"],
 ];
 export function metricItems(metrics: Record<string, number>): Array<{ value: number; unit: string }> {
   return METRICS.filter(([k]) => typeof metrics[k] === "number" && (k !== "modelsReleased" || metrics[k]! > 0)).map(([k, unit]) => ({ value: metrics[k]!, unit }));
 }
 
-/** "前一日 · 9月25日", "上一期 · 第 37 周", "下一期 · 7 月". */
+/** "前一日 · 9月25日", "上一期 · 第 37 週", "下一期 · 7 月". */
 export function neighbourLabel(kind: ReportKind, key: string, direction: "prev" | "next"): string {
-  if (kind === "daily") return `${direction === "prev" ? "前一日" : "后一日"} · ${dayLabel(key)}`;
+  if (kind === "daily") return `${direction === "prev" ? "前一日" : "後一日"} · ${dayLabel(key)}`;
   const which = direction === "prev" ? "上一期" : "下一期";
-  return kind === "weekly" ? `${which} · 第 ${Number(key.slice(6))} 周` : `${which} · ${Number(key.slice(5, 7))} 月`;
+  return kind === "weekly" ? `${which} · 第 ${Number(key.slice(6))} 週` : `${which} · ${Number(key.slice(5, 7))} 月`;
 }
 
 const CN = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
@@ -164,7 +164,7 @@ export function dateLine(kind: ReportKind, key: string): string {
 }
 
 /** What each kind is, under its nameplate. */
-export const MOTTO: Record<ReportKind, string> = { daily: "人工智能 · 每日要闻", weekly: "人工智能 · 每周综述", monthly: "人工智能 · 每月盘点" };
+export const MOTTO: Record<ReportKind, string> = { daily: "人工智慧 · 每日要聞", weekly: "人工智慧 · 每週綜述", monthly: "人工智慧 · 每月盤點" };
 
 export interface PeriodCell {
   key: string | null;

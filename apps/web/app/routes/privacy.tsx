@@ -12,7 +12,7 @@ export function headers() {
 }
 
 export function meta() {
-  return pageMeta({ title: "隐私说明", description: `本站如何处理浏览器本地数据、反馈资料与访问日志。`, path: "/privacy", image: "/og/pages/privacy.png" });
+  return pageMeta({ title: "隱私說明", description: `本站如何處理瀏覽器本地資料、反饋資料與訪問日誌。`, path: "/privacy", image: "/og/pages/privacy.png" });
 }
 
 export default function PrivacyPage() {
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
       doc={PRIVACY.doc}
       rendered={PRIVACY.rendered}
       eyebrow={SITE.name}
-      footer={<LegalFooterLinks links={[{ to: "/terms", label: "使用规则" }, { to: "/feedback", label: "反馈页" }]} note={`隐私说明 ${PRIVACY.doc.meta["版本"] ?? ""} · ${PRIVACY.doc.meta["生效日期"] ?? ""}`} />}
+      footer={<LegalFooterLinks links={[{ to: "/terms", label: "使用規則" }, { to: "/feedback", label: "反饋頁" }]} note={`隱私說明 ${PRIVACY.doc.meta["版本"] ?? ""} · ${PRIVACY.doc.meta["生效日期"] ?? ""}`} />}
     />
   );
 }

@@ -8,9 +8,9 @@ import { ArticleLayout, RailSection } from "../../components/ui/Page";
  * left rail and its outline in the right (phones get the facts above the text and no outline).
  */
 export function CopyPage({ doc, rendered, eyebrow, footer, aside }: { doc: CopyDocument; rendered: RenderedCopy; eyebrow?: ReactNode; footer?: ReactNode; aside?: ReactNode }) {
-  const facts = (["版本", "生效日期", "运营主体", "备案号"] as const).filter((k) => doc.meta[k]);
+  const facts = (["版本", "生效日期", "運營主體", "備案號"] as const).filter((k) => doc.meta[k]);
   const info = facts.length > 0 && (
-    <RailSection title="文档信息">
+    <RailSection title="文件資訊">
       <dl className="space-y-2 text-[12.5px]">
         {facts.map((k) => (
           <div key={k}>
@@ -22,8 +22,8 @@ export function CopyPage({ doc, rendered, eyebrow, footer, aside }: { doc: CopyD
     </RailSection>
   );
   const outline = rendered.outline.length > 2 && (
-    <RailSection title="目录">
-      <nav aria-label="目录">
+    <RailSection title="目錄">
+      <nav aria-label="目錄">
         <ol className="-ml-px space-y-0.5 border-l border-line">
           {rendered.outline.map((o) => (
             <li key={o.id}>
