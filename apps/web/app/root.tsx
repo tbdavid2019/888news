@@ -17,6 +17,7 @@ import { THEME_BOOT_SCRIPT } from "./lib/local-state.ts";
 import { apiGet } from "./lib/api.server.ts";
 import { useHydratedFlag } from "./lib/hydration.ts";
 import { detectLocale, LocaleProvider, useI18n, type Locale } from "./lib/i18n/index.ts";
+import { PwaAutoPrompt } from "./components/shell/PwaInstall.tsx";
 
 
 
@@ -77,6 +78,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content={SITE.name} />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: `
+if (typeof window !== 'undefined') {
+  window.__deferredPwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    window.__deferredPwaPrompt = e;
+    if (typeof window.__onPwaPromptReady === 'function') {
+      window.__onPwaPromptReady(e);
+    }
+  });
+}
+` }} />
         <Meta />
         <Links />
       </head>
@@ -137,6 +150,7 @@ export default function App() {
       <SiteShell changelogVersion={meta.changelogVersion}>
         <Outlet />
       </SiteShell>
+      <PwaAutoPrompt />
     </LocaleProvider>
   );
 }

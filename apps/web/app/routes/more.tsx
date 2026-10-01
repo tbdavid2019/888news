@@ -1,6 +1,6 @@
 import { SITE } from "@aihot/industry/site";
 import { FEATURES } from "@aihot/industry/features";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouteLoaderData } from "react-router";
 import type { loader as rootLoader } from "../root";
 import { useChangelogDot } from "../components/shell/Sidebar";
@@ -11,7 +11,7 @@ import { useI18n } from "../lib/i18n";
 import {
   IconBookmark, IconChart, IconChevronRight, IconFlame, IconGlobe, IconGrid, IconHeart, IconHistory, IconMessage, IconMoon, IconPlug, IconDownload,
 } from "../components/icons";
-import { usePwaInstall, PwaInstallModal } from "../components/shell/PwaInstall";
+import { triggerPwaInstallModal, isStandalone } from "../components/shell/PwaInstall";
 
 /** Shared caches may keep this page for five minutes. */
 export function headers() {
@@ -37,7 +37,11 @@ export default function MorePage() {
   const root = useRouteLoaderData<typeof rootLoader>("root");
   const changelogDot = useChangelogDot(root?.changelogVersion ?? null);
   const { t } = useI18n();
-  const { canInstall, isIOS, showIosGuide, setShowIosGuide, triggerInstall } = usePwaInstall();
+  const [standalone, setStandalone] = useState(false);
+
+  useEffect(() => {
+    setStandalone(isStandalone());
+  }, []);
 
   const groups: Array<{ title: string; rows: Row[] }> = [
     {
@@ -82,11 +86,11 @@ export default function MorePage() {
                 </Link>
               </li>
             ))}
-            {g.title === t("nav.section.more") && canInstall && (
+            {g.title === t("nav.section.more") && !standalone && (
               <li>
                 <button
                   type="button"
-                  onClick={triggerInstall}
+                  onClick={triggerPwaInstallModal}
                   className="flex h-[50px] w-full items-center gap-3 px-4 text-left text-[15px] font-medium text-ink transition-colors active:bg-bg-sunk lg:hover:bg-bg-sunk"
                 >
                   <span className="text-accent">
@@ -95,7 +99,7 @@ export default function MorePage() {
                   <span className="flex flex-1 items-center gap-2">
                     {t("nav.install_app")} (PWA)
                   </span>
-                  <span className="text-[12px] text-ink-4">加到桌面</span>
+                  <span className="text-[12px] text-ink-4">加到主畫面</span>
                 </button>
               </li>
             )}
@@ -127,12 +131,6 @@ export default function MorePage() {
         {SITE.githubUrl && <a href={SITE.githubUrl} target="_blank" rel="noopener noreferrer" className="hover:text-ink-2">GitHub</a>}
         {SITE.icp && <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-ink-2">{SITE.icp}</a>}
       </div>
-
-      <PwaInstallModal
-        open={showIosGuide}
-        onClose={() => setShowIosGuide(false)}
-        isIOS={isIOS}
-      />
     </div>
   );
 }
