@@ -10,7 +10,7 @@ import { SITE } from "@aihot/industry/site";
 import { config } from "@aihot/backend/config";
 import { fonts, h, nameMark, OG_PNG, SITE_HOST, type Node } from "./render.ts";
 
-export const POSTER_TEMPLATE_VERSION = "poster-2026-09-29.1";
+export const POSTER_TEMPLATE_VERSION = "poster-2026-10-01.2";
 const WIDTH = 1080;
 const HEIGHT = 1440;
 const CACHE_DIR = path.join(config.dataDir, "ogcache");
@@ -49,7 +49,7 @@ async function tree(p: Poster): Promise<Node> {
       display: "flex",
       flexDirection: "column",
       padding: "84px 88px 72px",
-      fontFamily: "Noto Sans SC",
+      fontFamily: "'Noto Sans TC', 'Noto Sans SC'",
       color: INK,
       backgroundColor: "#f5f6f5",
       backgroundImage: "radial-gradient(circle at 100% 0%, rgba(23,107,117,0.16), rgba(245,246,245,0) 52%), radial-gradient(circle at 0% 100%, rgba(44,226,232,0.10), rgba(245,246,245,0) 45%)",

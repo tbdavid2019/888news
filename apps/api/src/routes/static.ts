@@ -76,15 +76,95 @@ function manifest() {
     lang: SITE.locale,
     start_url: "/",
     scope: "/",
+    id: "/",
     display: "standalone",
+    orientation: "portrait-primary",
     background_color: "#13191c",
     theme_color: "#13191c",
     icons: [
-      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { src: "/icon.png", sizes: "512x512", type: "image/png" },
+      { src: "/favicon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   };
 }
+
+const SW_SCRIPT = `const CACHE_NAME = '888news-v1';
+const PRECACHE_ASSETS = [
+  '/',
+  '/manifest.webmanifest',
+  '/favicon.svg',
+  '/favicon-32x32.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin/')) {
+    return;
+  }
+
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((match) => match || caches.match('/')))
+    );
+    return;
+  }
+
+  if (
+    url.pathname.startsWith('/assets/') ||
+    url.pathname.startsWith('/build/') ||
+    /\\.(woff2?|ttf|png|svg|ico|jpg|jpeg|webp)$/.test(url.pathname)
+  ) {
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        const fetchPromise = fetch(req).then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return res;
+        }).catch(() => null);
+        return cached || fetchPromise;
+      })
+    );
+    return;
+  }
+});
+`;
 
 /** The OpenAPI document with this deployment's name, address and categories. */
 let openApi: string | null = null;
@@ -137,6 +217,15 @@ export function registerStatic(app: FastifyInstance) {
   app.get("/manifest.webmanifest", (req, reply) =>
     sendTextWithEtag(req, reply, JSON.stringify(manifest()), { etagPrefix: "manifest", cacheControl: "public, max-age=86400", contentType: "application/manifest+json" }));
 
+  app.get("/sw.js", (req, reply) => {
+    reply.header("Service-Worker-Allowed", "/");
+    return sendTextWithEtag(req, reply, SW_SCRIPT, {
+      etagPrefix: "sw",
+      cacheControl: "public, max-age=0, must-revalidate",
+      contentType: "application/javascript; charset=utf-8",
+    });
+  });
+
   app.get("/openapi-v1.json", async (req, reply) => {
     applyPublicHeaders(reply);
     return sendTextWithEtag(req, reply, await openApiJson(), { etagPrefix: "openapi", cacheControl: "public, max-age=300, stale-while-revalidate=3600", contentType: "application/json; charset=utf-8" });
@@ -148,7 +237,18 @@ export function registerStatic(app: FastifyInstance) {
   }
 
   // Icons from the industry pack (industry/brand/).
-  for (const icon of ["favicon.ico", "icon.png", "icon-192.png", "apple-icon.png", "logo.svg"]) {
+  for (const icon of [
+    "favicon.ico",
+    "favicon.svg",
+    "favicon-32x32.png",
+    "favicon-16x16.png",
+    "icon.png",
+    "icon-192.png",
+    "icon-512.png",
+    "apple-icon.png",
+    "apple-touch-icon.png",
+    "logo.svg",
+  ]) {
     app.get(`/${icon}`, (req, reply) => sendFile(req, reply, path.join(BRAND, icon), { cacheControl: "public, max-age=86400, stale-while-revalidate=604800" }));
   }
 

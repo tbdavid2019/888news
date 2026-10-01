@@ -13,7 +13,7 @@ export const SITE = {
   /** 首页的完整标题（浏览器标签、搜索结果）。 */
   homeTitle: "888news — AI 科技動態 · 每日精選與情報",
   /** 一句话介绍：搜索引擎、分享卡片、RSS、llms.txt 会用。 */
-  description: "自動追蹤上百個全球科技與 AI 信源，用模型摘要、打分、精選，把同一件事的多篇報導歸組，每天出一份精選情報。",
+  description: "888news 自動追蹤全球上百個頂尖科技與 AI 信源，涵蓋 OpenAI、Google、Anthropic、Meta 等最新動態。透過 AI 模型即時摘要、品質評分與多源報導歸組，過濾行銷噪音，每日清晨精準呈獻高價值科技情報與前沿深度觀察。",
   /** 首页左上角和侧边栏下面的一行小字。 */
   tagline: "值得關注的 AI 科技動態",
   /** 界面语言（HTML lang、og:locale）。 */

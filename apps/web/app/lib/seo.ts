@@ -51,6 +51,7 @@ export function pageMeta(input: PageMetaInput): MetaDescriptor[] {
   const description = input.description ?? SITE_DESCRIPTION;
   const url = `${base}${input.path}`;
   const image = input.image ? (input.image.startsWith("http") ? input.image : `${base}${input.image}`) : `${base}/og/site.png`;
+  const imageAlt = input.title ? `${input.title} - ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
   const tags: MetaDescriptor[] = [
     { title },
     { name: "description", content: description },
@@ -61,13 +62,17 @@ export function pageMeta(input: PageMetaInput): MetaDescriptor[] {
     { property: "og:description", content: description },
     { property: "og:url", content: url },
     { property: "og:image", content: image },
+    { property: "og:image:alt", content: imageAlt },
     { property: "og:image:width", content: "1200" },
     { property: "og:image:height", content: "630" },
     { property: "og:locale", content: SITE.locale.replace("-", "_") },
     { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:site", content: "@888news" },
+    { name: "twitter:creator", content: "@888news" },
     { name: "twitter:title", content: input.title ?? HOME_TITLE },
     { name: "twitter:description", content: description },
     { name: "twitter:image", content: image },
+    { name: "twitter:image:alt", content: imageAlt },
   ];
   if (input.noindex) tags.push({ name: "robots", content: input.nofollow ? "noindex, nofollow" : "noindex, follow" });
   if (input.jsonLd) tags.push({ "script:ld+json": input.jsonLd });

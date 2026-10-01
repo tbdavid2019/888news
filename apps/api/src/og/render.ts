@@ -8,7 +8,7 @@ import sharp from "sharp";
 import { SITE } from "@aihot/industry/site";
 import { config, REPO_ROOT } from "@aihot/backend/config";
 
-export const OG_TEMPLATE_VERSION = "og-2026-09-29.1";
+export const OG_TEMPLATE_VERSION = "og-2026-10-01.2";
 const WIDTH = 1200;
 const HEIGHT = 630;
 const CACHE_DIR = path.join(config.dataDir, "ogcache");
@@ -27,11 +27,15 @@ let fontsPromise: Promise<Array<{ name: string; data: Buffer; weight: 400 | 700;
 
 export function fonts() {
   fontsPromise ??= Promise.all([
+    readFile(path.join(REPO_ROOT, "assets/og-fonts/noto-sans-tc-400.woff")),
+    readFile(path.join(REPO_ROOT, "assets/og-fonts/noto-sans-tc-700.woff")),
     readFile(path.join(REPO_ROOT, "assets/og-fonts/noto-sans-sc-400.ttf")),
     readFile(path.join(REPO_ROOT, "assets/og-fonts/noto-sans-sc-700.ttf")),
-  ]).then(([regular, bold]) => [
-    { name: "Noto Sans SC", data: regular, weight: 400, style: "normal" },
-    { name: "Noto Sans SC", data: bold, weight: 700, style: "normal" },
+  ]).then(([tcRegular, tcBold, scRegular, scBold]) => [
+    { name: "Noto Sans TC", data: tcRegular, weight: 400, style: "normal" },
+    { name: "Noto Sans TC", data: tcBold, weight: 700, style: "normal" },
+    { name: "Noto Sans SC", data: scRegular, weight: 400, style: "normal" },
+    { name: "Noto Sans SC", data: scBold, weight: 700, style: "normal" },
   ]);
   return fontsPromise;
 }
@@ -69,7 +73,7 @@ async function tree(card: OgCard): Promise<Node> {
       display: "flex",
       flexDirection: "column",
       padding: "64px 72px",
-      fontFamily: "Noto Sans SC",
+      fontFamily: "'Noto Sans TC', 'Noto Sans SC'",
       color: "#e6eded",
       backgroundColor: "#0a1012",
       backgroundImage: "radial-gradient(circle at 88% 8%, rgba(44,226,232,0.28), rgba(10,16,18,0) 46%), radial-gradient(circle at 0% 100%, rgba(23,107,117,0.35), rgba(10,16,18,0) 50%)",

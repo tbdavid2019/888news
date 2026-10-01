@@ -12,7 +12,7 @@ export function parseCookieLocale(cookieHeader?: string | null): Locale | null {
 }
 
 export function parseAcceptLanguage(header?: string | null): Locale {
-  if (!header || !header.trim()) return "en";
+  if (!header || !header.trim()) return "zh-TW";
 
   const parts = header.toLowerCase().split(",").map((part) => {
     const [tag, qPart] = part.split(";");
@@ -44,8 +44,8 @@ export function parseAcceptLanguage(header?: string | null): Locale {
     }
   }
 
-  // Not Chinese / unknown -> default to English
-  return "en";
+  // Not Chinese / unknown -> default to zh-TW
+  return "zh-TW";
 }
 
 export function detectLocale(request?: Request): Locale {
