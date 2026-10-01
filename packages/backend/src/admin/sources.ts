@@ -67,6 +67,10 @@ export async function sourceDetail(id: string) {
 
 /** Fetches a source (saved or draft) and returns what it would collect, without storing anything. */
 export async function previewSource(draft: Pick<SourceRow, "id" | "kind" | "config"> & Partial<SourceRow>) {
+  if (draft.kind === "x_search" && typeof draft.config?.query === "string" && draft.config.query.includes("from:handle")) {
+    const handle = (draft.id && draft.id !== "draft" ? draft.id : "elonmusk").replace(/^x-/, "");
+    draft.config.query = draft.config.query.replace(/from:handle\b/gi, `from:${handle}`);
+  }
   const source = { name: draft.id, enabled: true, cursor: null, tier: "T2", participation_mode: "editorial", ...draft } as SourceRow;
   assertSupportedConfig(source.kind, source.config);
   const started = Date.now();
@@ -147,12 +151,15 @@ const CreateSchema = z
   .strict();
 
 /** The address a source collects from, used to find duplicates before creating one. */
-export function sourceIdentity(kind: string, config: Record<string, unknown>): string | null {
+export function sourceIdentity(kind: string, config: Record<string, unknown>, sourceId?: string): string | null {
   const raw = (config.feedUrl ?? config.url ?? config.listUrl ?? config.endpoint ?? null) as string | null;
   if (kind === "x_search") {
-    const handle = (typeof config.handle === "string" ? config.handle.trim().replace(/^@/, "") : null) ??
+    let handle = (typeof config.handle === "string" ? config.handle.trim().replace(/^@/, "") : null) ??
       /from:([A-Za-z0-9_]{1,20})/i.exec(String(config.query ?? ""))?.[1];
-    return handle ? `x:${handle.toLowerCase()}` : null;
+    if ((!handle || handle.toLowerCase() === "handle") && sourceId) {
+      handle = sourceId.replace(/^x-/, "");
+    }
+    return handle && handle.toLowerCase() !== "handle" ? `x:${handle.toLowerCase()}` : null;
   }
   if (!raw) return null;
   try {
@@ -162,17 +169,20 @@ export function sourceIdentity(kind: string, config: Record<string, unknown>): s
   }
 }
 
-export async function findDuplicateSource(kind: string, config: Record<string, unknown>) {
-  const identity = sourceIdentity(kind, config);
+export async function findDuplicateSource(kind: string, config: Record<string, unknown>, sourceId?: string) {
+  const identity = sourceIdentity(kind, config, sourceId);
   if (!identity) return null;
   const rows = await sql<{ id: string; kind: string; config: Record<string, unknown>; name: string }[]>`SELECT id, kind, config, name FROM sources WHERE kind = ${kind}`;
-  return rows.find((r) => sourceIdentity(r.kind, r.config) === identity) ?? null;
+  return rows.find((r) => r.id !== sourceId && sourceIdentity(r.kind, r.config, r.id) === identity) ?? null;
 }
 
 export async function createSource(input: unknown, actor: string) {
   const s = CreateSchema.parse(input);
+  if (s.kind === "x_search" && typeof s.config.query === "string" && s.config.query.includes("from:handle")) {
+    s.config.query = s.config.query.replace(/from:handle\b/gi, `from:${s.id.replace(/^x-/, "")}`);
+  }
   assertSupportedConfig(s.kind, s.config);
-  const dup = await findDuplicateSource(s.kind, s.config);
+  const dup = await findDuplicateSource(s.kind, s.config, s.id);
   if (dup) return { created: false as const, duplicate: dup };
   const [row] = await sql`
     INSERT INTO sources (id, name, kind, config, tier, participation_mode, interval_minutes, first_party, tags, site_fulltext, syndicate_fulltext, next_fetch_at)

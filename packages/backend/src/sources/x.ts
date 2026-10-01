@@ -183,17 +183,18 @@ export async function readXSearch(base: string, opts: { lastId: string | null; b
 }
 
 export function extractHandle(source: Pick<SourceRow, "id" | "config" | "name">): string | null {
-  if (typeof source.config?.handle === "string" && source.config.handle.trim()) {
+  if (typeof source.config?.handle === "string" && source.config.handle.trim() && source.config.handle.toLowerCase() !== "handle") {
     return source.config.handle.trim().replace(/^@/, "");
   }
   const query = String(source.config?.query ?? "");
   const m = /from:([A-Za-z0-9_]{1,20})/i.exec(query);
-  if (m && m[1]) return m[1];
+  if (m && m[1] && m[1].toLowerCase() !== "handle") return m[1];
   if (typeof source.config?.url === "string") {
     const urlMatch = /x\.com\/([A-Za-z0-9_]{1,20})/i.exec(source.config.url);
-    if (urlMatch && urlMatch[1] && !["home", "explore", "search"].includes(urlMatch[1])) return urlMatch[1];
+    if (urlMatch && urlMatch[1] && !["home", "explore", "search", "handle"].includes(urlMatch[1].toLowerCase())) return urlMatch[1];
   }
   if (source.id.startsWith("x-")) return source.id.replace(/^x-/, "");
+  if (source.id && source.id.toLowerCase() !== "handle") return source.id;
   return null;
 }
 
