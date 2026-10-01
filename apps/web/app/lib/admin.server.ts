@@ -1,5 +1,7 @@
 // Admin loaders read /api/admin/* with the visitor's own cookie; the web process holds no session.
 import { data, redirect } from "react-router";
+import { detectLocale } from "./i18n/detect.ts";
+import { localizeData } from "./i18n/converter.server.ts";
 
 const API_BASE = process.env.API_BASE_URL || "http://127.0.0.1:3001";
 
@@ -22,5 +24,11 @@ export async function adminGet<T>(request: Request, path: string): Promise<T> {
     }
     throw data({ message: detail }, { status: res.status >= 500 ? 503 : res.status });
   }
-  return (await res.json()) as T;
+  const raw = (await res.json()) as T;
+  const loc = detectLocale(request);
+  if (loc === "zh-TW") {
+    return localizeData(raw, "zh-TW");
+  }
+  return raw;
 }
+

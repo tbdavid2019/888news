@@ -91,8 +91,8 @@ export function buildMaterial(a: AnalyzeInputArticle): string {
   } else {
     lines.push(`标题：${collapseWhitespace(a.title)}`);
     const body = a.bodyText ?? a.excerpt ?? "";
-    lines.push(body ? `正文：\n${truncate(body, 7000)}` : "正文：（无）");
-    if (a.translationZh && !a.bodyText) lines.push(`正文中文译文：\n${truncate(a.translationZh, 5000)}`);
+    lines.push(body ? `正文：\n${truncate(body, 25000)}` : "正文：（无）");
+    if (a.translationZh && !a.bodyText) lines.push(`正文中文译文：\n${truncate(a.translationZh, 15000)}`);
   }
   lines.push(`原文链接：${a.url}`);
   lines.push("</material>");

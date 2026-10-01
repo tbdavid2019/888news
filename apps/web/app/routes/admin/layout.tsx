@@ -8,6 +8,7 @@ import { NavigationProgress } from "../../components/shell/Chrome";
 import { LanguageSwitch } from "../../components/shell/LanguageSwitch";
 import type { AdminMe } from "../../features/admin/action";
 import { Toaster } from "../../features/admin/toast";
+import { AdminAutoConverter } from "../../features/admin/AdminAutoConverter";
 import { adminGet } from "../../lib/admin.server";
 import { useI18n } from "../../lib/i18n";
 
@@ -21,7 +22,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 // Counts follow every navigation and command; the identity does not change.
 export const shouldRevalidate: ShouldRevalidateFunction = () => true;
 
-export const meta: Route.MetaFunction = () => [{ title: `${SITE.name} 后台` }, { name: "robots", content: "noindex, nofollow" }];
+export const meta: Route.MetaFunction = () => [{ title: `${SITE.name} 後台` }, { name: "robots", content: "noindex, nofollow" }];
 
 export const headers: Route.HeadersFunction = () => ({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" });
 
@@ -57,7 +58,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
   const { me, counts } = loaderData;
   const navigation = useNavigation();
   const location = useLocation();
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
 
   const nav: NavGroupDef[] = [
     {
@@ -143,6 +144,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
         </main>
       </div>
       <Toaster />
+      <AdminAutoConverter locale={locale} />
     </div>
   );
 }
