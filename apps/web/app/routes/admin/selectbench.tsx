@@ -25,7 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return adminGet<{ runs: RunRow[] }>(request, "/api/admin/selectbench");
 }
 
-export const meta: Route.MetaFunction = () => [{ title: `SelectBench · ${SITE.name} 后台` }];
+export const meta: Route.MetaFunction = () => [{ title: `SelectBench · ${SITE.name} 後台` }];
 
 export default function SelectBench({ loaderData }: Route.ComponentProps) {
   const { run, pending } = useAdminAction();
@@ -33,7 +33,7 @@ export default function SelectBench({ loaderData }: Route.ComponentProps) {
   return (
     <AdminPage
       title="SelectBench"
-      subtitle="精选判断的模型对比：同一批人工金标样本，逐条比较各模型的入选决定。运行由 scripts/eval-selection.ts 产生并自动导入；也可以上传报告文件。"
+      subtitle="精選判斷的模型對比：同一批人工金標樣本，逐條比較各模型的入選決定。執行由 scripts/eval-selection.ts 產生並自動匯入；亦可上傳報告檔案。"
       actions={
         <>
           <input
@@ -47,13 +47,13 @@ export default function SelectBench({ loaderData }: Route.ComponentProps) {
               if (!f) return;
               try {
                 const report = JSON.parse(await f.text());
-                await run("POST", "/api/admin/selectbench/import", { label: f.name.replace(/\.json$/, ""), report }, { label: "import", success: "已导入" });
+                await run("POST", "/api/admin/selectbench/import", { label: f.name.replace(/\.json$/, ""), report }, { label: "import", success: "已匯入" });
               } catch {
-                toast("文件不是合法的报告 JSON", "error");
+                toast("檔案不是合法的報告 JSON", "error");
               }
             }}
           />
-          <Button busy={pending === "import"} onClick={() => file.current?.click()}>导入报告</Button>
+          <Button busy={pending === "import"} onClick={() => file.current?.click()}>匯入報告</Button>
         </>
       }
     >
@@ -65,14 +65,14 @@ export default function SelectBench({ loaderData }: Route.ComponentProps) {
               <Card
                 key={r.id}
                 title={<Link to={`/admin/selectbench/${r.id}`} className="hover:text-accent">{r.label}</Link>}
-                right={<span>{bj(r.created_at, true)} · {r.split ?? "—"} · {num(r.sample_size)} 条 · {r.prompt_version ?? "提示版本未记录"}</span>}
+                right={<span>{bj(r.created_at, true)} · {r.split ?? "—"} · {num(r.sample_size)} 條 · {r.prompt_version ?? "提示版本未記錄"}</span>}
                 pad={false}
               >
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[720px] text-[13px]">
                     <thead>
                       <tr className="border-b border-line text-left text-[12px] text-ink-3">
-                        {["模型", "准确率", "精确率", "召回率", "F1", "入选比例", "金标入选", "失败", "平均耗时", "输入/输出 tokens"].map((h) => <th key={h} className="px-3 py-2 font-medium">{h}</th>)}
+                        {["模型", "準確率", "精確率", "召回率", "F1", "入選比例", "金標入選", "失敗", "平均耗時", "輸入/輸出 tokens"].map((h) => <th key={h} className="px-3 py-2 font-medium">{h}</th>)}
                       </tr>
                     </thead>
                     <tbody>
@@ -97,15 +97,15 @@ export default function SelectBench({ loaderData }: Route.ComponentProps) {
                   </table>
                 </div>
                 <div className="flex items-center justify-between border-t border-line px-4 py-2 text-[12.5px] text-ink-3">
-                  <span>{r.cases ? `${num(r.cases)} 条逐条结果` : "只有汇总（旧格式报告）"}</span>
-                  {r.cases > 0 && <Link className="text-accent" to={`/admin/selectbench/${r.id}`}>逐条浏览</Link>}
+                  <span>{r.cases ? `${num(r.cases)} 條逐條結果` : "只有彙總（舊格式報告）"}</span>
+                  {r.cases > 0 && <Link className="text-accent" to={`/admin/selectbench/${r.id}`}>逐條瀏覽</Link>}
                 </div>
               </Card>
             );
           })}
         </div>
       ) : (
-        <Card><Empty>还没有对比运行。运行 scripts/eval-selection.ts 后会自动出现在这里。</Empty></Card>
+        <Card><Empty>尚未有對比執行。執行 scripts/eval-selection.ts 後會自動出現在這裡。</Empty></Card>
       )}
     </AdminPage>
   );

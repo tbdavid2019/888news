@@ -102,6 +102,7 @@ export const en: Record<TranslationKey, string> = {
   "admin.nav.selectbench": "SelectBench",
   "admin.nav.settings": "Settings",
   "admin.nav.audit": "Audit Log",
+  "admin.nav.monitor": "Codex Resets",
   "admin.sign_out": "Sign Out",
   "admin.dev_tag": "Dev",
   "admin.reason_dialog.placeholder": "Why make this change (optional)",

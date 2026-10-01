@@ -59,7 +59,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return adminGet<Detail>(request, `/api/admin/sources/${encodeURIComponent(params.id)}`);
 }
 
-export const meta: Route.MetaFunction = ({ loaderData }) => [{ title: `${loaderData?.source.name ?? "信源"} · ${SITE.name} 后台` }];
+export const meta: Route.MetaFunction = ({ loaderData }) => [{ title: `${loaderData?.source.name ?? "信源"} · ${SITE.name} 後台` }];
 
 type Draft = Pick<Source, "name" | "interval_minutes" | "tier" | "participation_mode" | "signal_group_id" | "first_party" | "owner_entity_id" | "site_fulltext" | "syndicate_fulltext"> & { tags: string; config: string };
 
@@ -187,45 +187,45 @@ export default function SourceDetail({ loaderData }: Route.ComponentProps) {
               ))}
             </ul>
           ) : (
-            <Empty>没有抓到条目。检查地址、选择器或登录要求。</Empty>
+            <Empty>沒有抓到條目。請檢查網址、選擇器或登入要求。</Empty>
           )}
         </Card>
       )}
 
       <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
         <div className="space-y-5">
-          <Card title="设置" right={<span>版本 {bj(s.updated_at, true)}</span>}>
+          <Card title="設定" right={<span>版本 {bj(s.updated_at, true)}</span>}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="名称">
+              <Field label="名稱">
                 <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
               </Field>
-              <Field label="采集间隔（分钟）">
+              <Field label="採集間隔（分鐘）">
                 <Input type="number" min={1} max={1440} value={draft.interval_minutes} onChange={(e) => setDraft({ ...draft, interval_minutes: Number(e.target.value) })} />
               </Field>
-              <Field label="参与方式" hint="氛围只作热点讨论证据，不单独成为内容">
+              <Field label="參與方式" hint="氛圍僅作熱點討論依據，不單獨成為內容">
                 <Select value={draft.participation_mode} onChange={(e) => setDraft({ ...draft, participation_mode: e.target.value })}>
                   {Object.entries(MODE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </Select>
               </Field>
-              <Field label="等级">
+              <Field label="等級">
                 <Select value={draft.tier} onChange={(e) => setDraft({ ...draft, tier: e.target.value })}>
                   {Object.entries(TIER_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </Select>
               </Field>
-              <Field label="讨论分组 ID" hint="同一机构的多个账号共用，热度只算一次">
+              <Field label="討論分組 ID" hint="同一機構的多個帳號共用，熱度僅計算一次">
                 <Input value={draft.signal_group_id ?? ""} onChange={(e) => setDraft({ ...draft, signal_group_id: e.target.value })} />
               </Field>
-              <Field label="运营主体 ID">
+              <Field label="營運主體 ID">
                 <Input value={draft.owner_entity_id ?? ""} onChange={(e) => setDraft({ ...draft, owner_entity_id: e.target.value })} />
               </Field>
-              <Field label="标签（逗号分隔）">
+              <Field label="標籤（逗號分隔）">
                 <Input value={draft.tags} onChange={(e) => setDraft({ ...draft, tags: e.target.value })} />
               </Field>
               <div className="flex flex-col justify-end gap-2 text-[13px] text-ink-2">
                 {([
-                  ["first_party", "一手信源（官方账号或官网）"],
-                  ["site_fulltext", "站内可展示全文"],
-                  ["syndicate_fulltext", "对外接口可带全文"],
+                  ["first_party", "一手信源（官方帳號或官網）"],
+                  ["site_fulltext", "站內可展示全文"],
+                  ["syndicate_fulltext", "對外介面可帶全文"],
                 ] as const).map(([k, label]) => (
                   <label key={k} className="inline-flex items-center gap-2">
                     <input type="checkbox" className="size-4 accent-[var(--accent)]" checked={draft[k]} onChange={(e) => setDraft({ ...draft, [k]: e.target.checked })} />
@@ -235,7 +235,7 @@ export default function SourceDetail({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
             <div className="mt-4">
-              <Field label="采集配置（JSON）">
+              <Field label="採集設定（JSON）">
                 <Textarea className="font-mono !text-[12px]" rows={Math.min(18, draft.config.split("\n").length + 1)} value={draft.config} onChange={(e) => setDraft({ ...draft, config: e.target.value })} spellCheck={false} />
               </Field>
               {configError && <div className="mt-1 text-[12.5px] text-hot">{configError}</div>}
@@ -322,27 +322,27 @@ export default function SourceDetail({ loaderData }: Route.ComponentProps) {
 
       <ReasonDialog
         open={dialog === "save"}
-        title="保存信源设置"
-        description={`将修改：${Object.keys(patchPreview(draft, s)).join("、") || "无"}`}
+        title="儲存信源設定"
+        description={`將修改：${Object.keys(patchPreview(draft, s)).join("、") || "無"}`}
         busy={pending === "save"}
         onClose={() => setDialog(null)}
         onSubmit={async (reason) => {
           const p = patch();
           if (!p) return false;
-          const r = await run("PATCH", base, { patch: p, version: new Date(s.updated_at).toISOString(), reason }, { label: "save", success: "已保存" });
+          const r = await run("PATCH", base, { patch: p, version: new Date(s.updated_at).toISOString(), reason }, { label: "save", success: "已儲存" });
           return r !== null;
         }}
       />
       <ReasonDialog
         open={dialog === "toggle"}
-        title={s.enabled ? "暂停这个信源" : "恢复这个信源"}
-        description={s.enabled ? "暂停后不再采集，已有内容和历史保留。" : "恢复后会立即排队采集一次。"}
+        title={s.enabled ? "暫停此信源" : "恢復此信源"}
+        description={s.enabled ? "暫停後不再採集，已有內容和歷史保留。" : "恢復後會立即排隊採集一次。"}
         danger={s.enabled}
-        confirmLabel={s.enabled ? "暂停" : "恢复"}
+        confirmLabel={s.enabled ? "暫停" : "恢復"}
         busy={pending === "toggle"}
         onClose={() => setDialog(null)}
         onSubmit={async (reason) => {
-          const r = await run("PATCH", base, { patch: { enabled: !s.enabled }, version: new Date(s.updated_at).toISOString(), reason }, { label: "toggle", success: s.enabled ? "已暂停" : "已恢复" });
+          const r = await run("PATCH", base, { patch: { enabled: !s.enabled }, version: new Date(s.updated_at).toISOString(), reason }, { label: "toggle", success: s.enabled ? "已暫停" : "已恢復" });
           return r !== null;
         }}
       />

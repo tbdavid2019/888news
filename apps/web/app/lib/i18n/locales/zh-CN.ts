@@ -102,6 +102,7 @@ export const zhCN: Record<TranslationKey, string> = {
   "admin.nav.selectbench": "SelectBench",
   "admin.nav.settings": "设置",
   "admin.nav.audit": "审计记录",
+  "admin.nav.monitor": "Codex 重置",
   "admin.sign_out": "退出登录",
   "admin.dev_tag": "开发",
   "admin.reason_dialog.placeholder": "为什么做这个改动（可选）",

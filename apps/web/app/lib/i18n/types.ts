@@ -104,6 +104,7 @@ export type TranslationKey =
   | "admin.nav.selectbench"
   | "admin.nav.settings"
   | "admin.nav.audit"
+  | "admin.nav.monitor"
   | "admin.sign_out"
   | "admin.dev_tag"
   | "admin.reason_dialog.placeholder"

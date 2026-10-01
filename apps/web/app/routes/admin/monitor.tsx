@@ -62,11 +62,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { tab, posts: null, events };
 }
 
-export const meta: Route.MetaFunction = () => [{ title: `Codex 重置 · ${SITE.name} 后台` }];
+export const meta: Route.MetaFunction = () => [{ title: `Codex 重設 · ${SITE.name} 後台` }];
 
 const toLocal = (iso: string | null | undefined) => (iso ? new Date(new Date(iso).getTime() + 8 * 3600_000).toISOString().slice(0, 16) : "");
 const fromLocal = (v: string) => (v ? `${v}:00+08:00` : null);
-const KIND: Record<string, string> = { direct_reset: "额度重置", reset_credit: "重置卡" };
+const KIND: Record<string, string> = { direct_reset: "額度重設", reset_credit: "重設卡" };
 
 function EventCard({ e, all }: { e: MonitorEvent; all: MonitorEvent[] }) {
   const { run, pending } = useAdminAction();
@@ -83,23 +83,23 @@ function EventCard({ e, all }: { e: MonitorEvent; all: MonitorEvent[] }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge tone={e.type === "reset_credit" ? "info" : "accent"}>{KIND[e.type]}</Badge>
-            <Badge tone={e.status === "confirmed" ? "ok" : "warn"}>{e.status === "confirmed" ? "已确认" : p.inProgress ? "下发中" : "已宣布"}</Badge>
-            {e.confirmation_basis === "receipt_review" && <Badge tone="info" title="根据账户回执核对确认">回执核对</Badge>}
+            <Badge tone={e.status === "confirmed" ? "ok" : "warn"}>{e.status === "confirmed" ? "已確認" : p.inProgress ? "發送中" : "已宣佈"}</Badge>
+            {e.confirmation_basis === "receipt_review" && <Badge tone="info" title="依據帳戶收據核對確認">收據核對</Badge>}
             {e.withdrawn && <Badge tone="bad">已撤回</Badge>}
-            {!p.kindExplicit && <Badge>形式未明确</Badge>}
+            {!p.kindExplicit && <Badge>形式未明確</Badge>}
           </div>
-          <div className="mt-2 text-[15px] font-semibold text-ink">{e.schedule?.label ?? (e.estimate ? `${SITE.name} 估计 ${e.estimate.label}` : "没有给出时间")}</div>
+          <div className="mt-2 text-[15px] font-semibold text-ink">{e.schedule?.label ?? (e.estimate ? `${SITE.name} 估計 ${e.estimate.label}` : "未提供時間")}</div>
           <div className="mt-0.5 text-[12.5px] text-ink-3">
-            {p.audienceZh ?? e.scope ?? "适用对象未说明"}
+            {p.audienceZh ?? e.scope ?? "適用對象未說明"}
             {p.productsZh ? ` · ${p.productsZh}` : ""}
-            {e.confirmed_at ? ` · 确认于 ${bj(e.confirmed_at, true)}` : e.occurred_on ? ` · 发生于 ${e.occurred_on}` : ""}
+            {e.confirmed_at ? ` · 確認於 ${bj(e.confirmed_at, true)}` : e.occurred_on ? ` · 發生於 ${e.occurred_on}` : ""}
           </div>
           <div className="mt-1 font-mono text-[11.5px] text-ink-4">{e.id} · 更新 {bj(e.updated_at, true)}</div>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          <Button size="sm" onClick={() => { setForm(formOf(e)); setDialog("edit"); }}>编辑</Button>
-          {e.status !== "confirmed" && <Button size="sm" onClick={() => setDialog("review")}>回执核对确认</Button>}
-          <Button size="sm" tone="ghost" onClick={() => setDialog("withdraw")}>{e.withdrawn ? "恢复" : "撤回"}</Button>
+          <Button size="sm" onClick={() => { setForm(formOf(e)); setDialog("edit"); }}>編輯</Button>
+          {e.status !== "confirmed" && <Button size="sm" onClick={() => setDialog("review")}>收據核對確認</Button>}
+          <Button size="sm" tone="ghost" onClick={() => setDialog("withdraw")}>{e.withdrawn ? "恢復" : "撤回"}</Button>
         </div>
       </div>
       <ol className="mt-3 space-y-2 border-t border-line pt-3">
@@ -178,39 +178,39 @@ function EventCard({ e, all }: { e: MonitorEvent; all: MonitorEvent[] }) {
       </ReasonDialog>
       <ReasonDialog
         open={dialog === "review"}
-        title="根据回执核对确认"
-        description="Tibo 没有发“已完成”，但账户里已经看到重置或重置卡（读者截图或自有账号）。知道哪天生效就填北京时间日期，不确定就清空；不发通知。Tibo 之后补发确认帖时，来源会自动改为官方确认，这条核对记录保留。"
-        confirmLabel="确认"
+        title="依據收據核對確認"
+        description="官方尚未發布「已完成」，但帳戶中已觀察到重設或重設卡（讀者截圖或自有帳號）。若知曉生效日請填寫日期，不確定則留空；不發送推播通知。官方補發確認貼文時，來源會自動改為官方確認，此筆核對記錄將予保留。"
+        confirmLabel="確認"
         busy={pending === "review"}
         onClose={() => setDialog(null)}
-        onSubmit={async (reason) => (await run("POST", `${base}/receipt-review`, { occurredOn: reviewDay || null, reason, version }, { label: "review", success: "已确认" })) !== null}
+        onSubmit={async (reason) => (await run("POST", `${base}/receipt-review`, { occurredOn: reviewDay || null, reason, version }, { label: "review", success: "已確認" })) !== null}
       >
-        <Field label="生效日（北京时间，不确定就清空）"><Input type="date" value={reviewDay} onChange={(ev) => setReviewDay(ev.target.value)} /></Field>
+        <Field label="生效日（不確定請留空）"><Input type="date" value={reviewDay} onChange={(ev) => setReviewDay(ev.target.value)} /></Field>
       </ReasonDialog>
       <ReasonDialog
         open={dialog === "withdraw"}
-        title={e.withdrawn ? "恢复事件" : "撤回事件"}
-        description={e.withdrawn ? "恢复后重新出现在重置页和接口里。" : "撤回后不再出现在重置页和接口里（识别错误、重复事件）。"}
+        title={e.withdrawn ? "恢復事件" : "撤回事件"}
+        description={e.withdrawn ? "恢復後將重新顯示於重設頁面和 API 接口。" : "撤回後不再出現於重設頁面和 API 接口（識別錯誤、重複事件）。"}
         danger={!e.withdrawn}
-        confirmLabel={e.withdrawn ? "恢复" : "撤回"}
+        confirmLabel={e.withdrawn ? "恢復" : "撤回"}
         busy={pending === "withdraw"}
         onClose={() => setDialog(null)}
-        onSubmit={async (reason) => (await run("POST", `${base}/withdrawn`, { withdrawn: !e.withdrawn, reason, version }, { label: "withdraw", success: e.withdrawn ? "已恢复" : "已撤回" })) !== null}
+        onSubmit={async (reason) => (await run("POST", `${base}/withdrawn`, { withdrawn: !e.withdrawn, reason, version }, { label: "withdraw", success: e.withdrawn ? "已恢復" : "已撤回" })) !== null}
       />
       <ReasonDialog
         open={dialog === "move"}
-        title="移动帖子"
-        description="把这条帖子挂到另一个事件，或从事件里移除。"
-        confirmLabel="移动"
+        title="移動貼文"
+        description="將此貼文連結至另一個事件，或從事件中移除。"
+        confirmLabel="移動"
         busy={pending === "move"}
         onClose={() => setDialog(null)}
         onSubmit={async (reason) =>
-          (await run("POST", "/api/admin/monitor/relink", { postId: move!.postId, fromEventId: e.id, toEventId: move!.to || null, reason }, { label: "move", success: "帖子已移动" })) !== null
+          (await run("POST", "/api/admin/monitor/relink", { postId: move!.postId, fromEventId: e.id, toEventId: move!.to || null, reason }, { label: "move", success: "貼文已移動" })) !== null
         }
       >
-        <Field label="目标事件">
+        <Field label="目標事件">
           <Select value={move?.to ?? ""} onChange={(ev) => setMove({ ...move!, to: ev.target.value })}>
-            <option value="">移出（不属于任何事件）</option>
+            <option value="">移出（不屬於任何事件）</option>
             {all.filter((x) => x.id !== e.id).slice(0, 60).map((x) => (
               <option key={x.id} value={x.id}>{bj(x.created_at)} · {KIND[x.type]} · {x.schedule?.label ?? x.id}</option>
             ))}
@@ -279,19 +279,19 @@ function PostRow({ post }: { post: Post }) {
       )}
       <ReasonDialog
         open={dialog === "skip"}
-        title="跳过这条帖子"
-        description="帖子按顺序识别，这条一直失败会挡住后面所有帖子。跳过后它不再识别、不产生事件；确有重置内容请到“事件”里手动处理。"
+        title="略過此貼文"
+        description="貼文按順序識別，此筆持續失敗將阻擋後續所有貼文。略過後將不再進行識別、不產生事件；若確有重設內容請至「事件」中手動處理。"
         danger
-        confirmLabel="跳过"
+        confirmLabel="略過"
         busy={pending === "skip"}
         onClose={() => setDialog(null)}
         onSubmit={(reason) => resolve("skip", reason)}
       />
       <ReasonDialog
         open={dialog === "reviewed"}
-        title="标记已核实"
-        description="已经按原帖处理过（修改或确认了事件，或确认不需要处理）。标记后它离开复核列表，告警也会停止。"
-        confirmLabel="标记"
+        title="標記為已核實"
+        description="已按原貼文處理完畢（修改或確認了事件，或確認無須處理）。標記後將離開複核清單，告警亦會停止。"
+        confirmLabel="標記"
         busy={pending === "reviewed"}
         onClose={() => setDialog(null)}
         onSubmit={(reason) => resolve("reviewed", reason)}
@@ -305,29 +305,29 @@ export default function MonitorAdmin({ loaderData }: Route.ComponentProps) {
   const tab = loaderData.tab;
   return (
     <AdminPage
-      title="Codex 重置"
-      subtitle="修正识别结果：事件类型、状态、时间与适用对象；没有“已完成”帖子时用回执核对确认；识别错的事件撤回；帖子挂错可以移动。"
-      actions={<a className="text-[13px] text-accent" href="/codex-reset" target="_blank" rel="noreferrer">打开公开页</a>}
+      title="Codex 重設"
+      subtitle="修正識別結果：事件類型、狀態、時間與適用對象；無「已完成」貼文時以收據核對確認；識別錯誤之事件可撤回；貼文關聯錯誤可移動。"
+      actions={<a className="text-[13px] text-accent" href="/codex-reset" target="_blank" rel="noreferrer">開啟公開頁</a>}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-1.5">
           <Link to="?tab=events" className={`rounded-full px-3.5 py-1.5 text-[13px] ${tab === "events" ? "bg-ink text-bg" : "bg-surface text-ink-2 ring-1 ring-line"}`}>事件</Link>
-          <Link to="?tab=posts" className={`rounded-full px-3.5 py-1.5 text-[13px] ${tab === "posts" ? "bg-ink text-bg" : "bg-surface text-ink-2 ring-1 ring-line"}`}>帖子与识别</Link>
+          <Link to="?tab=posts" className={`rounded-full px-3.5 py-1.5 text-[13px] ${tab === "posts" ? "bg-ink text-bg" : "bg-surface text-ink-2 ring-1 ring-line"}`}>貼文與識別</Link>
         </div>
         {tab === "events" ? (
-          <Link to={sp.get("withdrawn") ? "?tab=events" : "?tab=events&withdrawn=1"} className="text-[12.5px] text-ink-3 hover:text-ink">{sp.get("withdrawn") ? "隐藏已撤回" : "包括已撤回"}</Link>
+          <Link to={sp.get("withdrawn") ? "?tab=events" : "?tab=events&withdrawn=1"} className="text-[12.5px] text-ink-3 hover:text-ink">{sp.get("withdrawn") ? "隱藏已撤回" : "包含已撤回"}</Link>
         ) : (
-          <FilterChips param="filter" options={[{ value: "relevant", label: "相关" }, { value: "review", label: "需复核" }, { value: "pending", label: "待识别" }, { value: "all", label: "全部" }]} />
+          <FilterChips param="filter" options={[{ value: "relevant", label: "相關" }, { value: "review", label: "需複核" }, { value: "pending", label: "待識別" }, { value: "all", label: "全部" }]} />
         )}
       </div>
       {loaderData.events && (
         <div className="space-y-3">
-          {loaderData.events.events.length ? loaderData.events.events.map((e) => <EventCard key={`${e.id}-${e.updated_at}`} e={e} all={loaderData.events!.events} />) : <Card><Empty>没有事件</Empty></Card>}
+          {loaderData.events.events.length ? loaderData.events.events.map((e) => <EventCard key={`${e.id}-${e.updated_at}`} e={e} all={loaderData.events!.events} />) : <Card><Empty>沒有事件</Empty></Card>}
         </div>
       )}
       {loaderData.posts && (
         <>
-          <div className="space-y-3">{loaderData.posts.rows.length ? loaderData.posts.rows.map((p) => <PostRow key={p.id} post={p} />) : <Card><Empty>没有符合条件的帖子</Empty></Card>}</div>
+          <div className="space-y-3">{loaderData.posts.rows.length ? loaderData.posts.rows.map((p) => <PostRow key={p.id} post={p} />) : <Card><Empty>沒有符合條件的貼文</Empty></Card>}</div>
           <Pager page={loaderData.posts.page} hasMore={loaderData.posts.rows.length === 50} />
         </>
       )}

@@ -66,7 +66,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
       items: [
         { to: "/admin/content", label: t("admin.nav.content_diag") },
         { to: "/admin/sources", label: t("admin.nav.sources"), count: "sources" as const, tone: "bad" as const },
-        ...(FEATURES.codexResetMonitor ? [{ to: "/admin/monitor", label: "Codex 重置", count: "monitor" as const, tone: "accent" as const }] : []),
+        ...(FEATURES.codexResetMonitor ? [{ to: "/admin/monitor", label: t("admin.nav.monitor"), count: "monitor" as const, tone: "accent" as const }] : []),
         { to: "/admin/feedback", label: t("admin.nav.feedback"), count: "feedback" as const, tone: "accent" as const },
       ],
     },

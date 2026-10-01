@@ -47,7 +47,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return adminGet<Settings>(request, "/api/admin/settings");
 }
 
-export const meta: Route.MetaFunction = () => [{ title: `设置 · ${SITE.name} 后台` }];
+export const meta: Route.MetaFunction = () => [{ title: `系統設定 · ${SITE.name} 後台` }];
 
 function LlmCard({ llm }: { llm?: LlmSettings }) {
   const { run, pending } = useAdminAction();
@@ -497,14 +497,32 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
 
 
 
+const BUDGET_SERVICE_INFO: Record<string, { label: string; note: string; tone?: "ok" | "muted" | "accent" }> = {
+  llm: { label: "LLM 主模型", note: "文章處理、判斷與翻譯之熔斷上限", tone: "accent" },
+  socialdata: { label: "SocialData (X)", note: "上游付費 API（888news 採用 2md 免費抓取，此項處於閒置 $0）", tone: "muted" },
+  jina: { label: "Jina Reader", note: "上游付費 Reader（888news 優先使用本地提取，此項閒置 $0）", tone: "muted" },
+  dajiala: { label: "大家啦 (微信)", note: "上游微信公眾號接口（閒置 $0）", tone: "muted" },
+  zhipu: { label: "智譜 GLM", note: "上游中國服務商模型熔斷（閒置 $0）", tone: "muted" },
+  mimo: { label: "小米 MiMo", note: "上游中國服務商模型熔斷（閒置 $0）", tone: "muted" },
+  dashscope: { label: "阿里百煉", note: "上游中國服務商模型熔斷（閒置 $0）", tone: "muted" },
+  deepseek: { label: "DeepSeek", note: "上游中國服務商模型熔斷（閒置 $0）", tone: "muted" },
+};
+
 function BudgetRow({ b }: { b: Settings["budgets"][number] }) {
   const { run, pending } = useAdminAction();
   const [v, setV] = useState({ perMinute: b.per_minute, perHour: b.per_hour, perDay: b.per_day });
   const [open, setOpen] = useState(false);
   const changed = v.perMinute !== b.per_minute || v.perHour !== b.per_hour || v.perDay !== b.per_day;
+  const info = BUDGET_SERVICE_INFO[b.service];
   return (
     <tr className="border-b border-line/70 last:border-0">
-      <td className="px-3 py-2 font-mono text-[12.5px]">{b.service}</td>
+      <td className="px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[12.5px] font-semibold text-ink">{b.service}</span>
+          {info && <Badge tone={info.tone ?? "muted"}>{info.label}</Badge>}
+        </div>
+        <div className="text-[11.5px] text-ink-4 mt-0.5">{info ? info.note : (b.note || "服務調用熔斷")}</div>
+      </td>
       {(["perMinute", "perHour", "perDay"] as const).map((k) => (
         <td key={k} className="px-3 py-2">
           <Input type="number" min={0} className="!w-24 !py-1 text-right" value={v[k]} onChange={(e) => setV({ ...v, [k]: Number(e.target.value) })} />
@@ -512,12 +530,12 @@ function BudgetRow({ b }: { b: Settings["budgets"][number] }) {
       ))}
       <td className="num px-3 py-2 text-right text-ink-3">{num(b.used_hour)} / {num(b.used_day)}</td>
       <td className="px-3 py-2 text-right">
-        <Button size="sm" tone="primary" disabled={!changed} onClick={() => setOpen(true)}>保存</Button>
+        <Button size="sm" tone="primary" disabled={!changed} onClick={() => setOpen(true)}>儲存</Button>
         <ReasonDialog
           open={open}
           title={`調整 ${b.service} 的請求上限`}
-          description="上限是付费请求的熔断：超过后请求暂停并按窗口重试。填 0 表示立即停用这个服务。"
-          confirmLabel="保存"
+          description="上限是付費請求的熔斷限制：超過後請求暫停並按窗口重試。填 0 表示立即停用此服務。"
+          confirmLabel="儲存"
           busy={pending === "budget"}
           onClose={() => setOpen(false)}
           onSubmit={async (reason) => (await run("PUT", `/api/admin/budgets/${encodeURIComponent(b.service)}`, { ...v, reason }, { label: "budget", success: "上限已更新" })) !== null}
@@ -532,13 +550,13 @@ function TargetToggle({ t }: { t: Settings["targets"][number] }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button size="sm" tone={t.enabled ? "danger" : "primary"} onClick={() => setOpen(true)}>{t.enabled ? "停用" : "启用"}</Button>
+      <Button size="sm" tone={t.enabled ? "danger" : "primary"} onClick={() => setOpen(true)}>{t.enabled ? "停用" : "啟用"}</Button>
       <ReasonDialog
         open={open}
-        title={`${t.enabled ? "停用" : "启用"}：${t.note ?? t.key}`}
-        description={t.enabled ? "停用后新的推送不再发往这个群。" : "启用时间会被记录：启用之前的内容不会补推。开发与彩排环境即使启用也不会真的发出。"}
+        title={`${t.enabled ? "停用" : "啟用"}：${t.note ?? t.key}`}
+        description={t.enabled ? "停用後新的推送不再發往此群。" : "啟用時間會被記錄：啟用之前的內容不會補推。開發與彩排環境即使啟用也不會真的送出。"}
         danger={t.enabled}
-        confirmLabel={t.enabled ? "停用" : "启用"}
+        confirmLabel={t.enabled ? "停用" : "啟用"}
         busy={pending === "target"}
         onClose={() => setOpen(false)}
         onSubmit={async (reason) => (await run("POST", `/api/admin/notify-targets/${encodeURIComponent(t.key)}`, { enabled: !t.enabled, reason }, { label: "target", success: "已更新" })) !== null}
@@ -549,17 +567,35 @@ function TargetToggle({ t }: { t: Settings["targets"][number] }) {
 
 export default function SettingsAdmin({ loaderData: s }: Route.ComponentProps) {
   return (
-    <AdminPage title="系統設置" subtitle="無需修改程式碼即可調整的營運設置。每次修改皆會寫入審計日誌。">
+    <AdminPage title="系統設定" subtitle="無需修改程式碼即可調整的營運設定。每次修改皆會寫入審計日誌。">
       <div className="space-y-6">
         <LlmCard llm={s.llm} />
         <WebhooksCard webhooks={s.webhooks} />
 
-        <Card title="通知目的地通道" pad={false}>
+        <Card
+          title="通知目的地通道"
+          right={<span className="text-[12px] text-ink-4">現代推播請優先使用上方 Webhook</span>}
+          pad={false}
+        >
           <DataTable
             rows={s.targets}
             rowKey={(t) => t.key}
             columns={[
-              { key: "k", label: "目的地", render: (t) => <div><div className="font-medium text-ink">{t.note ?? t.key}</div><div className="font-mono text-[11.5px] text-ink-4">{t.key} · {t.config_ref}</div></div> },
+              {
+                key: "k",
+                label: "目的地",
+                render: (t) => (
+                  <div>
+                    <div className="flex items-center gap-1.5 font-medium text-ink">
+                      {t.note ?? t.key}
+                      {!t.enabled && t.key.startsWith("feishu") && (
+                        <span className="text-[11.5px] font-normal text-ink-4">（上游預設 · 閒置）</span>
+                      )}
+                    </div>
+                    <div className="font-mono text-[11.5px] text-ink-4">{t.key} · {t.config_ref}</div>
+                  </div>
+                ),
+              },
               { key: "e", label: "狀態", render: (t) => (t.enabled ? <Badge tone="ok">啟用於 {bj(t.enabled_at)}</Badge> : <Badge>停用</Badge>) },
               { key: "d", label: "7 天遞送", align: "right", render: (t) => num(t.deliveries_7d) },
               { key: "a", label: "", align: "right", render: (t) => <TargetToggle t={t} /> },
@@ -567,7 +603,10 @@ export default function SettingsAdmin({ loaderData: s }: Route.ComponentProps) {
           />
         </Card>
 
-        <Card title="付費請求上限" right={<span>已用：近 1 小時 / 近 24 小時</span>} pad={false}>
+        <Card title="付費請求上限 (熔斷機制)" right={<span>已用：近 1 小時 / 近 24 小時</span>} pad={false}>
+          <div className="p-3 border-b border-line bg-bg-sunk/40 text-[12.5px] text-ink-3">
+            此處為後端熔斷安全閥。888news 採零成本架構（X 採集經 2md 免費鏡像，網頁正文本地優先），未啟用之外部付費 API 均處於 0 用量安全狀態。
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-[13px]">
               <thead>

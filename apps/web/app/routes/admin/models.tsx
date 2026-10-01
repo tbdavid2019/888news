@@ -37,9 +37,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   return adminGet<Models>(request, `/api/admin/models?days=${encodeURIComponent(days)}`);
 }
 
-export const meta: Route.MetaFunction = () => [{ title: `模型与评测 · ${SITE.name} 后台` }];
+export const meta: Route.MetaFunction = () => [{ title: `模型與評測 · ${SITE.name} 後台` }];
 
-const SOURCE_LABEL = { admin: "后台切换", env: "环境变量", default: "代码默认" } as const;
+const SOURCE_LABEL = { admin: "後台切換", env: "環境變數", default: "程式碼預設" } as const;
 const secs = (ms: number | null) => (ms == null ? "—" : ms >= 10_000 ? `${Math.round(ms / 1000)} s` : `${(ms / 1000).toFixed(1)} s`);
 
 export default function ModelsAdmin({ loaderData: m }: Route.ComponentProps) {
@@ -50,9 +50,9 @@ export default function ModelsAdmin({ loaderData: m }: Route.ComponentProps) {
 
   return (
     <AdminPage
-      title="模型与评测"
-      subtitle="每项能力当前用哪个模型、来自哪里（后台切换 > 环境变量 > 代码默认），以及近期的成功率、耗时与费用。切换只影响之后的新任务，已有结果不重算；换精选模型前先看 SelectBench 同批对比。"
-      actions={<FilterChips param="days" options={[{ value: "1", label: "24 小时" }, { value: "", label: "7 天" }, { value: "30", label: "30 天" }]} />}
+      title="模型與評測"
+      subtitle="每項能力目前使用哪個模型、來自何處（後台切換 > 環境變數 > 程式碼預設），以及近期的成功率、耗時與費用。切換只影響之後的新任務，已有結果不重算；更換精選模型前請先參考 SelectBench 同批對比。"
+      actions={<FilterChips param="days" options={[{ value: "1", label: "24 小時" }, { value: "", label: "7 天" }, { value: "30", label: "30 天" }]} />}
     >
       <div className="grid gap-5">
         {m.capabilities.map((c) => {
@@ -75,7 +75,7 @@ export default function ModelsAdmin({ loaderData: m }: Route.ComponentProps) {
                     setChoice(c.current.model);
                   }}
                 >
-                  切换
+                  切換
                 </Button>
               }
               pad={false}
@@ -125,52 +125,52 @@ export default function ModelsAdmin({ loaderData: m }: Route.ComponentProps) {
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-2">
-        <Card title="切换记录" pad={false}>
+        <Card title="切換記錄" pad={false}>
           {m.history.length ? (
             <DataTable
               dense
               rows={m.history}
               rowKey={(h) => `${h.at}|${h.subject}`}
               columns={[
-                { key: "at", label: "时间", render: (h) => <span className="num whitespace-nowrap">{bj(h.at)}</span> },
+                { key: "at", label: "時間", render: (h) => <span className="num whitespace-nowrap">{bj(h.at)}</span> },
                 { key: "c", label: "能力", render: (h) => labelOf(h.subject) },
-                { key: "m", label: "变化", render: (h) => <span className="font-mono text-[12px]">{h.before?.model ?? "—"} → {h.after?.model ?? "—"}</span> },
+                { key: "m", label: "變化", render: (h) => <span className="font-mono text-[12px]">{h.before?.model ?? "—"} → {h.after?.model ?? "—"}</span> },
                 { key: "r", label: "原因", render: (h) => <span className="text-ink-3">{h.reason}</span> },
-                { key: "a", label: "操作人", render: (h) => h.actor },
+                { key: "a", label: "操作者", render: (h) => h.actor },
               ]}
             />
           ) : (
-            <Empty>还没有在后台切换过模型</Empty>
+            <Empty>尚未在後台切換過模型</Empty>
           )}
         </Card>
-        <Card title="同批样本对比（SelectBench）" right={<Link to="/admin/selectbench" className="text-accent">全部运行</Link>} pad={false}>
+        <Card title="同批樣本對比（SelectBench）" right={<Link to="/admin/selectbench" className="text-accent">全部執行</Link>} pad={false}>
           {m.benches.length ? (
             <DataTable
               dense
               rows={m.benches}
               rowKey={(b) => b.id}
               columns={[
-                { key: "l", label: "运行", render: (b) => <Link to={`/admin/selectbench/${b.id}`} className="text-ink hover:text-accent">{b.label}</Link> },
+                { key: "l", label: "執行", render: (b) => <Link to={`/admin/selectbench/${b.id}`} className="text-ink hover:text-accent">{b.label}</Link> },
                 { key: "m", label: "模型", render: (b) => <span className="font-mono text-[11.5px] text-ink-3">{b.models.join("、")}</span> },
-                { key: "n", label: "样本", align: "right", render: (b) => num(b.sample_size) },
-                { key: "at", label: "时间", render: (b) => <span className="num whitespace-nowrap">{bj(b.created_at)}</span> },
+                { key: "n", label: "樣本", align: "right", render: (b) => num(b.sample_size) },
+                { key: "at", label: "時間", render: (b) => <span className="num whitespace-nowrap">{bj(b.created_at)}</span> },
               ]}
             />
           ) : (
-            <Empty>还没有导入对比运行</Empty>
+            <Empty>尚未匯入對比執行</Empty>
           )}
         </Card>
       </div>
 
       <ReasonDialog
         open={!!target}
-        title={`切换模型：${target?.label ?? ""}`}
-        description="只影响之后的新任务。选“恢复默认”会回到环境变量或代码默认。"
-        confirmLabel="切换"
+        title={`切換模型：${target?.label ?? ""}`}
+        description="只影響之後的新任務。選「恢復預設」會回到環境變數或程式碼預設。"
+        confirmLabel="切換"
         busy={pending === "switch"}
         onClose={() => setTarget(null)}
         onSubmit={async (reason) =>
-          (await run("POST", `/api/admin/models/${target!.key}`, { model: choice === "__default" ? null : choice, reason }, { label: "switch", success: "已切换，下一次调用生效" })) !== null
+          (await run("POST", `/api/admin/models/${target!.key}`, { model: choice === "__default" ? null : choice, reason }, { label: "switch", success: "已切換，下一次調用生效" })) !== null
         }
       >
         <Field label="模型">
@@ -182,7 +182,7 @@ export default function ModelsAdmin({ loaderData: m }: Route.ComponentProps) {
                   {x.key}（{x.service}）
                 </option>
               ))}
-            <option value="__default">恢复默认（{target?.env} 或 {target?.defaultModel}）</option>
+            <option value="__default">恢復預設（{target?.env} 或 {target?.defaultModel}）</option>
           </Select>
         </Field>
       </ReasonDialog>

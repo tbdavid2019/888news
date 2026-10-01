@@ -7,7 +7,7 @@ import { bj } from "../../features/admin/format";
 import { KIND_LABEL, MODE_LABEL, TIER_LABEL } from "../../features/admin/labels";
 import { AdminPage, Button, Card, Empty, Field, Input, Select, Textarea } from "../../features/admin/ui";
 
-export const meta: Route.MetaFunction = () => [{ title: `新建信源 · ${SITE.name} 后台` }];
+export const meta: Route.MetaFunction = () => [{ title: `建立信源 · ${SITE.name} 後台` }];
 
 const TEMPLATES: Record<string, Record<string, unknown>> = {
   rss: { feedUrl: "https://example.com/feed.xml" },
@@ -38,13 +38,13 @@ export default function NewSource() {
       setError(null);
       return JSON.parse(config) as Record<string, unknown>;
     } catch (e) {
-      setError(`配置不是合法 JSON：${(e as Error).message}`);
+      setError(`設定內容非合法 JSON：${(e as Error).message}`);
       return null;
     }
   };
 
   return (
-    <AdminPage title="新建信源" subtitle="先判重、先预览：优先 RSS/JSON 等稳定协议；首抓成功且有真实条目才算接入完成。一手身份要有运营主体或官方交叉链接证据。">
+    <AdminPage title="建立信源" subtitle="先判重、先預覽：優先 RSS/JSON 等穩定協定；首抓成功且有真實條目才算接入完成。一手身份要有營運主體或官方交叉連結證據。">
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <Card title="信源定義">
           <div className="grid gap-4 sm:grid-cols-2">
