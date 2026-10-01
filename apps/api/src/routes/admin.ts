@@ -11,7 +11,7 @@ import { contentChain, detachFromFact, mergeStories, overrideFields, rerun, sear
 import { banSource, eraseFeedback, feedbackScreenshot, listFeedback, unbanSource, updateFeedback } from "@aihot/backend/admin/feedback";
 import { listMonitorEvents, listMonitorPosts, relinkPost, resolveMonitorPost, reviewReceipt, setWithdrawn, updateMonitorEvent } from "@aihot/backend/admin/monitor";
 import { releaseReceipt, requeueFailedArticles, resolveDelivery, runsOverview } from "@aihot/backend/admin/runs";
-import { getWebhookSettings, listBudgets, listTargets, replaceContactQr, saveWebhookSettings, setTargetEnabled, testWebhookChannel, updateBudget } from "@aihot/backend/admin/settings";
+import { getLlmSettings, getWebhookSettings, listBudgets, listTargets, replaceContactQr, requeueAllWaitingArticles, saveLlmSettings, saveWebhookSettings, setTargetEnabled, testModelConnection, testWebhookChannel, updateBudget } from "@aihot/backend/admin/settings";
 import { createSource, fetchNow, listSources, previewSource, sourceDetail, updateSource } from "@aihot/backend/admin/sources";
 import { sql } from "@aihot/backend/db";
 import { loadContact } from "@aihot/backend/site/contact";
@@ -110,7 +110,30 @@ export function registerAdmin(app: FastifyInstance) {
     targets: await listTargets(),
     budgets: await listBudgets(),
     webhooks: await getWebhookSettings(),
+    llm: await getLlmSettings(),
   })));
+  app.put("/api/admin/settings/llm", adminHandler(async (req, _reply, admin) => {
+    const b = body<{
+      llmBaseUrl?: string;
+      llmApiKey?: string;
+      llmModel?: string;
+      llmFallback1BaseUrl?: string;
+      llmFallback1ApiKey?: string;
+      llmFallback1Model?: string;
+      llmFallback2BaseUrl?: string;
+      llmFallback2ApiKey?: string;
+      llmFallback2Model?: string;
+      reason?: string;
+    }>(req);
+    return saveLlmSettings(b, b.reason || "更新 LLM 配置", actorOf(admin));
+  }));
+  app.post("/api/admin/settings/llm/test", adminHandler(async (req) => {
+    const b = body<{ target: "default" | "fallback_1" | "fallback_2" }>(req);
+    return testModelConnection(b.target);
+  }));
+  app.post("/api/admin/settings/llm/requeue", adminHandler(async () => {
+    return requeueAllWaitingArticles();
+  }));
   app.put("/api/admin/settings/webhooks", adminHandler(async (req, _reply, admin) => {
     const b = body<{ slackWebhookUrl?: string; discordWebhookUrl?: string; telegramBotToken?: string; telegramChatId?: string; reason?: string }>(req);
     return saveWebhookSettings(b, b.reason || "更新 Webhook 配置", actorOf(admin));

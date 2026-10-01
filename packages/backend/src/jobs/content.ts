@@ -233,3 +233,20 @@ export async function requeueFailed(group: string | null): Promise<{ requeued: n
   for (const r of rows.slice(0, 500)) await queueProcessing(r.id);
   return { requeued: rows.length };
 }
+
+/**
+ * Resets all articles in 'new' or 'failed' state so that delayed backoff timers are cleared
+ * and the worker immediately restarts processing with the configured LLM.
+ */
+export async function requeueAllWaitingArticles(): Promise<{ count: number }> {
+  const rows = await sql<{ id: string }[]>`
+    UPDATE articles
+    SET processing_state = 'new',
+        processing_attempts = 0,
+        processing_retry_at = NULL,
+        processing_error = NULL
+    WHERE processing_state = 'new' OR processing_state = 'failed'
+    RETURNING id`;
+  for (const r of rows.slice(0, 500)) await queueProcessing(r.id);
+  return { count: rows.length };
+}

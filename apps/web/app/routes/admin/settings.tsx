@@ -20,11 +20,27 @@ export interface WebhooksSettings {
   telegram: WebhookChannelInfo;
 }
 
+export interface LlmChannelConfig {
+  baseUrl: string;
+  model: string;
+  apiKeyMasked: string | null;
+  isConfigured: boolean;
+  source: "env" | "db" | "none";
+}
+
+export interface LlmSettings {
+  primary: LlmChannelConfig;
+  fallback1: LlmChannelConfig;
+  fallback2: LlmChannelConfig;
+  waitingCount: number;
+}
+
 interface Settings {
   contact: { wechatQr: string; feishuQr: string };
   targets: Array<{ key: string; purpose: string; kind: string; enabled: boolean; enabled_at: string | null; config_ref: string | null; note: string | null; deliveries_7d: number; last_sent_at: string | null }>;
   budgets: Array<{ service: string; per_minute: number; per_hour: number; per_day: number; note: string | null; updated_at: string; used_day: number; used_hour: number }>;
   webhooks?: WebhooksSettings;
+  llm?: LlmSettings;
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -32,6 +48,292 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export const meta: Route.MetaFunction = () => [{ title: `设置 · ${SITE.name} 后台` }];
+
+function LlmCard({ llm }: { llm?: LlmSettings }) {
+  const { run, pending } = useAdminAction();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    llmBaseUrl: "",
+    llmApiKey: "",
+    llmModel: "",
+    llmFallback1BaseUrl: "",
+    llmFallback1ApiKey: "",
+    llmFallback1Model: "",
+    llmFallback2BaseUrl: "",
+    llmFallback2ApiKey: "",
+    llmFallback2Model: "",
+  });
+
+  const handleTest = async (target: "default" | "fallback_1" | "fallback_2", name: string) => {
+    const res = await run<{ ok: boolean; model?: string; error?: string }>(
+      "POST",
+      "/api/admin/settings/llm/test",
+      { target },
+      { label: `test-llm-${target}`, revalidate: false }
+    );
+    if (res?.ok) {
+      toast(`${name} 連線測試成功！模型 (${res.model}) 回應正常。`, "ok");
+    } else if (res?.error) {
+      toast(`${name} 連線失敗：${res.error}`, "error");
+    }
+  };
+
+  const handleRequeue = async () => {
+    const res = await run<{ count: number }>(
+      "POST",
+      "/api/admin/settings/llm/requeue",
+      {},
+      { label: "requeue-articles", success: "已成功重置！文章已加入佇列排隊處理。" }
+    );
+  };
+
+  const isPrimaryConfigured = !!llm?.primary.isConfigured;
+  const primarySource = llm?.primary.source === "db" ? "資料庫覆蓋" : llm?.primary.source === "env" ? "ENV 環境變數" : "";
+
+  return (
+    <Card
+      title="LLM 模型與 API 金鑰 (支援 OpenAI / Groq / Gemini / 自訂端點)"
+      right={
+        <div className="flex items-center gap-2">
+          {llm && llm.waitingCount > 0 && (
+            <Button
+              size="sm"
+              tone="primary"
+              busy={pending === "requeue-articles"}
+              onClick={handleRequeue}
+              title="清除失敗重試的指數退避計時，立即把所有等待中與失敗的文章送入處理佇列"
+            >
+              立即重試處理文章 ({llm.waitingCount} 篇待辦)
+            </Button>
+          )}
+          <Button size="sm" onClick={() => setOpen(true)}>配置 LLM</Button>
+        </div>
+      }
+      pad={false}
+    >
+      <div className="divide-y divide-line">
+        {/* Primary LLM */}
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-ink">主模型 (Primary LLM)</span>
+              {isPrimaryConfigured ? (
+                <Badge tone="ok">已啟用{primarySource ? ` (${primarySource})` : ""}</Badge>
+              ) : (
+                <Badge tone="bad">未配置金鑰 (文章無法評分入庫)</Badge>
+              )}
+            </div>
+            <div className="mt-1 font-mono text-[12px] text-ink-3 break-all">
+              端點: {llm?.primary.baseUrl} · 模型: {llm?.primary.model} · API Key: {llm?.primary.apiKeyMasked || "未設置"}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              size="sm"
+              disabled={!isPrimaryConfigured}
+              busy={pending === "test-llm-default"}
+              onClick={() => handleTest("default", "主模型")}
+            >
+              測試連線
+            </Button>
+            <Button size="sm" tone="secondary" onClick={() => setOpen(true)}>
+              修改
+            </Button>
+          </div>
+        </div>
+
+        {/* Fallback 1 */}
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-ink">備援 1 (Fallback 1)</span>
+              {llm?.fallback1.isConfigured ? (
+                <Badge tone="ok">已啟用備援</Badge>
+              ) : (
+                <Badge tone="muted">未配置 (可選)</Badge>
+              )}
+            </div>
+            <div className="mt-1 font-mono text-[12px] text-ink-3 break-all">
+              端點: {llm?.fallback1.baseUrl || "—"} · 模型: {llm?.fallback1.model || "—"} · API Key: {llm?.fallback1.apiKeyMasked || "—"}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              size="sm"
+              disabled={!llm?.fallback1.isConfigured}
+              busy={pending === "test-llm-fallback_1"}
+              onClick={() => handleTest("fallback_1", "備援 1")}
+            >
+              測試連線
+            </Button>
+            <Button size="sm" tone="secondary" onClick={() => setOpen(true)}>
+              修改
+            </Button>
+          </div>
+        </div>
+
+        {/* Fallback 2 */}
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-ink">備援 2 (Fallback 2)</span>
+              {llm?.fallback2.isConfigured ? (
+                <Badge tone="ok">已啟用備援</Badge>
+              ) : (
+                <Badge tone="muted">未配置 (可選)</Badge>
+              )}
+            </div>
+            <div className="mt-1 font-mono text-[12px] text-ink-3 break-all">
+              端點: {llm?.fallback2.baseUrl || "—"} · 模型: {llm?.fallback2.model || "—"} · API Key: {llm?.fallback2.apiKeyMasked || "—"}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              size="sm"
+              disabled={!llm?.fallback2.isConfigured}
+              busy={pending === "test-llm-fallback_2"}
+              onClick={() => handleTest("fallback_2", "備援 2")}
+            >
+              測試連線
+            </Button>
+            <Button size="sm" tone="secondary" onClick={() => setOpen(true)}>
+              修改
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <ReasonDialog
+        open={open}
+        title="配置 LLM 模型與 API Key"
+        description="在此輸入主模型與備援模型設定。儲存後會即時寫入資料庫並優先於 ENV 生效，系統將自動重置待辦文章佇列並開始處理。留空則保持原值，清除請填 -。"
+        confirmLabel="儲存配置"
+        busy={pending === "save-llm"}
+        onClose={() => setOpen(false)}
+        onSubmit={async (reason) => {
+          const payload: Record<string, string> = {};
+          if (form.llmBaseUrl.trim()) payload.llmBaseUrl = form.llmBaseUrl.trim();
+          if (form.llmApiKey.trim()) payload.llmApiKey = form.llmApiKey.trim();
+          if (form.llmModel.trim()) payload.llmModel = form.llmModel.trim();
+          if (form.llmFallback1BaseUrl.trim()) payload.llmFallback1BaseUrl = form.llmFallback1BaseUrl.trim();
+          if (form.llmFallback1ApiKey.trim()) payload.llmFallback1ApiKey = form.llmFallback1ApiKey.trim();
+          if (form.llmFallback1Model.trim()) payload.llmFallback1Model = form.llmFallback1Model.trim();
+          if (form.llmFallback2BaseUrl.trim()) payload.llmFallback2BaseUrl = form.llmFallback2BaseUrl.trim();
+          if (form.llmFallback2ApiKey.trim()) payload.llmFallback2ApiKey = form.llmFallback2ApiKey.trim();
+          if (form.llmFallback2Model.trim()) payload.llmFallback2Model = form.llmFallback2Model.trim();
+
+          const ok = await run(
+            "PUT",
+            "/api/admin/settings/llm",
+            { ...payload, reason: reason || "更新 LLM 配置" },
+            { label: "save-llm", success: "LLM 配置已成功更新！待辦文章已自動重置並排入處理佇列。" }
+          );
+          if (ok !== null) {
+            setForm({
+              llmBaseUrl: "", llmApiKey: "", llmModel: "",
+              llmFallback1BaseUrl: "", llmFallback1ApiKey: "", llmFallback1Model: "",
+              llmFallback2BaseUrl: "", llmFallback2ApiKey: "", llmFallback2Model: "",
+            });
+            return true;
+          }
+          return false;
+        }}
+      >
+        <div className="space-y-4">
+          <div className="rounded-control bg-bg-sunk p-3 space-y-3">
+            <div className="text-[13px] font-semibold text-ink">主模型（必填）</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Base URL" hint="OpenAI / Groq / Gemini 或自訂相容端點">
+                <Input
+                  type="text"
+                  placeholder={llm?.primary.baseUrl || "https://api.openai.com/v1"}
+                  value={form.llmBaseUrl}
+                  onChange={(e) => setForm({ ...form, llmBaseUrl: e.target.value })}
+                />
+              </Field>
+              <Field label="模型名稱 (Model)" hint="如 gpt-4o-mini、llama-3.3-70b-versatile">
+                <Input
+                  type="text"
+                  placeholder={llm?.primary.model || "gpt-4o-mini"}
+                  value={form.llmModel}
+                  onChange={(e) => setForm({ ...form, llmModel: e.target.value })}
+                />
+              </Field>
+            </div>
+            <Field label="API Key" hint="填入您的 API 金鑰（留空保持不變）">
+              <Input
+                type="password"
+                placeholder={llm?.primary.apiKeyMasked || "sk-..."}
+                value={form.llmApiKey}
+                onChange={(e) => setForm({ ...form, llmApiKey: e.target.value })}
+              />
+            </Field>
+          </div>
+
+          <div className="rounded-control bg-bg-sunk p-3 space-y-3">
+            <div className="text-[13px] font-semibold text-ink">備援 1 (Fallback 1，選填)</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Fallback 1 Base URL">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback1.baseUrl || "https://api.groq.com/openai/v1"}
+                  value={form.llmFallback1BaseUrl}
+                  onChange={(e) => setForm({ ...form, llmFallback1BaseUrl: e.target.value })}
+                />
+              </Field>
+              <Field label="Fallback 1 Model">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback1.model || "llama-3.3-70b-versatile"}
+                  value={form.llmFallback1Model}
+                  onChange={(e) => setForm({ ...form, llmFallback1Model: e.target.value })}
+                />
+              </Field>
+            </div>
+            <Field label="Fallback 1 API Key">
+              <Input
+                type="password"
+                placeholder={llm?.fallback1.apiKeyMasked || "gsk_..."}
+                value={form.llmFallback1ApiKey}
+                onChange={(e) => setForm({ ...form, llmFallback1ApiKey: e.target.value })}
+              />
+            </Field>
+          </div>
+
+          <div className="rounded-control bg-bg-sunk p-3 space-y-3">
+            <div className="text-[13px] font-semibold text-ink">備援 2 (Fallback 2，選填)</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Fallback 2 Base URL">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback2.baseUrl || "https://generativelanguage.googleapis.com/v1beta/openai/"}
+                  value={form.llmFallback2BaseUrl}
+                  onChange={(e) => setForm({ ...form, llmFallback2BaseUrl: e.target.value })}
+                />
+              </Field>
+              <Field label="Fallback 2 Model">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback2.model || "gemini-2.5-flash"}
+                  value={form.llmFallback2Model}
+                  onChange={(e) => setForm({ ...form, llmFallback2Model: e.target.value })}
+                />
+              </Field>
+            </div>
+            <Field label="Fallback 2 API Key">
+              <Input
+                type="password"
+                placeholder={llm?.fallback2.apiKeyMasked || "AIza..."}
+                value={form.llmFallback2ApiKey}
+                onChange={(e) => setForm({ ...form, llmFallback2ApiKey: e.target.value })}
+              />
+            </Field>
+          </div>
+        </div>
+      </ReasonDialog>
+    </Card>
+  );
+}
 
 function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
   const { run, pending } = useAdminAction();
@@ -281,6 +583,7 @@ export default function SettingsAdmin({ loaderData: s }: Route.ComponentProps) {
   return (
     <AdminPage title="设置" subtitle="不改代码即可替换的运营设置。每次修改都写入审计记录。">
       <div className="space-y-6">
+        <LlmCard llm={s.llm} />
         <WebhooksCard webhooks={s.webhooks} />
 
         <div className="grid gap-5 xl:grid-cols-2">

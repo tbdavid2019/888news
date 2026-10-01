@@ -12,6 +12,8 @@ import { audit } from "./auth.ts";
 import { invalidateSlackCache, sendSlackAlert } from "../notify/slack.ts";
 import { invalidateDiscordCache, sendDiscordAlert } from "../notify/discord.ts";
 import { invalidateTelegramCache, sendTelegramAlert } from "../notify/telegram.ts";
+import { getDbLlmConfig, invalidateLlmConfigCache, testModelConnection } from "../providers/llm.ts";
+import { requeueAllWaitingArticles } from "../jobs/content.ts";
 
 const MAX_QR_BYTES = 2 * 1024 * 1024;
 
@@ -172,3 +174,125 @@ export async function testWebhookChannel(channel: "slack" | "discord" | "telegra
   }
   return { ok: false, error: "unknown channel" };
 }
+
+export interface LlmChannelConfig {
+  baseUrl: string;
+  model: string;
+  apiKeyMasked: string | null;
+  isConfigured: boolean;
+  source: "env" | "db" | "none";
+}
+
+export interface LlmSettings {
+  primary: LlmChannelConfig;
+  fallback1: LlmChannelConfig;
+  fallback2: LlmChannelConfig;
+  waitingCount: number;
+}
+
+export async function getLlmSettings(): Promise<LlmSettings> {
+  const dbConfig = await getDbLlmConfig();
+
+  const mask = (s: string | null | undefined, keep = 4) => {
+    if (!s) return null;
+    if (s.length <= keep * 2) return `${s.slice(0, 2)}***${s.slice(-2)}`;
+    return `${s.slice(0, keep)}...${s.slice(-keep)}`;
+  };
+
+  const primaryKey = dbConfig.llmApiKey || credential("models", "LLM_API_KEY") || process.env.LLM_API_KEY || null;
+  const primaryBase = dbConfig.llmBaseUrl || credential("models", "LLM_BASE_URL") || process.env.LLM_BASE_URL || "https://api.openai.com/v1";
+  const primaryModel = dbConfig.llmModel || process.env.LLM_MODEL || "gpt-4o-mini";
+
+  const fb1Key = dbConfig.llmFallback1ApiKey || credential("models", "LLM_FALLBACK_1_API_KEY") || process.env.LLM_FALLBACK_1_API_KEY || null;
+  const fb1Base = dbConfig.llmFallback1BaseUrl || credential("models", "LLM_FALLBACK_1_BASE_URL") || process.env.LLM_FALLBACK_1_BASE_URL || "";
+  const fb1Model = dbConfig.llmFallback1Model || process.env.LLM_FALLBACK_1_MODEL || "";
+
+  const fb2Key = dbConfig.llmFallback2ApiKey || credential("models", "LLM_FALLBACK_2_API_KEY") || process.env.LLM_FALLBACK_2_API_KEY || null;
+  const fb2Base = dbConfig.llmFallback2BaseUrl || credential("models", "LLM_FALLBACK_2_BASE_URL") || process.env.LLM_FALLBACK_2_BASE_URL || "";
+  const fb2Model = dbConfig.llmFallback2Model || process.env.LLM_FALLBACK_2_MODEL || "";
+
+  let waitingCount = 0;
+  try {
+    const [row] = await sql<{ count: number }[]>`SELECT count(*)::int as count FROM articles WHERE processing_state = 'new' OR processing_state = 'failed'`;
+    waitingCount = Number(row?.count ?? 0);
+  } catch {}
+
+  return {
+    primary: {
+      baseUrl: primaryBase,
+      model: primaryModel,
+      apiKeyMasked: mask(primaryKey),
+      isConfigured: Boolean(primaryKey),
+      source: dbConfig.llmApiKey ? "db" : primaryKey ? "env" : "none",
+    },
+    fallback1: {
+      baseUrl: fb1Base,
+      model: fb1Model,
+      apiKeyMasked: mask(fb1Key),
+      isConfigured: Boolean(fb1Key && fb1Model),
+      source: dbConfig.llmFallback1ApiKey ? "db" : fb1Key ? "env" : "none",
+    },
+    fallback2: {
+      baseUrl: fb2Base,
+      model: fb2Model,
+      apiKeyMasked: mask(fb2Key),
+      isConfigured: Boolean(fb2Key && fb2Model),
+      source: dbConfig.llmFallback2ApiKey ? "db" : fb2Key ? "env" : "none",
+    },
+    waitingCount,
+  };
+}
+
+export async function saveLlmSettings(
+  input: {
+    llmBaseUrl?: string;
+    llmApiKey?: string;
+    llmModel?: string;
+    llmFallback1BaseUrl?: string;
+    llmFallback1ApiKey?: string;
+    llmFallback1Model?: string;
+    llmFallback2BaseUrl?: string;
+    llmFallback2ApiKey?: string;
+    llmFallback2Model?: string;
+  },
+  reason: string,
+  actor: string,
+): Promise<LlmSettings> {
+  if (!reason?.trim()) throw new Error("reason is required");
+  const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'llm_config'`;
+  const before = row?.value ?? {};
+  const next = { ...before };
+
+  for (const [k, v] of Object.entries(input)) {
+    if (v !== undefined) {
+      const trimmed = String(v).trim();
+      if (trimmed === "-") {
+        delete next[k];
+      } else if (trimmed) {
+        next[k] = trimmed;
+      }
+    }
+  }
+
+  await sql`
+    INSERT INTO settings (key, value, updated_by) VALUES ('llm_config', ${sql.json(next)}, ${actor})
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = now()
+  `;
+
+  invalidateLlmConfigCache();
+  await audit(actor, "settings.llm", "settings:llm_config", reason, before, next);
+
+  // If primary key is configured, automatically requeue waiting articles!
+  if (next.llmApiKey || credential("models", "LLM_API_KEY") || process.env.LLM_API_KEY) {
+    try {
+      await requeueAllWaitingArticles();
+    } catch (e) {
+      console.warn("Failed to auto-requeue articles after saving LLM settings:", e);
+    }
+  }
+
+  return getLlmSettings();
+}
+
+export { testModelConnection, requeueAllWaitingArticles };
+

@@ -30,11 +30,28 @@ function extraFromEnv(value: string | undefined): Record<string, unknown> | unde
   }
 }
 
+let cachedDbLlmConfig: Record<string, string> | null | undefined = undefined;
+
+export function invalidateLlmConfigCache() {
+  cachedDbLlmConfig = undefined;
+}
+
+export async function getDbLlmConfig(): Promise<Record<string, string>> {
+  if (cachedDbLlmConfig !== undefined && cachedDbLlmConfig !== null) return cachedDbLlmConfig;
+  try {
+    const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'llm_config'`;
+    cachedDbLlmConfig = row?.value ?? {};
+  } catch {
+    cachedDbLlmConfig = {};
+  }
+  return cachedDbLlmConfig;
+}
+
 export const MODELS: Record<string, ModelSpec> = {
-  // Read from the environment at call time.
+  // Read from the environment or DB settings at call time.
   default: {
     key: "default", service: "llm", baseUrlEnv: "LLM_BASE_URL", apiKeyEnv: "LLM_API_KEY",
-    get model() { return process.env.LLM_MODEL ?? ""; },
+    get model() { return cachedDbLlmConfig?.llmModel ?? process.env.LLM_MODEL ?? "gpt-4o-mini"; },
     get extra() { return extraFromEnv(process.env.LLM_EXTRA_JSON); },
     get jsonMode() { return process.env.LLM_JSON_MODE !== "false"; },
     get vision() { return process.env.LLM_VISION === "true"; },
@@ -110,12 +127,12 @@ export const MODELS: Record<string, ModelSpec> = {
   // --- Configurable Multi-Tier Fallbacks ---
   fallback_1: {
     key: "fallback_1", service: "fallback_1", baseUrlEnv: "LLM_FALLBACK_1_BASE_URL", apiKeyEnv: "LLM_FALLBACK_1_API_KEY",
-    get model() { return process.env.LLM_FALLBACK_1_MODEL ?? ""; },
+    get model() { return cachedDbLlmConfig?.llmFallback1Model ?? process.env.LLM_FALLBACK_1_MODEL ?? ""; },
     jsonMode: true,
   },
   fallback_2: {
     key: "fallback_2", service: "fallback_2", baseUrlEnv: "LLM_FALLBACK_2_BASE_URL", apiKeyEnv: "LLM_FALLBACK_2_API_KEY",
-    get model() { return process.env.LLM_FALLBACK_2_MODEL ?? ""; },
+    get model() { return cachedDbLlmConfig?.llmFallback2Model ?? process.env.LLM_FALLBACK_2_MODEL ?? ""; },
     jsonMode: true,
   },
 };
@@ -208,21 +225,97 @@ export function getApiKey(spec: ModelSpec): string | null {
   return credential("models", spec.apiKeyEnv) ?? process.env[spec.apiKeyEnv] ?? null;
 }
 
-export function isFallbackConfigured(key: "fallback_1" | "fallback_2"): boolean {
+export async function isFallbackConfigured(key: "fallback_1" | "fallback_2"): Promise<boolean> {
   const spec = MODELS[key];
   if (!spec) return false;
-  const apiKey = getApiKey(spec);
-  const model = spec.model;
+  const dbConfig = await getDbLlmConfig();
+  const apiKey = (key === "fallback_1" ? dbConfig.llmFallback1ApiKey : dbConfig.llmFallback2ApiKey) || getApiKey(spec);
+  const model = (key === "fallback_1" ? dbConfig.llmFallback1Model : dbConfig.llmFallback2Model) || spec.model;
   return Boolean(apiKey && model);
+}
+
+export async function testModelConnection(
+  target: "default" | "fallback_1" | "fallback_2",
+): Promise<{ ok: boolean; model?: string; error?: string }> {
+  const spec = MODELS[target];
+  if (!spec) return { ok: false, error: `未知的模型項目: ${target}` };
+
+  const dbConfig = await getDbLlmConfig();
+  let baseUrl = getBaseUrl(spec);
+  let apiKey = getApiKey(spec);
+  let modelName = spec.model;
+
+  if (target === "default") {
+    baseUrl = dbConfig.llmBaseUrl || baseUrl || "https://api.openai.com/v1";
+    apiKey = dbConfig.llmApiKey || apiKey;
+    modelName = dbConfig.llmModel || modelName || "gpt-4o-mini";
+  } else if (target === "fallback_1") {
+    baseUrl = dbConfig.llmFallback1BaseUrl || baseUrl;
+    apiKey = dbConfig.llmFallback1ApiKey || apiKey;
+    modelName = dbConfig.llmFallback1Model || modelName;
+  } else if (target === "fallback_2") {
+    baseUrl = dbConfig.llmFallback2BaseUrl || baseUrl;
+    apiKey = dbConfig.llmFallback2ApiKey || apiKey;
+    modelName = dbConfig.llmFallback2Model || modelName;
+  }
+
+  if (!apiKey) return { ok: false, error: "API Key 尚未配置" };
+  if (!modelName) return { ok: false, error: "模型名稱未填寫" };
+  if (!baseUrl) return { ok: false, error: "Base URL 未填寫" };
+
+  try {
+    const url = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages: [{ role: "user", content: "Reply with pong" }],
+        max_tokens: 10,
+        temperature: 0,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      return { ok: false, error: `HTTP ${res.status}: ${errText.slice(0, 150)}` };
+    }
+    return { ok: true, model: modelName };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 async function executeSingleModel<S extends z.ZodType>(
   spec: ModelSpec,
   opts: ChatJsonOptions<S>,
 ): Promise<ChatJsonResult<z.infer<S>>> {
-  const baseUrl = getBaseUrl(spec);
-  const apiKey = getApiKey(spec);
-  if (!baseUrl || !apiKey || !spec.model) {
+  const dbConfig = await getDbLlmConfig();
+  let baseUrl = getBaseUrl(spec);
+  let apiKey = getApiKey(spec);
+  let modelName = spec.model;
+
+  if (spec.key === "default") {
+    if (dbConfig.llmBaseUrl) baseUrl = dbConfig.llmBaseUrl;
+    if (dbConfig.llmApiKey) apiKey = dbConfig.llmApiKey;
+    if (dbConfig.llmModel) modelName = dbConfig.llmModel;
+    if (!baseUrl) baseUrl = "https://api.openai.com/v1";
+    if (!modelName) modelName = "gpt-4o-mini";
+  } else if (spec.key === "fallback_1") {
+    if (dbConfig.llmFallback1BaseUrl) baseUrl = dbConfig.llmFallback1BaseUrl;
+    if (dbConfig.llmFallback1ApiKey) apiKey = dbConfig.llmFallback1ApiKey;
+    if (dbConfig.llmFallback1Model) modelName = dbConfig.llmFallback1Model;
+  } else if (spec.key === "fallback_2") {
+    if (dbConfig.llmFallback2BaseUrl) baseUrl = dbConfig.llmFallback2BaseUrl;
+    if (dbConfig.llmFallback2ApiKey) apiKey = dbConfig.llmFallback2ApiKey;
+    if (dbConfig.llmFallback2Model) modelName = dbConfig.llmFallback2Model;
+  }
+
+  if (!baseUrl || !apiKey || !modelName) {
     throw new Error(`Model ${spec.key} is not configured (${spec.baseUrlEnv}, ${spec.apiKeyEnv}${spec.key === "default" ? ", LLM_MODEL" : ""})`);
   }
 
@@ -230,7 +323,7 @@ async function executeSingleModel<S extends z.ZodType>(
   const maxTokens = Math.max(opts.maxTokens ?? 1500, 512) + (spec.key.endsWith("-think") ? 4000 : 0);
   const userText = typeof opts.user === "string" ? opts.user : JSON.stringify(opts.user);
   const body: Record<string, unknown> = {
-    model: spec.model,
+    model: modelName,
     messages: [
       // A prompt given as one user message (the title/summary prompts) has no system message.
       ...(opts.system ? [{ role: "system", content: opts.system }] : []),
@@ -246,10 +339,10 @@ async function executeSingleModel<S extends z.ZodType>(
   const receipt = await paidRequest(
     {
       service: spec.service,
-      model: spec.model,
+      model: modelName,
       purpose: opts.purpose,
       subject: opts.subject,
-      identity: { model: spec.model, promptVersion: opts.promptVersion, system: sha256(opts.system), user: sha256(userText), temperature, maxTokens, extra: spec.extra ?? null },
+      identity: { model: modelName, promptVersion: opts.promptVersion, system: sha256(opts.system), user: sha256(userText), temperature, maxTokens, extra: spec.extra ?? null },
       requestSummary: { promptVersion: opts.promptVersion, systemHash: sha256(opts.system), userHash: sha256(userText), userChars: userText.length, temperature, maxTokens },
       attemptTag: opts.attemptTag,
     },
@@ -316,8 +409,8 @@ export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): P
 
   const primaryKey = opts.model;
   const candidates: string[] = [primaryKey];
-  if (isFallbackConfigured("fallback_1") && primaryKey !== "fallback_1") candidates.push("fallback_1");
-  if (isFallbackConfigured("fallback_2") && primaryKey !== "fallback_2") candidates.push("fallback_2");
+  if ((await isFallbackConfigured("fallback_1")) && primaryKey !== "fallback_1") candidates.push("fallback_1");
+  if ((await isFallbackConfigured("fallback_2")) && primaryKey !== "fallback_2") candidates.push("fallback_2");
 
   let lastError: unknown = null;
 
