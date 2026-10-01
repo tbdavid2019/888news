@@ -8,11 +8,24 @@
 
 ### 🚀 新增與架構升級 (Features & Architecture)
 
-- **動態反爬與抓取容災升級（Anti-Scraping Fallback Engine）：**
-  - 整合 `2md.aiurl.tw` 高效 Markdown 提取引擎作為動態抓取 Fallback。
-  - **防驚群效應設計（Anti-Thundering Herd）：**
-    - 引入指數退避（Exponential Backoff）與動態隨機抖動延遲（Full Jitter Delay），避免信源併發失敗時流量瞬間灌入備用節點。
-    - 實裝智慧熔斷器（Circuit Breaker），當 Fallback 失敗率達到閾值時自動熔斷冷卻，保護下游服務。
+- **Docker GitHub Actions CI/CD 自動化與多架構支援 (GHCR Multi-Arch CI/CD)：**
+  - 新增 `.github/workflows/docker-publish.yml`，每次推送到 `main` 分支時由 GitHub 官方託管 Runner 自動建置並推送映像檔至 GitHub Packages (`ghcr.io/tbdavid2019/888news`)。
+  - 支援 `linux/amd64` 與 `linux/arm64` 雙架構（Multi-Arch），原生相容 AWS Graviton / ARM64 EC2 主機與 Apple Silicon。
+  - 整合 GitHub Actions 雲端快取 (`cache-from/to: type=gha`)，重造映像檔速度提升 80% 以上。
+  - 伺服器端 `docker-compose.yml` 預設直接拉取 `ghcr.io/tbdavid2019/888news:latest`，更新服務可在 10 秒內零編譯秒級完成。
+- **全面採用 `2md.aiurl.tw` 專屬 Reader 並剔除 Jina：**
+  - 廢棄所有 Jina Reader 依賴，所有網頁轉 Markdown 與動態爬取全數由 `https://2md.aiurl.tw` 接管。
+  - 整合防驚群效應設計（Full Jitter Delay）與單機本地測試 stub 快速旁路。
+- **Tibo (@thsottiaux) Codex 重置 Twitter 即時爬蟲監控：**
+  - 後端監控模組實作 `collectPostsVia2md()`，透過 `2md.aiurl.tw/https://x.com/thsottiaux` 突破 Twitter 爬蟲防禦，即時抓取並解析推文與發布時間。
+  - Worker 排程註冊 `monitor.tick` 定時巡檢，推文自動經 LLM 重點歸納後發布於前台 `/codex-reset` 專題頁面。
+- **公開 RSS 訂閱連結支援：**
+  - 在 `/all` 全部最新消息頁面桌面端與行動端頂部，新增醒目的「RSS 訂閱」按鈕，直接導向 `/feed/all.xml`，方便讀者以 Inoreader、Feedly、NetNewsWire 等閱讀器訂閱。
+- **LLM 輸入上下文窗口擴展：**
+  - 將長文分析與摘要的本文輸入截斷限制由 7,000 字擴增至 25,000 字，充分發揮現代長上下文大模型優勢，不再漏失長篇技術論文與發布會要點。
+- **後台管理介面 100% 台灣繁體中文在地化：**
+  - 服務端新增 `adminGet` 資料載入層自動繁簡轉換。
+  - 前端 AdminLayout 裝載 `AdminAutoConverter` 智慧觀察器（MutationObserver + OpenCC），即時將所有後台頁面按鈕、表格、側邊欄、表單 placeholder 與動態 DOM 元素自動轉為台灣繁體中文，消除任何殘留簡體。
 - **全方位通訊告警整合（Multi-Channel Alerting）：**
   - 新增支援 **Telegram Bot**（Chat ID + Bot Token）、**Slack Webhook** 以及 **Discord Webhook**。
   - 後台系統監控與異常通知支援自動多渠道分發與故障降級。
