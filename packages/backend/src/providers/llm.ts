@@ -208,8 +208,9 @@ export function escapeControlCharsInStrings(json: string): string {
 }
 
 function isConnectFailure(error: unknown): boolean {
+  if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) return true;
   const code = (error as { cause?: { code?: string } })?.cause?.code ?? (error as { code?: string })?.code;
-  return ["ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN", "UND_ERR_CONNECT_TIMEOUT", "ECONNRESET_BEFORE_SEND", "CERT_HAS_EXPIRED"].includes(code ?? "");
+  return ["ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN", "UND_ERR_CONNECT_TIMEOUT", "ECONNRESET_BEFORE_SEND", "CERT_HAS_EXPIRED", "ETIMEDOUT"].includes(code ?? "");
 }
 
 export function getBaseUrl(spec: ModelSpec): string | null {
@@ -426,9 +427,13 @@ export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): P
 
     // Circuit Breaker check: avoid hammering broken provider or stampeding
     const check = canExecute(candidateKey);
-    if (!check.allow && candidates.length > 1 && i < candidates.length - 1) {
-      console.warn(`[CircuitBreaker] Skipping ${candidateKey} (${check.reason}), switching to fallback`);
-      continue;
+    if (!check.allow) {
+      if (i < candidates.length - 1) {
+        console.warn(`[CircuitBreaker] Skipping ${candidateKey} (${check.reason}), switching to fallback`);
+        continue;
+      } else {
+        throw new Error(`CircuitBreaker is OPEN for ${candidateKey}: ${check.reason}`);
+      }
     }
 
     try {
