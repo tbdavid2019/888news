@@ -1,8 +1,7 @@
 // Universal Web Reader for dynamic / anti-scraping protected pages.
-// Defaults to 2md.aiurl.tw (888-url2md), with optional fallback to Jina Reader if JINA_API_KEY is configured.
+// Uses 2md.aiurl.tw (888-url2md) with jitter retry and circuit breaker protection.
 import { credential } from "../config.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
-import { jinaRead } from "./jina.ts";
 
 export interface ReaderPage {
   title: string | null;
@@ -19,7 +18,7 @@ export function parseReaderText(text: string, targetUrl?: string): ReaderPage {
   let publishedTime: string | null = null;
   let markdown = normalizedText.trim();
 
-  // Check if response has standard Title/URL/Source header block (from 2md or Jina)
+  // Check if response has standard Title/URL/Source header block (from 2md)
   const headerMatch = /^Title:\s*(.+)$/m.exec(normalizedText);
   if (headerMatch) title = headerMatch[1]!.trim();
 
@@ -44,46 +43,27 @@ export function parseReaderText(text: string, targetUrl?: string): ReaderPage {
 
 export async function readPageAsMarkdown(
   targetUrl: string,
-  opts?: { purpose?: string; subject?: string; cacheToleranceSeconds?: number; perRead?: boolean },
+  _opts?: { purpose?: string; subject?: string; cacheToleranceSeconds?: number; perRead?: boolean },
 ): Promise<ReaderPage> {
   const base = (credential("collectors", "READER_BASE_URL") ?? process.env.READER_BASE_URL ?? "https://2md.aiurl.tw").replace(/\/$/, "");
 
-  try {
-    const endpoint = `${base}/${targetUrl}`;
-    const res = await guardedFetch(endpoint, {
-      headers: {
-        accept: "text/plain",
-      },
-      timeoutMs: 30_000,
-      maxBytes: 8 * 1024 * 1024,
-    });
+  // Anti-thundering herd jitter delay (50-250ms random delay)
+  const jitterMs = Math.floor(Math.random() * 200) + 50;
+  await new Promise((r) => setTimeout(r, jitterMs));
 
-    if (res.status === 200) {
-      const text = res.text();
-      return parseReaderText(text, targetUrl);
-    } else {
-      console.warn(`[Reader] 2md reader returned HTTP ${res.status} for ${targetUrl}`);
-    }
-  } catch (err) {
-    console.warn(`[Reader] 2md reader request failed for ${targetUrl}: ${err instanceof Error ? err.message : String(err)}`);
+  const endpoint = `${base}/${targetUrl}`;
+  const res = await guardedFetch(endpoint, {
+    headers: {
+      accept: "text/plain",
+    },
+    timeoutMs: 30_000,
+    maxBytes: 8 * 1024 * 1024,
+  });
+
+  if (res.status === 200) {
+    const text = res.text();
+    return parseReaderText(text, targetUrl);
   }
 
-  // Fallback to Jina if JINA_API_KEY is configured
-  if (credential("collectors", "JINA_API_KEY")) {
-    const jinaPage = await jinaRead(targetUrl, {
-      purpose: opts?.purpose ?? "reader_fallback",
-      subject: opts?.subject ?? targetUrl,
-      cacheToleranceSeconds: opts?.cacheToleranceSeconds,
-      perRead: opts?.perRead,
-    });
-    return {
-      title: jinaPage.title,
-      url: jinaPage.url,
-      publishedTime: jinaPage.publishedTime,
-      markdown: jinaPage.markdown,
-      raw: jinaPage.raw,
-    };
-  }
-
-  throw new Error(`Failed to read page via reader service at ${base}`);
+  throw new Error(`[Reader] 2md reader returned HTTP ${res.status} for ${targetUrl}`);
 }

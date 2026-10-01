@@ -80,7 +80,19 @@ export default function AllPage() {
     <div className="pb-6">
       {/* Desktop, as on 精选: the title, then one filter row with the search field aligned on the right. */}
       <div className="hidden lg:block">
-        <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">{title ?? `全部${withSubject("动态")}`}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">{title ?? `全部${withSubject("動態")}`}</h1>
+          <a
+            href="/feed/all.xml"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-[12.5px] font-medium text-ink-3 transition-colors hover:border-line-strong hover:text-ink"
+            title="訂閱全部動態 RSS"
+          >
+            <span className="size-2 rounded-full bg-amber" />
+            RSS 訂閱
+          </a>
+        </div>
         <div className="mb-5 mt-4 flex items-center justify-between gap-4">
           <CategoryTabs base="/all" category={f.category} channel={f.channel} layoutId="all-cat-desk" className="min-w-0" />
           <SearchField variant="track" defaultValue={f.q ?? ""} keep={keep} />
@@ -90,7 +102,17 @@ export default function AllPage() {
       {/* Phones: title with today's count, the search bar, then the same filter row as 精选. */}
       <div className="lg:hidden">
         <div className="flex items-baseline justify-between pb-3 pt-5">
-          <h1 className="text-[22px] font-bold text-ink">{title ?? "全部動態"}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-[22px] font-bold text-ink">{title ?? "全部動態"}</h1>
+            <a
+              href="/feed/all.xml"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-medium text-ink-4 hover:text-ink"
+            >
+              RSS
+            </a>
+          </div>
           {!f.q && (
             <span className="text-[12.5px] text-ink-4">
               今日 <span className="num">{data.todayCount}</span> 則

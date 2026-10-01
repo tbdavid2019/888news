@@ -4,6 +4,8 @@
 // announcement it is 3 minutes for a while.
 import { sql } from "../db.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
+import { credential } from "../config.ts";
+import { readPageAsMarkdown } from "../providers/reader.ts";
 import { getTweet, searchTweets, tweetText, type SdTweet } from "../providers/socialdata.ts";
 import { deliverContent } from "../notify/deliver.ts";
 import { applyRecognition } from "./assemble.ts";
@@ -68,10 +70,55 @@ async function storePost(t: SdTweet) {
     ON CONFLICT (id) DO NOTHING`;
 }
 
+async function collectPostsVia2md(): Promise<number> {
+  try {
+    const profilePage = await readPageAsMarkdown(`https://x.com/${AUTHOR}`);
+    const statusIds = Array.from(new Set(Array.from(profilePage.raw.matchAll(/https:\/\/x\.com\/thsottiaux\/status\/(\d+)/g), (m) => m[1])));
+    let stored = 0;
+    for (const id of statusIds) {
+      const [exists] = await sql`SELECT 1 FROM monitor_posts WHERE id = ${id}`;
+      if (exists) continue;
+
+      try {
+        const page = await readPageAsMarkdown(`https://x.com/${AUTHOR}/status/${id}`);
+        let text = "";
+        const m = page.markdown.match(/@thsottiaux\)\s+([\s\S]*?)(?:\[\d+:\d+|\n\n## Log in|\n\*)/);
+        if (m && m[1]) {
+          text = m[1].replace(/Show more/g, "").trim();
+        } else {
+          text = page.markdown.split("\n\n").find((p) => p.includes("GPT") || p.includes("Codex") || p.length > 20) ?? page.title ?? "";
+        }
+
+        const publishedAt = page.publishedTime ? new Date(page.publishedTime) : new Date();
+
+        await sql`
+          INSERT INTO monitor_posts (id, author, published_at, text, url, context, raw, origin)
+          VALUES (${id}, ${AUTHOR}, ${publishedAt}, ${text}, ${`https://x.com/${AUTHOR}/status/${id}`},
+                  ${sql.json([])}, ${sql.json({ page } as never)}, 'live')
+          ON CONFLICT (id) DO NOTHING`;
+        stored++;
+      } catch (err) {
+        console.warn(`[Monitor] Failed to fetch tweet ${id} via 2md:`, err);
+      }
+    }
+    return stored;
+  } catch (err) {
+    console.warn(`[Monitor] Failed to fetch Tibo profile via 2md:`, err);
+    return 0;
+  }
+}
+
 /** Collects new posts (or a lookback window) and stores them before moving the cursor. */
 export async function collectPosts(opts: { lookbackHours?: number } = {}): Promise<{ stored: number; pages: number }> {
   const started = new Date();
   await touchWatermarks({ lastAttemptAt: started.toISOString() });
+
+  if (!credential("collectors", "SOCIALDATA_API_KEY")) {
+    const stored = await collectPostsVia2md();
+    await touchWatermarks({ lastCollectedAt: started.toISOString() });
+    return { stored, pages: 1 };
+  }
+
   const cursor = (await getState<{ sinceId: string | null }>("cursor")) ?? { sinceId: null };
   const since = opts.lookbackHours ? Math.floor((Date.now() - opts.lookbackHours * 3600_000) / 1000) : null;
   const query = since ? `from:${AUTHOR} since_time:${since}` : `from:${AUTHOR}`;

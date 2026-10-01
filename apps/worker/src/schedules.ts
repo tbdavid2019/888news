@@ -86,9 +86,8 @@ export const SCHEDULES: Scheduled[] = [
         { name: "sources.mp-reconcile", cron: "*/15 * * * *", run: () => scheduleMpReconcile() },
       ]
     : []),
-  // Codex reset monitor: checked every minute, scanned every 5 (every 3 while hot). It reads X through
-  // SocialData, so without that key there is nothing to run.
-  ...(collecting && FEATURES.codexResetMonitor && credential("collectors", "SOCIALDATA_API_KEY")
+  // Codex reset monitor: checked every minute, scanned every 5 (every 3 while hot).
+  ...(collecting && FEATURES.codexResetMonitor
     ? [
         { name: "monitor.tick", cron: "* * * * *", run: () => monitorTick() },
         { name: "monitor.lookback", cron: "40 4 * * *", run: () => monitorTick({ lookbackHours: 48 }) },
