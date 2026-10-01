@@ -8,6 +8,7 @@ import { ThemeSwitch } from "./ThemeSwitch";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { IconGithub } from "../icons";
 import { useI18n } from "../../lib/i18n";
+import { SidebarPwaInstall } from "./PwaInstall";
 
 /** True while the changelog has an entry newer than the one this reader last opened. */
 export function useChangelogDot(latestVersion: string | null): boolean {
@@ -67,6 +68,7 @@ export function Sidebar({ changelogVersion }: { changelogVersion: string | null 
       <div className="mt-2 space-y-2 px-1 pt-1">
         <LanguageSwitch className="mx-1" />
         <ThemeSwitch className="mx-1" />
+        <SidebarPwaInstall />
         {SITE.githubUrl && (
           <a
             href={SITE.githubUrl}

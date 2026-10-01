@@ -9,8 +9,9 @@ import { ThemeSwitch } from "../components/shell/ThemeSwitch";
 import { LanguageSwitch } from "../components/shell/LanguageSwitch";
 import { useI18n } from "../lib/i18n";
 import {
-  IconBookmark, IconChart, IconChevronRight, IconFlame, IconGlobe, IconGrid, IconHeart, IconHistory, IconMessage, IconMoon, IconPlug,
+  IconBookmark, IconChart, IconChevronRight, IconFlame, IconGlobe, IconGrid, IconHeart, IconHistory, IconMessage, IconMoon, IconPlug, IconDownload,
 } from "../components/icons";
+import { usePwaInstall, PwaInstallModal } from "../components/shell/PwaInstall";
 
 /** Shared caches may keep this page for five minutes. */
 export function headers() {
@@ -36,6 +37,7 @@ export default function MorePage() {
   const root = useRouteLoaderData<typeof rootLoader>("root");
   const changelogDot = useChangelogDot(root?.changelogVersion ?? null);
   const { t } = useI18n();
+  const { canInstall, isIOS, showIosGuide, setShowIosGuide, triggerInstall } = usePwaInstall();
 
   const groups: Array<{ title: string; rows: Row[] }> = [
     {
@@ -80,6 +82,23 @@ export default function MorePage() {
                 </Link>
               </li>
             ))}
+            {g.title === t("nav.section.more") && canInstall && (
+              <li>
+                <button
+                  type="button"
+                  onClick={triggerInstall}
+                  className="flex h-[50px] w-full items-center gap-3 px-4 text-left text-[15px] font-medium text-ink transition-colors active:bg-bg-sunk lg:hover:bg-bg-sunk"
+                >
+                  <span className="text-accent">
+                    <IconDownload size={18} />
+                  </span>
+                  <span className="flex flex-1 items-center gap-2">
+                    {t("nav.install_app")} (PWA)
+                  </span>
+                  <span className="text-[12px] text-ink-4">加到桌面</span>
+                </button>
+              </li>
+            )}
             {g.title === t("settings.appearance") && (
               <>
                 <li className="flex h-[58px] items-center gap-3 px-4 text-[15px] font-medium text-ink">
@@ -108,6 +127,12 @@ export default function MorePage() {
         {SITE.githubUrl && <a href={SITE.githubUrl} target="_blank" rel="noopener noreferrer" className="hover:text-ink-2">GitHub</a>}
         {SITE.icp && <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-ink-2">{SITE.icp}</a>}
       </div>
+
+      <PwaInstallModal
+        open={showIosGuide}
+        onClose={() => setShowIosGuide(false)}
+        isIOS={isIOS}
+      />
     </div>
   );
 }

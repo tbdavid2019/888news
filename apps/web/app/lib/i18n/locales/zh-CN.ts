@@ -20,6 +20,7 @@ export const zhCN: Record<TranslationKey, string> = {
   "nav.changelog": "更新日志",
   "nav.feedback": "意见反馈",
   "nav.more": "更多",
+  "nav.install_app": "安装 App",
   "nav.skip_to_content": "跳到正文",
   "nav.new_update": "有新的更新",
   "nav.back_to_top": "回到顶部",

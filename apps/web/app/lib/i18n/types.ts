@@ -22,6 +22,7 @@ export type TranslationKey =
   | "nav.changelog"
   | "nav.feedback"
   | "nav.more"
+  | "nav.install_app"
   | "nav.skip_to_content"
   | "nav.new_update"
   | "nav.back_to_top"

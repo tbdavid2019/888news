@@ -20,6 +20,7 @@ export const en: Record<TranslationKey, string> = {
   "nav.changelog": "Changelog",
   "nav.feedback": "Feedback",
   "nav.more": "More",
+  "nav.install_app": "Install App",
   "nav.skip_to_content": "Skip to content",
   "nav.new_update": "New updates available",
   "nav.back_to_top": "Back to top",
