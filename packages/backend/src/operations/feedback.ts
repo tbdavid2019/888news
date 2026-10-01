@@ -9,6 +9,9 @@ import { sql } from "../db.ts";
 import { sha256 } from "../lib/ids.ts";
 import { feishuInternalEnabled, forwardFeedbackToFeishu } from "../notify/feishu.ts";
 import { dispatchFeedback } from "../notify/dispatch.ts";
+import { isSlackConfigured } from "../notify/slack.ts";
+import { isDiscordConfigured } from "../notify/discord.ts";
+import { isTelegramConfigured } from "../notify/telegram.ts";
 
 export class FeedbackRejected extends Error {
   readonly status: number;
@@ -82,28 +85,44 @@ export async function submitFeedback(input: FeedbackInput): Promise<{ id: number
  * Forwards one feedback to configured channels (Slack, Discord, Telegram, and optional Feishu).
  */
 export async function forwardFeedback(id: number): Promise<"sent" | "disabled"> {
+  const feishuOn = feishuInternalEnabled();
+  const webhooksOn = isSlackConfigured() || isDiscordConfigured() || isTelegramConfigured();
+  if (!feishuOn && !webhooksOn) return "disabled";
+
   const [fb] = await sql<{ id: number; content: string; email: string | null; note: string | null; page_url: string | null; screenshot_key: string | null; created_at: Date }[]>`
     SELECT id, content, email, note, page_url, screenshot_key, created_at FROM feedback WHERE id = ${id} AND forwarded_at IS NULL`;
   if (!fb) return "disabled";
 
   try {
-    const res = await dispatchFeedback({
-      id: fb.id,
-      content: fb.content,
-      email: fb.email,
-      pageUrl: fb.page_url,
-      createdAt: fb.created_at,
-    });
+    let feishuSent = false;
+    let webhookSent = false;
 
-    if (feishuInternalEnabled()) {
-      await forwardFeedbackToFeishu(id).catch(() => {});
+    if (feishuOn) {
+      const res = await forwardFeedbackToFeishu(id);
+      if (res === "sent") feishuSent = true;
     }
 
-    if (res.dispatchedChannels.length > 0 || feishuInternalEnabled()) {
-      await sql`UPDATE feedback SET forwarded_at = now(), forward_error = NULL WHERE id = ${id}`;
-      return "sent";
+    if (webhooksOn) {
+      try {
+        const res = await dispatchFeedback({
+          id: fb.id,
+          content: fb.content,
+          email: fb.email,
+          pageUrl: fb.page_url,
+          createdAt: fb.created_at,
+        });
+        if (res.dispatchedChannels.length > 0) {
+          webhookSent = true;
+          if (!feishuSent) {
+            await sql`UPDATE feedback SET forwarded_at = now(), forward_error = NULL WHERE id = ${id}`;
+          }
+        }
+      } catch (err) {
+        if (!feishuSent) throw err;
+      }
     }
-    return "disabled";
+
+    return feishuSent || webhookSent ? "sent" : "disabled";
   } catch (error) {
     await sql`UPDATE feedback SET forward_error = ${String(error instanceof Error ? error.message : error).slice(0, 300)} WHERE id = ${id}`;
     throw error;
