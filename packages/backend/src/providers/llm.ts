@@ -320,7 +320,7 @@ async function executeSingleModel<S extends z.ZodType>(
   }
 
   const temperature = opts.temperature ?? 0.2;
-  const maxTokens = Math.max(opts.maxTokens ?? 1500, 512) + (spec.key.endsWith("-think") ? 4000 : 0);
+  const maxTokens = Math.max(opts.maxTokens ?? 2048, 2048) + (spec.key.endsWith("-think") ? 4000 : 0);
   const userText = typeof opts.user === "string" ? opts.user : JSON.stringify(opts.user);
   const body: Record<string, unknown> = {
     model: modelName,

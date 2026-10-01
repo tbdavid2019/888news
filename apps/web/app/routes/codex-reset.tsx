@@ -204,7 +204,7 @@ export default function CodexResetPage() {
           <p><strong className="font-semibold text-ink-3">有原话就按原话。</strong>Tibo 写了时间（如 “6pm PST”“next hour”“end of day”），按太平洋时间换算成北京时间，并多留一两个小时——他的确认帖通常比说的时间晚一点。只写了日期的，按他以往的习惯落在当天太平洋时间傍晚。</p>
           <p><strong className="font-semibold text-ink-3">没写时间就按习惯。</strong>Tibo 多在太平洋时间 16:30–21:30 按下重置按钮，也就是北京时间第二天早上 07:30–12:30。{d.confirmMinutes.length ? `近 ${d.confirmMinutes.length} 次确认中有 ${d.confirmMinutes.filter(inUsual).length} 次在这个时段。` : ""}推算只是参考，以 Tibo 的确认和你 Codex 里的用量为准。</p>
           <p><strong className="font-semibold text-ink-3">已生效、应已生效、等待中。</strong>Tibo 发帖确认才算“已生效”；预计时间过去几个小时仍没有确认帖，显示“应已生效”——他宣布过的重置以往都兑现了，只是常常不再发确认。重置卡与额度重置分开记录，发卡不代表额度已恢复。</p>
-          <p><strong className="font-semibold text-ink-3">持续跟踪 Tibo 的公开帖子。</strong>平时每 5 分钟检查一次，Tibo 确认故障或宣布重置后改为每 3 分钟。只有明确的重置或发卡消息才会推送飞书群。个人额度和重置卡余额请在 Codex 内查看。</p>
+          <p><strong className="font-semibold text-ink-3">持續追蹤 Tibo 的公開貼文。</strong>平時每 5 分鐘檢查一次，Tibo 確認故障或宣布重置後改為每 3 分鐘。只有明確的重置或發卡消息才會推播至通知頻道。個人額度與重置卡餘額請在 Codex 內查看。</p>
         </div>
       </details>
 

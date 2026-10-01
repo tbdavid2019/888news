@@ -495,39 +495,7 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
   );
 }
 
-function QrSlot({ slot, label, src }: { slot: "wechatQr" | "feishuQr"; label: string; src: string }) {
-  const { run, pending } = useAdminAction();
-  const input = useRef<HTMLInputElement>(null);
-  return (
-    <div className="flex items-center gap-4">
-      <img src={src} alt={label} className="size-28 rounded-card bg-white object-contain p-1.5 ring-1 ring-line" />
-      <div>
-        <div className="text-[14px] font-medium text-ink">{label}</div>
-        <div className="mt-0.5 break-all font-mono text-[11.5px] text-ink-4">{src}</div>
-        <input
-          ref={input}
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          className="hidden"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            if (!file) return;
-            if (file.size > 2 * 1024 * 1024) return toast("图片最大 2MB", "error");
-            const image = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(String(reader.result));
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            });
-            await run("POST", "/api/admin/settings/contact-qr", { slot, image }, { label: `qr-${slot}`, success: `${label}已更换，关于页 5 分钟内更新` });
-          }}
-        />
-        <Button className="mt-2" size="sm" busy={pending === `qr-${slot}`} onClick={() => input.current?.click()}>更换图片</Button>
-      </div>
-    </div>
-  );
-}
+
 
 function BudgetRow({ b }: { b: Settings["budgets"][number] }) {
   const { run, pending } = useAdminAction();
@@ -581,40 +549,32 @@ function TargetToggle({ t }: { t: Settings["targets"][number] }) {
 
 export default function SettingsAdmin({ loaderData: s }: Route.ComponentProps) {
   return (
-    <AdminPage title="设置" subtitle="不改代码即可替换的运营设置。每次修改都写入审计记录。">
+    <AdminPage title="系統設置" subtitle="無需修改程式碼即可調整的營運設置。每次修改皆會寫入審計日誌。">
       <div className="space-y-6">
         <LlmCard llm={s.llm} />
         <WebhooksCard webhooks={s.webhooks} />
 
-        <div className="grid gap-5 xl:grid-cols-2">
-          <Card title="通知目的地（飛書群組）" pad={false}>
-            <DataTable
-              rows={s.targets}
-              rowKey={(t) => t.key}
-              columns={[
-                { key: "k", label: "目的地", render: (t) => <div><div className="font-medium text-ink">{t.note ?? t.key}</div><div className="font-mono text-[11.5px] text-ink-4">{t.key} · {t.config_ref}</div></div> },
-                { key: "e", label: "状态", render: (t) => (t.enabled ? <Badge tone="ok">启用于 {bj(t.enabled_at)}</Badge> : <Badge>停用</Badge>) },
-                { key: "d", label: "7 天投递", align: "right", render: (t) => num(t.deliveries_7d) },
-                { key: "a", label: "", align: "right", render: (t) => <TargetToggle t={t} /> },
-              ]}
-            />
-          </Card>
-          <Card title="关于页二维码">
-            <div className="space-y-5">
-              <QrSlot slot="wechatQr" label="微信公众号二维码" src={s.contact.wechatQr} />
-              <QrSlot slot="feishuQr" label="飞书群二维码" src={s.contact.feishuQr} />
-            </div>
-          </Card>
-        </div>
+        <Card title="通知目的地通道" pad={false}>
+          <DataTable
+            rows={s.targets}
+            rowKey={(t) => t.key}
+            columns={[
+              { key: "k", label: "目的地", render: (t) => <div><div className="font-medium text-ink">{t.note ?? t.key}</div><div className="font-mono text-[11.5px] text-ink-4">{t.key} · {t.config_ref}</div></div> },
+              { key: "e", label: "狀態", render: (t) => (t.enabled ? <Badge tone="ok">啟用於 {bj(t.enabled_at)}</Badge> : <Badge>停用</Badge>) },
+              { key: "d", label: "7 天遞送", align: "right", render: (t) => num(t.deliveries_7d) },
+              { key: "a", label: "", align: "right", render: (t) => <TargetToggle t={t} /> },
+            ]}
+          />
+        </Card>
 
-        <Card title="付费请求上限" right={<span>已用：近 1 小时 / 近 24 小时</span>} pad={false}>
+        <Card title="付費請求上限" right={<span>已用：近 1 小時 / 近 24 小時</span>} pad={false}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-[13px]">
               <thead>
                 <tr className="border-b border-line text-left text-[12px] text-ink-3">
-                  <th className="px-3 py-2 font-medium">服务</th>
-                  <th className="px-3 py-2 font-medium">每分钟</th>
-                  <th className="px-3 py-2 font-medium">每小时</th>
+                  <th className="px-3 py-2 font-medium">服務</th>
+                  <th className="px-3 py-2 font-medium">每分鐘</th>
+                  <th className="px-3 py-2 font-medium">每小時</th>
                   <th className="px-3 py-2 font-medium">每天</th>
                   <th className="px-3 py-2 text-right font-medium">已用</th>
                   <th />
