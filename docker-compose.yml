@@ -7,6 +7,7 @@ x-app: &app
   restart: unless-stopped
   labels:
     - "com.centurylinklabs.watchtower.enable=true"
+    - "com.centurylinklabs.watchtower.scope=888news"
   environment: &app-env
     NODE_ENV: production
     DATABASE_URL: postgres://aihot:${POSTGRES_PASSWORD:-aihot}@db:5432/aihot
@@ -101,6 +102,7 @@ services:
     environment:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_SCOPE=888news
       - WATCHTOWER_POLL_INTERVAL=300
       - WATCHTOWER_TIMEOUT=210s
       - WATCHTOWER_INCLUDE_RESTARTING=true
