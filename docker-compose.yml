@@ -2,7 +2,7 @@ name: 888news
 
 x-app: &app
   build: .
-  image: 888news-app
+  image: ${DOCKER_IMAGE:-ghcr.io/tbdavid2019/888news:latest}
   env_file: .env
   restart: unless-stopped
   environment: &app-env
