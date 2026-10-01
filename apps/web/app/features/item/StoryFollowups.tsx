@@ -35,7 +35,7 @@ export function StoryFollowups({ story, currentId }: { story: StoryRef; currentI
     return () => { observer?.disconnect(); controller.abort(); };
   }, [story.publicId, currentId]);
   return <div ref={anchor}>
-    <noscript><a href={`/story/${story.publicId}`}>查看事件全部后续</a></noscript>
+    <noscript><a href={`/story/${story.publicId}`}>查看事件全部後續</a></noscript>
     {items && items.length > 0 && <Followups items={items} more={more} story={story} />}
   </div>;
 }
@@ -45,9 +45,9 @@ function Followups({items, more, story}: {items: StoryFollowup[]; more: boolean;
     <section className="mt-10 border-t border-line pt-5">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-[14px] font-semibold text-ink">
-          事件后续 <span className="num font-normal text-ink-4">· {items.length}{more ? "+" : ""}</span>
+          事件後續 <span className="num font-normal text-ink-4">· {items.length}{more ? "+" : ""}</span>
         </h2>
-        <MoreLink to={`/story/${story.publicId}`}>查看事件全部</MoreLink>
+        <MoreLink to={`/story/${story.publicId}`}>查看完整事件</MoreLink>
       </div>
       <ul className="divide-y divide-line-soft">
         {items.map((d) => (

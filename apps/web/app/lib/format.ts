@@ -1,9 +1,19 @@
 import { beijingDate, beijingTime, beijingWeekday } from "@aihot/contracts/time";
+import type { Locale } from "./i18n/types.ts";
 
 export { beijingDate, beijingTime, beijingWeekday };
 
-export function dayLabel(date: string, today: string): string {
+export function dayLabel(date: string, today: string, locale: Locale = "zh-TW"): string {
   const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  if (locale === "en") {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const base = `${months[m - 1]} ${d}`;
+    if (date === today) return `Today · ${base}`;
+    const diff = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86400000);
+    if (diff === 1) return `Yesterday · ${base}`;
+    if (y !== Number(today.slice(0, 4))) return `${base}, ${y}`;
+    return base;
+  }
   const base = `${m}月${d}日`;
   if (date === today) return `今天 · ${base}`;
   const diff = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86400000);
@@ -12,14 +22,35 @@ export function dayLabel(date: string, today: string): string {
   return base;
 }
 
-export function relativeTime(iso: string, now = Date.now()): string {
+export function relativeTime(iso: string, locale: Locale = "zh-TW", now = Date.now()): string {
   const t = Date.parse(iso);
   const s = Math.max(0, Math.round((now - t) / 1000));
-  if (s < 60) return "刚刚";
+  if (locale === "en") {
+    if (s < 60) return "just now";
+    const m = Math.round(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.round(h / 24);
+    if (d < 30) return `${d}d ago`;
+    return beijingDate(iso);
+  }
+  if (locale === "zh-CN") {
+    if (s < 60) return "刚刚";
+    const m = Math.round(s / 60);
+    if (m < 60) return `${m} 分钟前`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h} 小时前`;
+    const d = Math.round(h / 24);
+    if (d < 30) return `${d} 天前`;
+    return beijingDate(iso);
+  }
+  // zh-TW default
+  if (s < 60) return "剛剛";
   const m = Math.round(s / 60);
-  if (m < 60) return `${m} 分钟前`;
+  if (m < 60) return `${m} 分鐘前`;
   const h = Math.round(m / 60);
-  if (h < 24) return `${h} 小时前`;
+  if (h < 24) return `${h} 小時前`;
   const d = Math.round(h / 24);
   if (d < 30) return `${d} 天前`;
   return beijingDate(iso);

@@ -112,3 +112,47 @@ export function parseCopyFile(md: string, firstSection = /^## /m): CopyDocument 
   const start = md.search(firstSection);
   return { title, meta, intro, body: start >= 0 ? md.slice(start) : md };
 }
+
+export function formatArticleSummary(summary: string): string {
+  if (!summary) return "";
+  // If it already contains line breaks or markdown list syntax, leave as-is
+  if (summary.includes("\n") || /^\s*[-*]\s+/m.test(summary)) {
+    return summary;
+  }
+  // If it is a single block with multiple sentences, split lead sentence and format supporting points
+  const match = summary.match(/^([^。！？\n]+[。！？])\s*(.+)$/);
+  if (match) {
+    const [, lead, rest] = match;
+    // Check if the rest has semicolons separating points
+    if (rest.includes("；")) {
+      const parts = rest.split(/；\s*/).map((p) => p.trim()).filter(Boolean);
+      if (parts.length >= 2) {
+        const bullets = parts.map((p) => `- ${/[。！？]$/.test(p) ? p : p + "。"}`).join("\n");
+        return `${lead}\n\n${bullets}`;
+      }
+    }
+    // If the rest contains 2 or more complete sentences, format as bullet points for readability
+    const subSentences = rest.split(/(?<=[。！？])\s*/).map((s) => s.trim()).filter(Boolean);
+    if (subSentences.length >= 2) {
+      const bullets = subSentences.map((s) => `- ${s}`).join("\n");
+      return `${lead}\n\n${bullets}`;
+    }
+    return `${lead}\n\n${rest}`;
+  }
+  return summary;
+}
+
+export function stripMarkdown(md: string): string {
+  if (!md) return "";
+  return md
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^\s*[-*]\s+/gm, "")
+    .replace(/^\s*\d+[.．]\s+/gm, "")
+    .replace(/\n+/g, " ")
+    .trim();
+}
+

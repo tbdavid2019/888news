@@ -480,6 +480,37 @@
 .prose th { background: var(--bg-sunk); font-weight: 600; }
 .prose hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
 
+/* AI summaries on item detail pages: readable leading sentence with structured points */
+.prose-summary {
+  font-size: 16.5px;
+  line-height: 1.8;
+  color: var(--ink);
+}
+@media (min-width: 80rem) {
+  .prose-summary {
+    font-size: 18.5px;
+    line-height: 1.8;
+  }
+}
+.prose-summary p {
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.prose-summary ul, .prose-summary ol {
+  margin-top: 0.9em;
+  margin-bottom: 0.6em;
+  padding-left: 1.4em;
+  color: var(--ink-2);
+}
+.prose-summary li {
+  margin-top: 0.45em;
+  line-height: 1.75;
+}
+.prose-summary strong, .prose-summary b {
+  color: var(--ink);
+  font-weight: 650;
+}
+
 /* Policy pages read smaller and quieter than article bodies, with numbered sections set apart. */
 .prose-compact {
   font-size: 15px;
