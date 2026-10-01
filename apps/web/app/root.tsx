@@ -106,7 +106,13 @@ export default function App() {
   useHydratedFlag();
   const { pathname } = useLocation();
   // The admin has its own chrome.
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) return <Outlet />;
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return (
+      <LocaleProvider locale={meta.locale}>
+        <Outlet />
+      </LocaleProvider>
+    );
+  }
   return (
     <LocaleProvider locale={meta.locale}>
       <SiteShell changelogVersion={meta.changelogVersion}>

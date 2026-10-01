@@ -5,9 +5,11 @@ import { NavLink, Outlet, useLocation, useNavigation, type ShouldRevalidateFunct
 import type { Route } from "./+types/layout";
 import { RingMark } from "../../components/Logo";
 import { NavigationProgress } from "../../components/shell/Chrome";
+import { LanguageSwitch } from "../../components/shell/LanguageSwitch";
 import type { AdminMe } from "../../features/admin/action";
 import { Toaster } from "../../features/admin/toast";
 import { adminGet } from "../../lib/admin.server";
+import { useI18n } from "../../lib/i18n";
 
 type Counts = Partial<Record<"feedback" | "sources" | "runs" | "monitor", number>>;
 
@@ -22,28 +24,6 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => true;
 export const meta: Route.MetaFunction = () => [{ title: `${SITE.name} 后台` }, { name: "robots", content: "noindex, nofollow" }];
 
 export const headers: Route.HeadersFunction = () => ({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" });
-
-const NAV: Array<{ group: string; items: Array<{ to: string; label: string; count?: keyof Counts; tone?: "bad" | "accent" }> }> = [
-  {
-    group: "内容",
-    items: [
-      { to: "/admin/content", label: "内容诊断" },
-      { to: "/admin/sources", label: "信源", count: "sources", tone: "bad" },
-      ...(FEATURES.codexResetMonitor ? [{ to: "/admin/monitor", label: "Codex 重置", count: "monitor" as const, tone: "accent" as const }] : []),
-      { to: "/admin/feedback", label: "反馈", count: "feedback", tone: "accent" },
-    ],
-  },
-  {
-    group: "系统",
-    items: [
-      { to: "/admin/runs", label: "运行", count: "runs", tone: "bad" },
-      { to: "/admin/models", label: "模型与评测" },
-      { to: "/admin/selectbench", label: "SelectBench" },
-      { to: "/admin/settings", label: "设置" },
-      { to: "/admin/audit", label: "审计记录" },
-    ],
-  },
-];
 
 function NavItem({ to, label, count, tone }: { to: string; label: string; count?: number; tone?: "bad" | "accent" }) {
   return (
@@ -61,21 +41,57 @@ function NavItem({ to, label, count, tone }: { to: string; label: string; count?
   );
 }
 
+interface NavItemDef {
+  to: string;
+  label: string;
+  count?: keyof Counts;
+  tone?: "bad" | "accent";
+}
+
+interface NavGroupDef {
+  group: string;
+  items: NavItemDef[];
+}
+
 export default function AdminLayout({ loaderData }: Route.ComponentProps) {
   const { me, counts } = loaderData;
   const navigation = useNavigation();
   const location = useLocation();
-  const flat = NAV.flatMap((g) => g.items);
+  const { t } = useI18n();
+
+  const nav: NavGroupDef[] = [
+    {
+      group: t("admin.section.content"),
+      items: [
+        { to: "/admin/content", label: t("admin.nav.content_diag") },
+        { to: "/admin/sources", label: t("admin.nav.sources"), count: "sources" as const, tone: "bad" as const },
+        ...(FEATURES.codexResetMonitor ? [{ to: "/admin/monitor", label: "Codex 重置", count: "monitor" as const, tone: "accent" as const }] : []),
+        { to: "/admin/feedback", label: t("admin.nav.feedback"), count: "feedback" as const, tone: "accent" as const },
+      ],
+    },
+    {
+      group: t("admin.section.system"),
+      items: [
+        { to: "/admin/runs", label: t("admin.nav.runs"), count: "runs" as const, tone: "bad" as const },
+        { to: "/admin/models", label: t("admin.nav.models") },
+        { to: "/admin/selectbench", label: t("admin.nav.selectbench") },
+        { to: "/admin/settings", label: t("admin.nav.settings") },
+        { to: "/admin/audit", label: t("admin.nav.audit") },
+      ],
+    },
+  ];
+  const flat = nav.flatMap((g) => g.items);
+
   return (
     <div className="flex min-h-dvh bg-bg">
       <NavigationProgress active={navigation.state === "loading"} />
       <aside className="sticky top-0 hidden h-dvh w-[216px] shrink-0 flex-col border-r border-line bg-bg-sunk/50 px-3 py-4 lg:flex">
         <a href="/" className="mb-5 flex items-center gap-2 px-2">
           <RingMark className="size-6 text-accent" />
-          <span className="text-[15px] font-semibold tracking-tight text-ink">{SITE.name} 后台</span>
+          <span className="text-[15px] font-semibold tracking-tight text-ink">{SITE.name} {t("admin.title")}</span>
         </a>
         <nav className="flex-1 space-y-4 overflow-y-auto">
-          {NAV.map((g) => (
+          {nav.map((g) => (
             <div key={g.group}>
               <div className="mb-1 px-3 text-[11.5px] font-medium tracking-wide text-ink-4">{g.group}</div>
               <div className="space-y-0.5">
@@ -87,21 +103,27 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
           ))}
         </nav>
         <div className="mt-3 border-t border-line px-2 pt-3 text-[12.5px] text-ink-3">
+          <LanguageSwitch className="mb-3" />
           <div className="flex items-center justify-between gap-2">
             <span className="truncate">{me.name}</span>
-            {me.dev && <span className="rounded bg-amber/15 px-1.5 text-[11px] font-medium text-amber">开发</span>}
+            {me.dev && <span className="rounded bg-amber/15 px-1.5 text-[11px] font-medium text-amber">{t("admin.dev_tag")}</span>}
           </div>
           <form method="post" action="/api/auth/logout" className="mt-1.5">
-            <button type="submit" className="text-ink-4 hover:text-ink-2">退出登录</button>
+            <button type="submit" className="text-ink-4 hover:text-ink-2">{t("admin.sign_out")}</button>
           </form>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur lg:hidden">
-          <div className="flex items-center gap-2 px-4 pt-3">
-            <RingMark className="size-5 text-accent" />
-            <span className="text-[14px] font-semibold text-ink">{SITE.name} 后台</span>
-            {me.dev && <span className="rounded bg-amber/15 px-1.5 text-[11px] font-medium text-amber">开发</span>}
+          <div className="flex items-center justify-between px-4 pt-3">
+            <div className="flex items-center gap-2">
+              <RingMark className="size-5 text-accent" />
+              <span className="text-[14px] font-semibold text-ink">{SITE.name} {t("admin.title")}</span>
+              {me.dev && <span className="rounded bg-amber/15 px-1.5 text-[11px] font-medium text-amber">{t("admin.dev_tag")}</span>}
+            </div>
+            <div className="w-32">
+              <LanguageSwitch />
+            </div>
           </div>
           <nav className="no-scrollbar flex gap-1 overflow-x-auto px-3 py-2">
             {flat.map((i) => {

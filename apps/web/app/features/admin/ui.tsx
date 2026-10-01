@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { ago, bj } from "./format";
+import { useI18n } from "../../lib/i18n";
 
 export function AdminPage({ title, subtitle, actions, children }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; children: ReactNode }) {
   return (
@@ -269,9 +270,9 @@ export function ReasonDialog({
   open,
   title,
   description,
-  confirmLabel = "确认",
+  confirmLabel,
   danger,
-  requireReason = true,
+  requireReason = false,
   children,
   onClose,
   onSubmit,
@@ -288,6 +289,8 @@ export function ReasonDialog({
   onSubmit: (reason: string) => Promise<boolean | void> | boolean | void;
   busy?: boolean;
 }) {
+  const { t } = useI18n();
+  const labelConfirm = confirmLabel ?? t("admin.reason_dialog.confirm");
   const [reason, setReason] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
@@ -325,14 +328,14 @@ export function ReasonDialog({
             {description && <div className="mt-1.5 text-[13px] leading-relaxed text-ink-3">{description}</div>}
             {children && <div className="mt-4 space-y-3">{children}</div>}
             <div className="mt-4">
-              <Field label={requireReason ? "原因（写进审计记录）" : "备注（可选）"}>
-                <Textarea ref={ref} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={requireReason ? "为什么做这个改动" : ""} rows={2} />
+              <Field label={requireReason ? t("admin.reason_dialog.label") : t("admin.reason_dialog.note_label")}>
+                <Textarea ref={ref} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t("admin.reason_dialog.placeholder")} rows={2} />
               </Field>
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <Button tone="ghost" onClick={onClose}>取消</Button>
+              <Button tone="ghost" onClick={onClose}>{t("admin.reason_dialog.cancel")}</Button>
               <Button type="submit" tone={danger ? "danger" : "primary"} busy={busy} disabled={requireReason && !reason.trim()}>
-                {confirmLabel}
+                {labelConfirm}
               </Button>
             </div>
           </motion.form>
