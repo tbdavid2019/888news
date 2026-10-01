@@ -41,7 +41,9 @@ export async function listTargets() {
     SELECT t.key, t.purpose, t.kind, t.enabled, t.enabled_at, t.config_ref, t.note, t.updated_at,
            (SELECT count(*)::int FROM deliveries d WHERE d.target_key = t.key AND d.created_at > now() - interval '7 days') AS deliveries_7d,
            (SELECT max(d.sent_at) FROM deliveries d WHERE d.target_key = t.key) AS last_sent_at
-    FROM notify_targets t ORDER BY t.purpose, t.key`;
+    FROM notify_targets t
+    WHERE t.key NOT LIKE 'feishu%'
+    ORDER BY t.purpose, t.key`;
 }
 
 export async function setTargetEnabled(key: string, enabled: boolean, reason: string, actor: string) {
@@ -60,7 +62,9 @@ export async function listBudgets() {
     SELECT b.service, b.per_minute, b.per_hour, b.per_day, b.note, b.updated_at,
            (SELECT count(*)::int FROM receipt_attempts a WHERE a.service = b.service AND a.origin = 'live' AND a.started_at > now() - interval '1 day') AS used_day,
            (SELECT count(*)::int FROM receipt_attempts a WHERE a.service = b.service AND a.origin = 'live' AND a.started_at > now() - interval '1 hour') AS used_hour
-    FROM budgets b ORDER BY b.service`;
+    FROM budgets b
+    WHERE b.service NOT IN ('socialdata', 'jina', 'dajiala', 'zhipu', 'mimo', 'dashscope', 'deepseek')
+    ORDER BY b.service`;
 }
 
 export async function updateBudget(service: string, input: { perMinute: number; perHour: number; perDay: number; reason: string }, actor: string) {

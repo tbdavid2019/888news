@@ -497,15 +497,11 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
 
 
 
+const OBSOLETE_SERVICES = new Set(["jina", "socialdata", "dajiala", "zhipu", "mimo", "dashscope", "deepseek"]);
+
 const BUDGET_SERVICE_INFO: Record<string, { label: string; note: string; tone?: "ok" | "muted" | "accent" }> = {
   llm: { label: "LLM 主模型", note: "文章處理、判斷與翻譯之熔斷上限", tone: "accent" },
-  socialdata: { label: "SocialData (X)", note: "上游付費 API（888news 採用 2md 免費抓取，此項處於閒置 $0）", tone: "muted" },
-  jina: { label: "Jina Reader", note: "上游付費 Reader（888news 優先使用本地提取，此項閒置 $0）", tone: "muted" },
-  dajiala: { label: "大家啦 (微信)", note: "上游微信公眾號接口（閒置 $0）", tone: "muted" },
-  zhipu: { label: "智譜 GLM", note: "上游中國服務商模型熔斷（閒置 $0）", tone: "muted" },
-  mimo: { label: "小米 MiMo", note: "上游中國服務商模型熔斷（閒置 $0）", tone: "muted" },
-  dashscope: { label: "阿里百煉", note: "上游中國服務商模型熔斷（閒置 $0）", tone: "muted" },
-  deepseek: { label: "DeepSeek", note: "上游中國服務商模型熔斷（閒置 $0）", tone: "muted" },
+  embedding: { label: "Embedding 向量", note: "向量調用熔斷上限", tone: "muted" },
 };
 
 function BudgetRow({ b }: { b: Settings["budgets"][number] }) {
@@ -534,7 +530,7 @@ function BudgetRow({ b }: { b: Settings["budgets"][number] }) {
         <ReasonDialog
           open={open}
           title={`調整 ${b.service} 的請求上限`}
-          description="上限是付費請求的熔斷限制：超過後請求暫停並按窗口重試。填 0 表示立即停用此服務。"
+          description="上限是服務調用的熔斷限制：超過後請求暫停並按窗口重試。填 0 表示立即停用此服務。"
           confirmLabel="儲存"
           busy={pending === "budget"}
           onClose={() => setOpen(false)}
@@ -554,7 +550,7 @@ function TargetToggle({ t }: { t: Settings["targets"][number] }) {
       <ReasonDialog
         open={open}
         title={`${t.enabled ? "停用" : "啟用"}：${t.note ?? t.key}`}
-        description={t.enabled ? "停用後新的推送不再發往此群。" : "啟用時間會被記錄：啟用之前的內容不會補推。開發與彩排環境即使啟用也不會真的送出。"}
+        description={t.enabled ? "停用後新的推送不再發往此通道。" : "啟用時間會被記錄：啟用之前的內容不會補推。"}
         danger={t.enabled}
         confirmLabel={t.enabled ? "停用" : "啟用"}
         busy={pending === "target"}
@@ -566,46 +562,48 @@ function TargetToggle({ t }: { t: Settings["targets"][number] }) {
 }
 
 export default function SettingsAdmin({ loaderData: s }: Route.ComponentProps) {
+  const visibleBudgets = s.budgets.filter((b) => !OBSOLETE_SERVICES.has(b.service));
+  const visibleTargets = s.targets.filter((t) => !t.key.startsWith("feishu"));
+
   return (
     <AdminPage title="系統設定" subtitle="無需修改程式碼即可調整的營運設定。每次修改皆會寫入審計日誌。">
       <div className="space-y-6">
         <LlmCard llm={s.llm} />
         <WebhooksCard webhooks={s.webhooks} />
 
-        <Card
-          title="通知目的地通道"
-          right={<span className="text-[12px] text-ink-4">現代推播請優先使用上方 Webhook</span>}
-          pad={false}
-        >
-          <DataTable
-            rows={s.targets}
-            rowKey={(t) => t.key}
-            columns={[
-              {
-                key: "k",
-                label: "目的地",
-                render: (t) => (
-                  <div>
-                    <div className="flex items-center gap-1.5 font-medium text-ink">
-                      {t.note ?? t.key}
-                      {!t.enabled && t.key.startsWith("feishu") && (
-                        <span className="text-[11.5px] font-normal text-ink-4">（上游預設 · 閒置）</span>
-                      )}
+        {visibleTargets.length > 0 && (
+          <Card
+            title="通知目的地通道"
+            right={<span className="text-[12px] text-ink-4">現代推播請優先使用上方 Webhook</span>}
+            pad={false}
+          >
+            <DataTable
+              rows={visibleTargets}
+              rowKey={(t) => t.key}
+              columns={[
+                {
+                  key: "k",
+                  label: "目的地",
+                  render: (t) => (
+                    <div>
+                      <div className="flex items-center gap-1.5 font-medium text-ink">
+                        {t.note ?? t.key}
+                      </div>
+                      <div className="font-mono text-[11.5px] text-ink-4">{t.key} · {t.config_ref}</div>
                     </div>
-                    <div className="font-mono text-[11.5px] text-ink-4">{t.key} · {t.config_ref}</div>
-                  </div>
-                ),
-              },
-              { key: "e", label: "狀態", render: (t) => (t.enabled ? <Badge tone="ok">啟用於 {bj(t.enabled_at)}</Badge> : <Badge>停用</Badge>) },
-              { key: "d", label: "7 天遞送", align: "right", render: (t) => num(t.deliveries_7d) },
-              { key: "a", label: "", align: "right", render: (t) => <TargetToggle t={t} /> },
-            ]}
-          />
-        </Card>
+                  ),
+                },
+                { key: "e", label: "狀態", render: (t) => (t.enabled ? <Badge tone="ok">啟用於 {bj(t.enabled_at)}</Badge> : <Badge>停用</Badge>) },
+                { key: "d", label: "7 天遞送", align: "right", render: (t) => num(t.deliveries_7d) },
+                { key: "a", label: "", align: "right", render: (t) => <TargetToggle t={t} /> },
+              ]}
+            />
+          </Card>
+        )}
 
-        <Card title="付費請求上限 (熔斷機制)" right={<span>已用：近 1 小時 / 近 24 小時</span>} pad={false}>
+        <Card title="服務調用上限 (熔斷機制)" right={<span>已用：近 1 小時 / 近 24 小時</span>} pad={false}>
           <div className="p-3 border-b border-line bg-bg-sunk/40 text-[12.5px] text-ink-3">
-            此處為後端熔斷安全閥。888news 採零成本架構（X 採集經 2md 免費鏡像，網頁正文本地優先），未啟用之外部付費 API 均處於 0 用量安全狀態。
+            此處為後端熔斷安全閥。888news 採零成本架構（X 採集經 2md 免費鏡像，網頁正文本地優先），僅對啟用中的模型服務設定頻率與次數上限保護。
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-[13px]">
@@ -619,7 +617,7 @@ export default function SettingsAdmin({ loaderData: s }: Route.ComponentProps) {
                   <th />
                 </tr>
               </thead>
-              <tbody>{s.budgets.map((b) => <BudgetRow key={`${b.service}-${b.updated_at}`} b={b} />)}</tbody>
+              <tbody>{visibleBudgets.map((b) => <BudgetRow key={`${b.service}-${b.updated_at}`} b={b} />)}</tbody>
             </table>
           </div>
         </Card>

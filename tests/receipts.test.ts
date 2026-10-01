@@ -25,6 +25,7 @@ const ask = (subject: string) =>
 
 let savedBudget: { per_minute: number; per_hour: number; per_day: number } | undefined;
 before(async () => {
+  await sql`INSERT INTO budgets (service, per_minute, per_hour, per_day, note) VALUES ('deepseek', 100, 2000, 20000, 'test') ON CONFLICT (service) DO NOTHING`;
   [savedBudget] = await sql<{ per_minute: number; per_hour: number; per_day: number }[]>`SELECT per_minute, per_hour, per_day FROM budgets WHERE service = 'deepseek'`;
 });
 after(async () => {
@@ -37,7 +38,7 @@ after(async () => {
 test("the migrations seed a budget for every paid service", async () => {
   const rows = await sql<{ service: string }[]>`SELECT service FROM budgets`;
   const services = new Set(rows.map((r) => r.service));
-  for (const s of ["jina", "socialdata", "dajiala", "zhipu", "deepseek", "mimo", "dashscope"]) assert.ok(services.has(s), `no budget for ${s}`);
+  for (const s of ["llm", "embedding"]) assert.ok(services.has(s), `no budget for ${s}`);
 });
 
 test("an answer already received is reused instead of bought again", async () => {

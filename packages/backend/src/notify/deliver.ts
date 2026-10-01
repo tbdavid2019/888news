@@ -23,13 +23,9 @@ interface Target {
   config_ref: string | null;
 }
 
-/** Default content targets; they start disabled and are switched on in production only. */
+/** Default content targets; legacy Feishu targets removed in favor of Slack / Discord / Telegram. */
 export async function ensureContentTargets() {
-  await sql`
-    INSERT INTO notify_targets (key, purpose, kind, enabled, config_ref, note) VALUES
-      ('feishu-content-main', 'content', 'feishu_webhook', false, 'FEISHU_PUSH_WEBHOOK_URL', '飞书内容主群'),
-      ('feishu-content-mirror', 'content', 'feishu_webhook', false, 'FEISHU_PUSH_MIRROR_WEBHOOK_URL', '飞书内容镜像群')
-    ON CONFLICT (key) DO NOTHING`;
+  // No-op: modern push notifications use Slack / Discord / Telegram Webhooks.
 }
 
 export async function deliverContent(req: DeliveryRequest): Promise<Array<{ target: string; status: string }>> {
