@@ -383,6 +383,368 @@
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
+    },
+    {
+      "id": "vivago_ai",
+      "name": "Vivago AI (@vivago_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:vivago_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "工具/實踐",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "spacex",
+      "name": "SpaceX (@SpaceX)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SpaceX -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "科技"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "elonmusk",
+      "name": "Elon Musk (@elonmusk)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:elonmusk -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "xai",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "大佬觀點",
+        "xAI"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "sama",
+      "name": "Sam Altman (@sama)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:sama -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "openai",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "大佬觀點",
+        "OpenAI"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "openclaw",
+      "name": "OpenClaw (@openclaw)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:openclaw -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "開源/倉庫",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "steipete",
+      "name": "Peter Steinberger (@steipete)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:steipete -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "教程/實踐"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "zuck",
+      "name": "Mark Zuckerberg (@zuck)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:zuck -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "meta",
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "大佬觀點",
+        "Meta"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "darioamodei",
+      "name": "Dario Amodei (@DarioAmodei)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:DarioAmodei -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "安全/對齊",
+        "Anthropic"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "danielaamodei",
+      "name": "Daniela Amodei (@danielaamodei)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:danielaamodei -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "安全/對齊",
+        "Anthropic"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "ilyasut",
+      "name": "Ilya Sutskever (@ilyasut)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ilyasut -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "karpathy",
+      "name": "Andrej Karpathy (@karpathy)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:karpathy -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "大佬觀點",
+        "教程/實踐"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "demishassabis",
+      "name": "Demis Hassabis (@demishassabis)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:demishassabis -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "Google"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "jeffdean",
+      "name": "Jeff Dean (@jeffdean)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:jeffdean -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "Google"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "ylecun",
+      "name": "Yann LeCun (@ylecun)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ylecun -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "meta",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "大佬觀點",
+        "Meta"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "drfeifei",
+      "name": "Fei-Fei Li (@drfeifei)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:drfeifei -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "thom_wolf",
+      "name": "Thom Wolf (@Thom_Wolf)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Thom_Wolf -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "hugging-face",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "Hugging Face"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "andrewyng",
+      "name": "Andrew Ng (@AndrewYNg)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:AndrewYNg -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "教程/實踐"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "gdb",
+      "name": "Greg Brockman (@gdb)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:gdb -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": "openai",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "大佬觀點",
+        "OpenAI"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
     }
   ]
 }

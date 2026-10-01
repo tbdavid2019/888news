@@ -220,10 +220,9 @@ export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
   const blocks = page.markdown.split(/\n(?=\*\s+)/);
 
   for (const block of blocks) {
-    const statusMatch = new RegExp(`https://x\\.com/${handle}/status/(\\d+)`, "i").exec(block);
-    if (!statusMatch) continue;
-    const tweetId = statusMatch[1]!;
-    if (candidates.some((c) => c.identityKey === `x:${tweetId}`)) continue;
+    if (!block.trimStart().startsWith("*")) continue;
+    const statusMatch = new RegExp(`https://x\\.com/${handle}/status/(\\d+)`, "i").exec(block) ||
+      new RegExp(`https://x\\.com/[A-Za-z0-9_]+/status/(\\d+)`, "i").exec(block);
 
     let text = block
       .replace(/\*?\s*\[!\[Image.*?\]\(.*?\)\]\(.*?\)/g, "")
@@ -247,12 +246,17 @@ export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
     }));
 
     if (!text && media.length === 0) continue;
+    if (text.length < 5 && media.length === 0) continue;
+
+    const tweetId = statusMatch ? statusMatch[1]! : sha256(`${handle}:${text}`).slice(0, 16);
+    if (candidates.some((c) => c.identityKey === `x:${tweetId}`)) continue;
 
     const firstLine = text.split("\n").find((l) => l.trim()) ?? text;
     const title = firstLine.length > 140 ? `${firstLine.slice(0, 137)}...` : firstLine || `${source.name || handle} 於 X 發布動態`;
+    const tweetUrl = statusMatch ? `https://x.com/${handle}/status/${tweetId}` : `https://x.com/${handle}#${tweetId}`;
 
     candidates.push({
-      url: `https://x.com/${handle}/status/${tweetId}`,
+      url: tweetUrl,
       identityKey: `x:${tweetId}`,
       title,
       author: handle,
