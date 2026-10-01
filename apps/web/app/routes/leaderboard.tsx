@@ -95,7 +95,7 @@ export default function LeaderboardPage() {
         <section className="card p-5">
           <h2 className="text-[14px] font-semibold text-ink">關於價格</h2>
           <p className="mt-2 text-[13px] leading-relaxed text-ink-3">
-            API 價格來自廠商官網，按每百萬 Token 展示。{run.fx ? `美元報價按 ${run.fx.asOf} 匯率折算成人民幣。` : ""}快取價格指命中後的輸入價格，快取寫入、儲存及訂閱費用另計。
+            API 價格來自廠商官網，按每百萬 Token 展示，預設以美元（USD）計價，亦可切換為新台幣（TWD，參考匯率 1 USD ≈ 31.5 TWD）。快取價格指命中後的輸入價格，快取寫入、儲存及訂閱費用另計。
           </p>
         </section>
       </div>

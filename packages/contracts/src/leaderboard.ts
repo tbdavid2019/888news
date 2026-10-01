@@ -29,7 +29,15 @@ export interface LbBrand {
 
 export interface LbPrice {
   currency: "CNY" | "USD";
-  /** Per million tokens in RMB (converted at the run's rate when the list price is USD). */
+  /** Per million tokens in USD (default). */
+  inputUsd?: number | null;
+  outputUsd?: number | null;
+  cachedUsd?: number | null;
+  /** Per million tokens in TWD. */
+  inputTwd?: number | null;
+  outputTwd?: number | null;
+  cachedTwd?: number | null;
+  /** Per million tokens in RMB (legacy). */
   inputCny: number | null;
   outputCny: number | null;
   cachedCny: number | null;

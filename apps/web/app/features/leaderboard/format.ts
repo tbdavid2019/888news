@@ -1,16 +1,42 @@
 import type { LbPrice } from "@aihot/contracts/leaderboard";
 import { beijingDate, beijingTime } from "@aihot/contracts/time";
 
-/** ≥ ¥0.1 → up to two decimals; smaller amounts keep three significant digits. */
-export function yuan(v: number | null | undefined): string {
+export type LbCurrency = "USD" | "TWD";
+
+export function formatPrice(v: number | null | undefined, currency: LbCurrency = "USD"): string {
   if (v == null || !Number.isFinite(v)) return "—";
-  const n = v >= 0.1 ? Number(v.toFixed(2)) : Number(v.toPrecision(3));
-  return `¥${n.toLocaleString("en-US", { maximumFractionDigits: 6 })}`;
+  if (currency === "USD") {
+    if (v >= 1) return `$${v.toFixed(2)}`;
+    if (v >= 0.01) return `$${v.toFixed(2)}`;
+    return `$${Number(v.toPrecision(3))}`;
+  }
+  if (v >= 100) return `NT$${Math.round(v).toLocaleString("en-US")}`;
+  if (v >= 10) return `NT$${v.toFixed(1)}`;
+  if (v >= 0.1) return `NT$${v.toFixed(2)}`;
+  return `NT$${Number(v.toPrecision(3))}`;
 }
 
-export function listPrice(v: number | null, currency: LbPrice["currency"]): string {
+export function getPriceValue(p: LbPrice | null | undefined, field: "cached" | "input" | "output", currency: LbCurrency = "USD"): number | null {
+  if (!p) return null;
+  if (currency === "USD") {
+    if (field === "cached") return p.cachedUsd ?? (p.currency === "USD" ? p.cached : (p.cachedCny ? p.cachedCny / 7.2 : null));
+    if (field === "input") return p.inputUsd ?? (p.currency === "USD" ? p.input : (p.inputCny ? p.inputCny / 7.2 : null));
+    return p.outputUsd ?? (p.currency === "USD" ? p.output : (p.outputCny ? p.outputCny / 7.2 : null));
+  } else {
+    if (field === "cached") return p.cachedTwd ?? (p.cachedUsd != null ? p.cachedUsd * 31.5 : (p.currency === "USD" && p.cached != null ? p.cached * 31.5 : (p.cachedCny ? (p.cachedCny / 7.2) * 31.5 : null)));
+    if (field === "input") return p.inputTwd ?? (p.inputUsd != null ? p.inputUsd * 31.5 : (p.currency === "USD" && p.input != null ? p.input * 31.5 : (p.inputCny ? (p.inputCny / 7.2) * 31.5 : null)));
+    return p.outputTwd ?? (p.outputUsd != null ? p.outputUsd * 31.5 : (p.currency === "USD" && p.output != null ? p.output * 31.5 : (p.outputCny ? (p.outputCny / 7.2) * 31.5 : null)));
+  }
+}
+
+/** Legacy helper, forwards to USD formatting to avoid RMB leakage. */
+export function yuan(v: number | null | undefined): string {
+  return formatPrice(v, "USD");
+}
+
+export function listPrice(v: number | null, _currency: LbPrice["currency"] = "USD"): string {
   if (v == null) return "—";
-  return currency === "USD" ? `$${Number(v.toPrecision(6))}` : yuan(v);
+  return `$${Number(v.toPrecision(6))}`;
 }
 
 /** "09/26 20:00" in Beijing time, as the leaderboard has always shown update times. */

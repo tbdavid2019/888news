@@ -198,8 +198,14 @@ async function buildRunView(runId: string): Promise<RunView> {
 
   const priceRows = await sql<{ model_id: string; currency: "CNY" | "USD"; input: number | null; output: number | null; cached_input: number | null; source_url: string | null; verified_on: Date | null }[]>`
     SELECT model_id, currency, input, output, cached_input, source_url, verified_on FROM lb_prices WHERE kind = 'official' AND model_id = ANY(${modelIds})`;
-  const rate = info.fx?.rate ?? null;
-  const toCny = (v: number | null, currency: string) => (v == null ? null : currency === "CNY" ? v : rate ? v * rate : null);
+  const usdCnyRate = info.fx?.rate ?? 7.2;
+  const usdTwdRate = 31.5;
+  const toCny = (v: number | null, currency: string) => (v == null ? null : currency === "CNY" ? v : usdCnyRate ? v * usdCnyRate : null);
+  const toUsd = (v: number | null, currency: string) => (v == null ? null : currency === "USD" ? v : usdCnyRate ? v / usdCnyRate : null);
+  const toTwd = (v: number | null, currency: string) => {
+    const usd = toUsd(v, currency);
+    return usd == null ? null : usd * usdTwdRate;
+  };
   const prices = new Map<string, LbPrice>(
     priceRows.map((p) => [
       p.model_id,
@@ -208,6 +214,12 @@ async function buildRunView(runId: string): Promise<RunView> {
         input: p.input,
         output: p.output,
         cached: p.cached_input,
+        inputUsd: toUsd(p.input, p.currency),
+        outputUsd: toUsd(p.output, p.currency),
+        cachedUsd: toUsd(p.cached_input, p.currency),
+        inputTwd: toTwd(p.input, p.currency),
+        outputTwd: toTwd(p.output, p.currency),
+        cachedTwd: toTwd(p.cached_input, p.currency),
         inputCny: toCny(p.input, p.currency),
         outputCny: toCny(p.output, p.currency),
         cachedCny: toCny(p.cached_input, p.currency),

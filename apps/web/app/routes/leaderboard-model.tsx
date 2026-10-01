@@ -9,7 +9,7 @@ import { loadOr404 } from "../lib/api.server";
 import { breadcrumbLd, pageMeta, siteUrl, titled } from "../lib/seo";
 import { BrandMark } from "../features/leaderboard/BrandMark";
 import { EvidenceBadge } from "../features/leaderboard/Evidence";
-import { boardHref, listPrice, pctFixed, shortStamp, tokensWan, yuan } from "../features/leaderboard/format";
+import { boardHref, formatPrice, getPriceValue, pctFixed, shortStamp, tokensWan, type LbCurrency } from "../features/leaderboard/format";
 import { IconArrowLeft, IconArrowRight, IconArrowUpRight, IconChevronDown, IconExternal } from "../components/icons";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -61,7 +61,7 @@ function SectionHead({ eyebrow, title, sub }: { eyebrow: string; title: string; 
   );
 }
 
-function Stat({ label, children, foot }: { label: string; children: ReactNode; foot?: ReactNode }) {
+function Stat({ label, children, foot }: { label: ReactNode; children: ReactNode; foot?: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col">
       <span className="text-[11px] text-ink-4">{label}</span>
@@ -288,6 +288,29 @@ export default function LeaderboardModelPage() {
   const from = fromParam && (LEADERBOARD_PUBLIC_BOARDS as readonly string[]).includes(fromParam) ? fromParam : "overall";
   const { model, price, overall } = d;
   const withScores = d.categories.filter((c) => c.score !== null).length;
+
+  const [currency, setCurrency] = useState<LbCurrency>("USD");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("lb_currency") as LbCurrency;
+      if (saved === "USD" || saved === "TWD") setCurrency(saved);
+    } catch {}
+  }, []);
+
+  const handleCurrencyChange = (c: LbCurrency) => {
+    setCurrency(c);
+    try {
+      localStorage.setItem("lb_currency", c);
+    } catch {}
+  };
+
+  const altCurrency: LbCurrency = currency === "USD" ? "TWD" : "USD";
+  const cachedVal = getPriceValue(price, "cached", currency);
+  const inputVal = getPriceValue(price, "input", currency);
+  const outputVal = getPriceValue(price, "output", currency);
+  const altInputVal = getPriceValue(price, "input", altCurrency);
+  const altOutputVal = getPriceValue(price, "output", altCurrency);
+
   return (
     <div className="pb-12">
       <Link to={boardHref(from)} className="mt-4 inline-flex items-center gap-1.5 py-2 text-[13px] text-ink-3 transition-colors hover:text-accent lg:mt-0">
@@ -327,14 +350,26 @@ export default function LeaderboardModelPage() {
           <small className="ml-1 font-sans text-[11px] font-normal text-ink-4">Token</small>
         </Stat>
         <Stat
-          label="API 輸入 / 輸出 · 每百萬 Token"
+          label={
+            <span className="flex items-center justify-between">
+              <span>API 每百萬 Token</span>
+              <button
+                type="button"
+                onClick={() => handleCurrencyChange(altCurrency)}
+                className="rounded px-1.5 py-0.5 text-[10.5px] font-medium bg-bg-sunk text-accent hover:bg-accent-softer transition-colors"
+                title="切換計價幣別"
+              >
+                切換 {altCurrency}
+              </button>
+            </span>
+          }
           foot={
             price ? (
               <span className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
-                {price.cachedCny !== null && <span className="num">快取 {yuan(price.cachedCny)}</span>}
-                {price.currency === "USD" && (
+                {cachedVal !== null && <span className="num">快取 {formatPrice(cachedVal, currency)}</span>}
+                {altInputVal !== null && altOutputVal !== null && (
                   <span className="num text-ink-4">
-                    原價 {listPrice(price.input, "USD")} / {listPrice(price.output, "USD")}
+                    約 {formatPrice(altInputVal, altCurrency)} / {formatPrice(altOutputVal, altCurrency)}
                   </span>
                 )}
                 {price.officialUrl && (
@@ -348,7 +383,11 @@ export default function LeaderboardModelPage() {
             )
           }
         >
-          {price ? `${yuan(price.inputCny)} / ${yuan(price.outputCny)}` : <span className="font-sans text-[15px] font-normal text-ink-4">待核驗</span>}
+          {price && inputVal !== null && outputVal !== null ? (
+            `${formatPrice(inputVal, currency)} / ${formatPrice(outputVal, currency)}`
+          ) : (
+            <span className="font-sans text-[15px] font-normal text-ink-4">待核驗</span>
+          )}
         </Stat>
       </section>
 

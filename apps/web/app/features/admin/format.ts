@@ -30,11 +30,11 @@ export function num(n: number | string | null | undefined, digits = 0): string {
   return v.toLocaleString("zh-CN", { maximumFractionDigits: digits, minimumFractionDigits: digits });
 }
 
-export function money(n: number | string | null | undefined, currency = "CNY"): string {
+export function money(n: number | string | null | undefined, currency = "USD"): string {
   if (n === null || n === undefined) return "—";
   const v = Number(n);
-  const sign = currency === "USD" ? "$" : "¥";
-  return `${sign}${v.toLocaleString("zh-CN", { maximumFractionDigits: v < 10 ? 3 : 2, minimumFractionDigits: 2 })}`;
+  const sign = currency === "TWD" ? "NT$" : "$";
+  return `${sign}${v.toLocaleString("en-US", { maximumFractionDigits: v < 10 ? 3 : 2, minimumFractionDigits: 2 })}`;
 }
 
 export function duration(from: string | null, to: string | null): string {
