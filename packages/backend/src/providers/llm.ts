@@ -320,9 +320,10 @@ async function executeSingleModel<S extends z.ZodType>(
     throw new Error(`Model ${spec.key} is not configured (${spec.baseUrlEnv}, ${spec.apiKeyEnv}${spec.key === "default" ? ", LLM_MODEL" : ""})`);
   }
 
-  const temperature = opts.temperature ?? 0.2;
   const isReasoning = spec.key.endsWith("-think") || /r1|qwq|o1|o3|oss|reasoning/i.test(modelName);
-  const maxTokens = Math.max(opts.maxTokens ?? 2048, 2048) + (isReasoning ? 4096 : 0);
+  // Reasoning models (e.g. gpt-oss-20b, deepseek-r1) need sufficient entropy (0.5-0.7) to avoid looping in <think>
+  const temperature = isReasoning && (opts.temperature === undefined || opts.temperature < 0.5) ? 0.6 : (opts.temperature ?? 0.2);
+  const maxTokens = Math.max(opts.maxTokens ?? 2048, 2048) + (isReasoning ? 6144 : 0);
   const userText = typeof opts.user === "string" ? opts.user : JSON.stringify(opts.user);
   const body: Record<string, unknown> = {
     model: modelName,
@@ -365,7 +366,8 @@ async function executeSingleModel<S extends z.ZodType>(
       }
       const text = await res.text();
       if (!res.ok) {
-        const retryable = res.status === 429 || res.status >= 500;
+        const isJsonValidateFailed = res.status === 400 && text.includes("json_validate_failed");
+        const retryable = res.status === 429 || res.status >= 500 || isJsonValidateFailed;
         throw new ProviderRejectedError(`HTTP ${res.status}: ${text.slice(0, 500)}`, res.status, retryable);
       }
       let json: Record<string, unknown>;
