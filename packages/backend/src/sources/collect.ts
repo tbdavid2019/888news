@@ -10,6 +10,7 @@ import { allowed, fetchDetail, fetchWebList, type DetailNeed } from "./web-list.
 import { unsupportedConfig } from "./config-keys.ts";
 import { fetchJsonList } from "./json-list.ts";
 import { fetchXSearch, planXShards, readXSearch, shardHandle, shardQuery, SHARDABLE_SQL, tweetToCandidate, type XBacklog, type XRead } from "./x.ts";
+import { credential } from "../config.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
 
 export interface CollectResult {
@@ -242,6 +243,23 @@ export async function collectXShard(key: string, sourceIds: string[]): Promise<{
       FROM sources WHERE id IN ${sql(sourceIds)}`
   ).filter((m) => m.enabled && shardHandle(m));
   if (members.length === 0) return { key, status: "skipped", accounts: 0, found: 0, created: 0 };
+
+  // When SocialData API is not configured, fall back to individual zero-cost 2md collections
+  if (!credential("collectors", "SOCIALDATA_API_KEY")) {
+    let totalFound = 0;
+    let totalCreated = 0;
+    for (const m of members) {
+      try {
+        const res = await collectSource(m.id);
+        totalFound += res.found;
+        totalCreated += res.created;
+      } catch (err) {
+        console.warn(`[collectXShard fallback] Failed to collect ${m.id} via 2md:`, err);
+      }
+    }
+    return { key, status: "ok", accounts: members.length, found: totalFound, created: totalCreated };
+  }
+
   const minutes = shardMinutes(members[0]!.participation_mode);
   const runs = new Map<string, number>();
   for (const m of members) runs.set(m.id, (await sql<{ id: number }[]>`INSERT INTO fetch_runs (source_id) VALUES (${m.id}) RETURNING id`)[0]!.id);
@@ -299,11 +317,15 @@ export async function collectXShard(key: string, sourceIds: string[]): Promise<{
   return { key, status: "ok", accounts: members.length, found, created };
 }
 
-/** X accounts read by shard: a plain query and a watermark (the first fetch of an account is its own). */
-const sharded = () => sql`kind = 'x_search' AND config->>'query' ~* ${SHARDABLE_SQL} AND coalesce(config->>'searchType', 'Latest') = 'Latest' AND cursor->>'lastTweetId' IS NOT NULL`;
+/** X accounts read by shard: a plain query and a watermark (the first fetch of an account is its own). Only when SocialData is configured. */
+const sharded = () => {
+  if (!credential("collectors", "SOCIALDATA_API_KEY")) return sql`FALSE`;
+  return sql`kind = 'x_search' AND config->>'query' ~* ${SHARDABLE_SQL} AND coalesce(config->>'searchType', 'Latest') = 'Latest' AND cursor->>'lastTweetId' IS NOT NULL`;
+};
 
 /** Every minute: a shard is read when any of its accounts is due, all of them at once. */
 async function scheduleXShards(): Promise<number> {
+  if (!credential("collectors", "SOCIALDATA_API_KEY")) return 0;
   const rows = await sql<Array<Pick<SourceRow, "id" | "kind" | "config" | "cursor" | "participation_mode"> & { due: boolean }>>`
     SELECT id, kind, config, cursor, participation_mode, (next_fetch_at IS NULL OR next_fetch_at <= now()) AS due
     FROM sources WHERE enabled AND ${sharded()}`;

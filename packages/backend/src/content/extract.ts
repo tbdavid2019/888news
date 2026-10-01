@@ -7,6 +7,7 @@ import { guardedFetch } from "../lib/http-fetch.ts";
 import { collapseWhitespace, stripTags } from "../lib/text.ts";
 import { readPageAsMarkdown } from "../providers/reader.ts";
 import { BudgetExceededError } from "../providers/receipts.ts";
+import { credential } from "../config.ts";
 import { getArticle } from "../providers/socialdata.ts";
 import { onlyXArticleLink, xArticleText } from "../sources/x.ts";
 import { sanitizeBody, trimTrailingChrome } from "./sanitize.ts";
@@ -137,6 +138,10 @@ export async function extractArticleBody(articleId: string, allowJina = process.
  * the judging steps are told the article was not fetched.
  */
 async function extractXArticle(articleId: string, tweetId: string): Promise<"ok" | "unconfirmed"> {
+  if (!credential("collectors", "SOCIALDATA_API_KEY")) {
+    await sql`UPDATE articles SET body_status = 'unconfirmed', updated_at = now() WHERE id = ${articleId} AND body_status <> 'ok'`;
+    return "unconfirmed";
+  }
   const found = await getArticle(tweetId, { purpose: "x_article", subject: `article:${articleId}` });
   const got = found ? xArticleText(found) : null;
   if (!got) {
