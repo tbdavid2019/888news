@@ -1,416 +1,52 @@
 {
-  "$comment": "示范信源：首次启动时导入（scripts/seed.ts），已存在的不会被覆盖。之后在后台“信源”里增删改。字段说明见 docs/customize.md。",
+  "$comment": "示範信源：首次啟動時導入（scripts/seed.ts），已存在的不會被覆蓋。之後在後台「信源」裡增刪改。欄位說明見 docs/sources.md。",
   "sources": [
     {
-      "id": "rss-openai-news",
-      "name": "OpenAI News",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://openai.com/news/rss.xml",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": "openai",
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-google-deepmind",
-      "name": "Google DeepMind",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://deepmind.google/blog/rss.xml",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": "google",
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-google-research",
-      "name": "Google Research",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://research.google/blog/rss/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": "google",
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方",
-        "研究"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-hugging-face",
-      "name": "Hugging Face Blog",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://huggingface.co/blog/feed.xml",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": "hugging-face",
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方",
-        "开源"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-microsoft-research",
-      "name": "Microsoft Research",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://www.microsoft.com/en-us/research/feed/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": "microsoft",
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方",
-        "研究"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-nvidia-blog",
-      "name": "NVIDIA Blog",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://blogs.nvidia.com/feed/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": "nvidia",
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-aws-ml",
-      "name": "AWS Machine Learning Blog",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://aws.amazon.com/blogs/machine-learning/feed/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方",
-        "教程"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-github-ai",
-      "name": "GitHub Blog · AI & ML",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://github.blog/ai-and-ml/feed/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-mistral",
-      "name": "Mistral AI",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://mistral.ai/rss.xml",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "官方"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-bair",
-      "name": "Berkeley AI Research",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://bair.berkeley.edu/blog/feed.xml",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T1",
-      "first_party": true,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 180,
-      "tags": [
-        "研究"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-the-verge-ai",
-      "name": "The Verge · AI",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "媒体"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-techcrunch-ai",
-      "name": "TechCrunch · AI",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://techcrunch.com/category/artificial-intelligence/feed/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "媒体"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-ars-technica-ai",
-      "name": "Ars Technica · AI",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://arstechnica.com/ai/feed/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "媒体"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-mit-tech-review-ai",
-      "name": "MIT Technology Review · AI",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "媒体"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-the-decoder",
-      "name": "The Decoder",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://the-decoder.com/feed/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "媒体"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-simon-willison",
-      "name": "Simon Willison",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://simonwillison.net/atom/everything/",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "个人"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-import-ai",
-      "name": "Import AI",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://importai.substack.com/feed",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 180,
-      "tags": [
-        "个人",
-        "周刊"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "rss-latent-space",
-      "name": "Latent Space",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://www.latent.space/feed",
-        "_aihot": {
-          "initialBackfillLimit": 8
-        }
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 180,
-      "tags": [
-        "个人"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "vivago_ai",
-      "name": "Vivago AI (@vivago_ai)",
+      "id": "amd",
+      "name": "AMD",
       "kind": "x_search",
       "config": {
-        "query": "from:vivago_ai -filter:replies",
+        "query": "from:amd -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "晶片與算力"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "andrewyng",
+      "name": "Andrew Ng (@AndrewYNg)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:AndrewYNg -filter:replies",
         "searchType": "Latest"
       },
       "tier": "T1_5",
       "first_party": false,
       "owner_entity_id": null,
       "participation_mode": "editorial",
-      "interval_minutes": 60,
+      "interval_minutes": 30,
       "tags": [
-        "工具/實踐",
-        "產品更新"
+        "專家觀點",
+        "教學/實務"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
     },
     {
-      "id": "spacex",
-      "name": "SpaceX (@SpaceX)",
-      "kind": "x_search",
+      "id": "cloudflare-blog",
+      "name": "cloudflare blog",
+      "kind": "rss",
       "config": {
-        "query": "from:SpaceX -filter:replies",
-        "searchType": "Latest"
+        "feedUrl": "https://blog.cloudflare.com/rss/"
       },
       "tier": "T1",
       "first_party": true,
@@ -419,7 +55,89 @@
       "interval_minutes": 60,
       "tags": [
         "官方",
-        "科技"
+        "雲端與邊緣"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "danielaamodei",
+      "name": "Daniela Amodei (@danielaamodei)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:danielaamodei -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Anthropic",
+        "安全/對齊",
+        "專家觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "darioamodei",
+      "name": "Dario Amodei (@DarioAmodei)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:DarioAmodei -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Anthropic",
+        "安全/對齊",
+        "專家觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "demishassabis",
+      "name": "Demis Hassabis (@demishassabis)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:demishassabis -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "專家觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "drfeifei",
+      "name": "Fei-Fei Li (@drfeifei)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:drfeifei -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "論文/研究"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -432,37 +150,155 @@
         "query": "from:elonmusk -filter:replies",
         "searchType": "Latest"
       },
-      "tier": "T1",
+      "tier": "T1_5",
       "first_party": false,
       "owner_entity_id": "xai",
       "participation_mode": "editorial",
       "interval_minutes": 30,
       "tags": [
-        "大佬觀點",
-        "xAI"
+        "xAI",
+        "專家觀點"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
     },
     {
-      "id": "sama",
-      "name": "Sam Altman (@sama)",
-      "kind": "x_search",
+      "id": "embody-blog",
+      "name": "888Embody",
+      "kind": "rss",
       "config": {
-        "query": "from:sama -filter:replies",
-        "searchType": "Latest"
+        "feedUrl": "https://tbdavid2019.github.io/paper-daily/feed.xml"
       },
       "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 720,
+      "tags": [
+        "具身智能/機器人",
+        "論文/研究"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": true
+    },
+    {
+      "id": "gdb",
+      "name": "Greg Brockman (@gdb)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:gdb -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
       "first_party": false,
       "owner_entity_id": "openai",
       "participation_mode": "editorial",
       "interval_minutes": 30,
       "tags": [
-        "大佬觀點",
-        "OpenAI"
+        "OpenAI",
+        "專家觀點"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
+    },
+    {
+      "id": "hackernews100",
+      "name": "hackernews100",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://hnrss.org/frontpage?points=100"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "技術討論",
+        "社群"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": true
+    },
+    {
+      "id": "ilyasut",
+      "name": "Ilya Sutskever (@ilyasut)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ilyasut -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "jeffdean",
+      "name": "Jeff Dean (@jeffdean)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:jeffdean -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "專家觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "karpathy",
+      "name": "Andrej Karpathy (@karpathy)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:karpathy -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "教學/實務"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "ollama-release",
+      "name": "ollama release",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/ollama/ollama/releases.atom"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "本機模型",
+        "開源專案"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": true
     },
     {
       "id": "openclaw",
@@ -476,10 +312,432 @@
       "first_party": true,
       "owner_entity_id": null,
       "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "產品更新",
+        "開源專案"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "openrouter-blog",
+      "name": "openrouter blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://openrouter.ai/blog/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "模型路由"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": true
+    },
+    {
+      "id": "rss-ars-technica-ai",
+      "name": "Ars Technica · AI",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://arstechnica.com/ai/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
       "interval_minutes": 60,
       "tags": [
-        "開源/倉庫",
-        "產品更新"
+        "媒體"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-aws-ml",
+      "name": "AWS Machine Learning Blog",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://aws.amazon.com/blogs/machine-learning/feed/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "教學"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-bair",
+      "name": "Berkeley AI Research",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://bair.berkeley.edu/blog/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-github-ai",
+      "name": "GitHub Blog · AI & ML",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://github.blog/ai-and-ml/feed/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-google-deepmind",
+      "name": "Google DeepMind",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://deepmind.google/blog/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-google-research",
+      "name": "Google Research",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://research.google/blog/rss/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-hugging-face",
+      "name": "Hugging Face Blog",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://huggingface.co/blog/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "hugging-face",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "開源"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-import-ai",
+      "name": "Import AI",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://importai.substack.com/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "個人",
+        "週刊"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-latent-space",
+      "name": "Latent Space",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.latent.space/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "個人"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-microsoft-research",
+      "name": "Microsoft Research",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.microsoft.com/en-us/research/feed/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "microsoft",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-mistral",
+      "name": "Mistral AI",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://mistral.ai/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-mit-tech-review-ai",
+      "name": "MIT Technology Review · AI",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.technologyreview.com/topic/artificial-intelligence/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-nvidia-blog",
+      "name": "NVIDIA Blog",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://blogs.nvidia.com/feed/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "nvidia",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-openai-news",
+      "name": "OpenAI News",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://openai.com/news/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "openai",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-simon-willison",
+      "name": "Simon Willison",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://simonwillison.net/atom/everything/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "個人"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-techcrunch-ai",
+      "name": "TechCrunch · AI",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://techcrunch.com/category/artificial-intelligence/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-the-decoder",
+      "name": "The Decoder",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://the-decoder.com/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-the-verge-ai",
+      "name": "The Verge · AI",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "sama",
+      "name": "Sam Altman (@sama)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:sama -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "openai",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "OpenAI",
+        "專家觀點"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -496,192 +754,10 @@
       "first_party": false,
       "owner_entity_id": null,
       "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "大佬觀點",
-        "教程/實踐"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "zuck",
-      "name": "Mark Zuckerberg (@zuck)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:zuck -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": "meta",
-      "participation_mode": "editorial",
-      "interval_minutes": 120,
-      "tags": [
-        "大佬觀點",
-        "Meta"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "darioamodei",
-      "name": "Dario Amodei (@DarioAmodei)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:DarioAmodei -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": "anthropic",
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "大佬觀點",
-        "安全/對齊",
-        "Anthropic"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "danielaamodei",
-      "name": "Daniela Amodei (@danielaamodei)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:danielaamodei -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": "anthropic",
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "大佬觀點",
-        "安全/對齊",
-        "Anthropic"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "ilyasut",
-      "name": "Ilya Sutskever (@ilyasut)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:ilyasut -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "大佬觀點",
-        "論文/研究"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "karpathy",
-      "name": "Andrej Karpathy (@karpathy)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:karpathy -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
       "interval_minutes": 30,
       "tags": [
-        "大佬觀點",
-        "教程/實踐"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "demishassabis",
-      "name": "Demis Hassabis (@demishassabis)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:demishassabis -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": "google",
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "大佬觀點",
-        "Google"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "jeffdean",
-      "name": "Jeff Dean (@jeffdean)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:jeffdean -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": "google",
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "大佬觀點",
-        "Google"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "ylecun",
-      "name": "Yann LeCun (@ylecun)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:ylecun -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": "meta",
-      "participation_mode": "editorial",
-      "interval_minutes": 30,
-      "tags": [
-        "大佬觀點",
-        "Meta"
-      ],
-      "site_fulltext": false,
-      "syndicate_fulltext": false
-    },
-    {
-      "id": "drfeifei",
-      "name": "Fei-Fei Li (@drfeifei)",
-      "kind": "x_search",
-      "config": {
-        "query": "from:drfeifei -filter:replies",
-        "searchType": "Latest"
-      },
-      "tier": "T1",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 60,
-      "tags": [
-        "大佬觀點",
-        "論文/研究"
+        "專家觀點",
+        "教學/實務"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -694,54 +770,93 @@
         "query": "from:Thom_Wolf -filter:replies",
         "searchType": "Latest"
       },
-      "tier": "T1",
+      "tier": "T1_5",
       "first_party": false,
       "owner_entity_id": "hugging-face",
       "participation_mode": "editorial",
-      "interval_minutes": 60,
+      "interval_minutes": 30,
       "tags": [
-        "大佬觀點",
-        "Hugging Face"
+        "Hugging Face",
+        "專家觀點"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
     },
     {
-      "id": "andrewyng",
-      "name": "Andrew Ng (@AndrewYNg)",
-      "kind": "x_search",
+      "id": "vercel-blog",
+      "name": "Vercel Blog",
+      "kind": "rss",
       "config": {
-        "query": "from:AndrewYNg -filter:replies",
-        "searchType": "Latest"
+        "feedUrl": "https://vercel.com/atom"
       },
-      "tier": "T1",
-      "first_party": false,
+      "tier": "T1_5",
+      "first_party": true,
       "owner_entity_id": null,
       "participation_mode": "editorial",
       "interval_minutes": 60,
       "tags": [
-        "大佬觀點",
-        "教程/實踐"
+        "前端與部署",
+        "官方"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "vivago_ai",
+      "name": "Vivago AI (@vivago_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:vivago_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "產品更新",
+        "視訊/影片"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": true
+    },
+    {
+      "id": "ylecun",
+      "name": "Yann LeCun (@ylecun)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ylecun -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "meta",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Meta",
+        "專家觀點"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
     },
     {
-      "id": "gdb",
-      "name": "Greg Brockman (@gdb)",
+      "id": "zuck",
+      "name": "Mark Zuckerberg (@zuck)",
       "kind": "x_search",
       "config": {
-        "query": "from:gdb -filter:replies",
+        "query": "from:zuck -filter:replies",
         "searchType": "Latest"
       },
-      "tier": "T1",
+      "tier": "T1_5",
       "first_party": false,
-      "owner_entity_id": "openai",
+      "owner_entity_id": "meta",
       "participation_mode": "editorial",
-      "interval_minutes": 60,
+      "interval_minutes": 120,
       "tags": [
-        "大佬觀點",
-        "OpenAI"
+        "Meta",
+        "專家觀點"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
