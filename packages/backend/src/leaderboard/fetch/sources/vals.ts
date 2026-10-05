@@ -41,14 +41,37 @@ function revive(v: unknown): unknown {
   return value;
 }
 
+export async function extractBenchmarkView(html: string): Promise<View> {
+  for (const m of html.matchAll(/<astro-island\b([^>]*)>/g)) {
+    const attrs = m[1]!;
+    if (!/component-url="[^"]*BenchmarkView/i.test(attrs)) continue;
+    const props = /\sprops="([^"]*)"/.exec(attrs);
+    if (!props) continue;
+    const parsed = JSON.parse(unescapeAttribute(props[1]!)) as Record<string, unknown>;
+    if (parsed.benchmarkView) {
+      return (revive(parsed.benchmarkView) as { metadata: unknown; tasks: unknown }) as View;
+    }
+    if (parsed.benchmarkViewUrl) {
+      const rawUrl = revive(parsed.benchmarkViewUrl) as string;
+      const targetUrl = rawUrl.startsWith("http") ? rawUrl : new URL(rawUrl, PAGE).href;
+      const jsonRes = await guardedFetch(targetUrl, { timeoutMs: 30_000, maxBytes: 32 * 1024 * 1024 });
+      if (jsonRes.status !== 200) throw new Error(`vals benchmarkViewUrl HTTP ${jsonRes.status}`);
+      return JSON.parse(jsonRes.text()) as View;
+    }
+  }
+  throw new Error("vals: benchmark data not found on the page");
+}
+
 export function benchmarkView(html: string): View {
   for (const m of html.matchAll(/<astro-island\b([^>]*)>/g)) {
     const attrs = m[1]!;
-    if (!/component-url="[^"]*BenchmarkView[^"]*"/.test(attrs)) continue;
+    if (!/component-url="[^"]*BenchmarkView/i.test(attrs)) continue;
     const props = /\sprops="([^"]*)"/.exec(attrs);
-    if (!props) break;
+    if (!props) continue;
     const parsed = JSON.parse(unescapeAttribute(props[1]!)) as Record<string, unknown>;
-    return (revive(parsed.benchmarkView) as { metadata: unknown; tasks: unknown }) as View;
+    if (parsed.benchmarkView) {
+      return (revive(parsed.benchmarkView) as { metadata: unknown; tasks: unknown }) as View;
+    }
   }
   throw new Error("vals: benchmark data not found on the page");
 }
@@ -58,7 +81,7 @@ export const vals: Fetcher = {
   async fetch() {
     const res = await guardedFetch(PAGE, { timeoutMs: 60_000, maxBytes: 32 * 1024 * 1024 });
     if (res.status !== 200) throw new Error(`vals HTTP ${res.status}`);
-    const view = benchmarkView(res.text());
+    const view = await extractBenchmarkView(res.text());
     const overall = view.tasks.overall;
     const published = view.metadata.updated;
     const publishedAt = published ? `${published}T00:00:00.000Z` : null;
