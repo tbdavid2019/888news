@@ -287,7 +287,7 @@
       "config": {
         "feedUrl": "https://github.com/ollama/ollama/releases.atom"
       },
-      "tier": "T1_5",
+      "tier": "T1",
       "first_party": true,
       "owner_entity_id": null,
       "participation_mode": "editorial",
