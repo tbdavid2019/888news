@@ -15,8 +15,8 @@ interface AaModel {
 export const artificialAnalysis: Fetcher = {
   sourceKeys: ["artificial-analysis"],
   async fetch() {
-    const key = credential("collectors", "ARTIFICIAL_ANALYSIS_API_KEY");
-    if (!key) throw new Error("ARTIFICIAL_ANALYSIS_API_KEY is not configured");
+    const key = credential("collectors", "ARTIFICIAL_ANALYSIS_API_KEY") ?? credential("collectors", "AA_API_KEY");
+    if (!key) throw new Error("ARTIFICIAL_ANALYSIS_API_KEY (or AA_API_KEY) is not configured");
     const models: AaModel[] = [];
     let version: number | null = null;
     for (let page = 1; page <= 20; page++) {
