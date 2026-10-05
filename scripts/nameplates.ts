@@ -1,17 +1,17 @@
 // Generates the report nameplates (industry/brand/nameplates/*.svg and index.json): the subject word
-// from industry/site.ts (in the accent) and the Chinese title, set solid in Noto Sans SC Black
+// from industry/site.ts (in the accent) and the Chinese title, set solid in Noto Sans TC Black
 // (SIL OFL 1.1) as SVG paths, so the nameplate is one static logotype on every system. The Latin capitals are scaled to stand as tall as the Chinese
 // glyphs, both centred on one line, and the spacing is set by ink, pair by pair.
 //
-// Usage: node scripts/nameplates.ts <@fontsource/noto-sans-sc package directory>
-//   (fetch it with `npm pack @fontsource/noto-sans-sc@5.3.0` and untar; it is not a dependency)
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+// Usage: node scripts/nameplates.ts <@fontsource/noto-sans-tc package directory>
+//   (fetch it with `npm pack @fontsource/noto-sans-tc@5.3.0` and untar; it is not a dependency)
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import opentype from "opentype.js";
 import { SITE } from "@aihot/industry/site";
 
 const pkg = process.argv[2];
-if (!pkg) throw new Error("usage: node scripts/nameplates.ts <noto-sans-sc package dir>");
+if (!pkg) throw new Error("usage: node scripts/nameplates.ts <noto-sans-tc package dir>");
 
 /** Ink height of the Chinese glyphs, in the nameplate's units. */
 const H = 220;
@@ -30,21 +30,29 @@ const S = SITE.subject;
 const NAMEPLATES: Record<string, Array<{ text: string; accent: boolean }>> = {
   daily: [
     { text: S, accent: true },
-    { text: "日报", accent: false },
+    { text: "日報", accent: false },
   ],
   weekly: [
     { text: S, accent: true },
-    { text: "周报", accent: false },
+    { text: "週報", accent: false },
   ],
   monthly: [
     { text: S, accent: true },
-    { text: "月报", accent: false },
+    { text: "月報", accent: false },
   ],
   archive: [
-    { text: "日报", accent: false },
-    { text: "合订本", accent: true },
+    { text: "日報", accent: false },
+    { text: "合訂本", accent: true },
   ],
 };
+
+// Check if a full chinese-traditional woff exists in files (Noto Sans TC).
+const fullTraditional = path.join(pkg, "files", "noto-sans-tc-chinese-traditional-900-normal.woff");
+let fullFont: opentype.Font | null = null;
+if (existsSync(fullTraditional)) {
+  const buf = readFileSync(fullTraditional);
+  fullFont = opentype.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+}
 
 // Which woff slice of the 900 weight holds each character.
 const css = readFileSync(path.join(pkg, "900.css"), "utf8");
@@ -54,6 +62,7 @@ const faces = [...css.matchAll(/url\(\.\/files\/([\w-]+)\.woff2\)[^;]*;\s*unicod
 }));
 const fonts = new Map<string, opentype.Font>();
 function fontFor(ch: string): opentype.Font {
+  if (fullFont && fullFont.charToGlyphIndex(ch) > 0) return fullFont;
   const cp = ch.codePointAt(0)!;
   const face = faces.find((f) => f.ranges.some(([a, b]) => cp >= a! && cp <= (b ?? a!)));
   if (!face) throw new Error(`no slice holds ${ch}`);

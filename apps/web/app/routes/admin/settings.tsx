@@ -338,6 +338,10 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
 function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
   const { run, pending } = useAdminAction();
   const [open, setOpen] = useState(false);
+  const [clearTarget, setClearTarget] = useState<{ id: "slack" | "discord" | "telegram"; name: string } | null>(null);
+  const [clearSlack, setClearSlack] = useState(false);
+  const [clearDiscord, setClearDiscord] = useState(false);
+  const [clearTelegram, setClearTelegram] = useState(false);
   const [form, setForm] = useState({
     slackWebhookUrl: "",
     discordWebhookUrl: "",
@@ -357,6 +361,14 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
     } else if (res?.error) {
       toast(`${name} 測試發送失敗：${res.error}`, "error");
     }
+  };
+
+  const handleOpenEdit = () => {
+    setClearSlack(false);
+    setClearDiscord(false);
+    setClearTelegram(false);
+    setForm({ slackWebhookUrl: "", discordWebhookUrl: "", telegramBotToken: "", telegramChatId: "" });
+    setOpen(true);
   };
 
   const channels = [
@@ -387,7 +399,7 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
   return (
     <Card
       title="第三方通知 Webhook (Slack / Discord / Telegram)"
-      right={<Button size="sm" onClick={() => setOpen(true)}>配置 Webhook</Button>}
+      right={<Button size="sm" onClick={handleOpenEdit}>配置 Webhook</Button>}
       pad={false}
     >
       <div className="divide-y divide-line">
@@ -418,28 +430,85 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
                 >
                   發送測試
                 </Button>
-                <Button size="sm" tone="secondary" onClick={() => setOpen(true)}>
+                <Button size="sm" tone="secondary" onClick={handleOpenEdit}>
                   修改
                 </Button>
+                {isConfigured && (
+                  <Button
+                    size="sm"
+                    tone="secondary"
+                    className="text-accent-red hover:border-accent-red/30"
+                    busy={pending === `clear-${c.id}`}
+                    onClick={() => setClearTarget(c)}
+                  >
+                    清除
+                  </Button>
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
+      {/* Confirmation dialog for individual channel clear */}
+      <ReasonDialog
+        open={!!clearTarget}
+        title={`清除 ${clearTarget?.name} Webhook`}
+        description={`確定要清除 ${clearTarget?.name} Webhook 配置嗎？清除後系統將不再向此頻道推播任何系統警報或意見反饋。`}
+        confirmLabel="確認清除"
+        busy={pending === `clear-${clearTarget?.id}`}
+        onClose={() => setClearTarget(null)}
+        onSubmit={async (reason) => {
+          if (!clearTarget) return false;
+          const payload: Record<string, string> = {};
+          if (clearTarget.id === "slack") payload.slackWebhookUrl = "";
+          if (clearTarget.id === "discord") payload.discordWebhookUrl = "";
+          if (clearTarget.id === "telegram") {
+            payload.telegramBotToken = "";
+            payload.telegramChatId = "";
+          }
+          const ok = await run(
+            "PUT",
+            "/api/admin/settings/webhooks",
+            { ...payload, reason: reason || `清除 ${clearTarget.name} Webhook 配置` },
+            { label: `clear-${clearTarget.id}`, success: `${clearTarget.name} Webhook 配置已成功清除` }
+          );
+          if (ok !== null) {
+            setClearTarget(null);
+            return true;
+          }
+          return false;
+        }}
+      />
+
       <ReasonDialog
         open={open}
         title="配置第三方通知 Webhook"
-        description="在此輸入 Slack、Discord 或 Telegram Webhook。儲存後將寫入資料庫並優先於 ENV 生效，即刻應用於模型熔斷告警與意見反饋推播。若想清除某個設定，可填入符號 -。"
+        description="在此輸入 Slack、Discord 或 Telegram Webhook。儲存後將寫入資料庫並優先於 ENV 生效。留空保持原值；若要清除某項設定，可點擊「清除此設定」或在輸入框填入符號 -。"
         confirmLabel="儲存配置"
         busy={pending === "save-webhooks"}
         onClose={() => setOpen(false)}
         onSubmit={async (reason) => {
           const payload: Record<string, string> = {};
-          if (form.slackWebhookUrl.trim()) payload.slackWebhookUrl = form.slackWebhookUrl.trim() === "-" ? "" : form.slackWebhookUrl.trim();
-          if (form.discordWebhookUrl.trim()) payload.discordWebhookUrl = form.discordWebhookUrl.trim() === "-" ? "" : form.discordWebhookUrl.trim();
-          if (form.telegramBotToken.trim()) payload.telegramBotToken = form.telegramBotToken.trim() === "-" ? "" : form.telegramBotToken.trim();
-          if (form.telegramChatId.trim()) payload.telegramChatId = form.telegramChatId.trim() === "-" ? "" : form.telegramChatId.trim();
+          if (clearSlack) {
+            payload.slackWebhookUrl = "";
+          } else if (form.slackWebhookUrl.trim()) {
+            payload.slackWebhookUrl = form.slackWebhookUrl.trim() === "-" ? "" : form.slackWebhookUrl.trim();
+          }
+
+          if (clearDiscord) {
+            payload.discordWebhookUrl = "";
+          } else if (form.discordWebhookUrl.trim()) {
+            payload.discordWebhookUrl = form.discordWebhookUrl.trim() === "-" ? "" : form.discordWebhookUrl.trim();
+          }
+
+          if (clearTelegram) {
+            payload.telegramBotToken = "";
+            payload.telegramChatId = "";
+          } else {
+            if (form.telegramBotToken.trim()) payload.telegramBotToken = form.telegramBotToken.trim() === "-" ? "" : form.telegramBotToken.trim();
+            if (form.telegramChatId.trim()) payload.telegramChatId = form.telegramChatId.trim() === "-" ? "" : form.telegramChatId.trim();
+          }
 
           const ok = await run(
             "PUT",
@@ -449,45 +518,111 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
           );
           if (ok !== null) {
             setForm({ slackWebhookUrl: "", discordWebhookUrl: "", telegramBotToken: "", telegramChatId: "" });
+            setClearSlack(false);
+            setClearDiscord(false);
+            setClearTelegram(false);
             return true;
           }
           return false;
         }}
       >
-        <div className="space-y-3">
-          <Field label="Slack Incoming Webhook URL" hint="格式如 https://hooks.slack.com/services/...">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-[13px] font-medium text-ink">Slack Incoming Webhook URL</label>
+              {webhooks?.slack?.configured && (
+                <button
+                  type="button"
+                  className="text-xs text-accent-red hover:underline"
+                  onClick={() => {
+                    setClearSlack(!clearSlack);
+                    if (!clearSlack) setForm((f) => ({ ...f, slackWebhookUrl: "" }));
+                  }}
+                >
+                  {clearSlack ? "復原保留" : "清除此設定"}
+                </button>
+              )}
+            </div>
             <Input
               type="text"
-              placeholder={webhooks?.slack?.valueMasked || "https://hooks.slack.com/services/..."}
+              disabled={clearSlack}
+              placeholder={clearSlack ? "（已標記清除，儲存後將移除）" : webhooks?.slack?.valueMasked || "https://hooks.slack.com/services/..."}
               value={form.slackWebhookUrl}
               onChange={(e) => setForm({ ...form, slackWebhookUrl: e.target.value })}
             />
-          </Field>
-          <Field label="Discord Webhook URL" hint="格式如 https://discord.com/api/webhooks/...">
+            <p className="text-[11.5px] text-ink-4">
+              {clearSlack ? "⚠️ 儲存時將從資料庫中清除此 Webhook。" : "格式如 https://hooks.slack.com/services/..."}
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-[13px] font-medium text-ink">Discord Webhook URL</label>
+              {webhooks?.discord?.configured && (
+                <button
+                  type="button"
+                  className="text-xs text-accent-red hover:underline"
+                  onClick={() => {
+                    setClearDiscord(!clearDiscord);
+                    if (!clearDiscord) setForm((f) => ({ ...f, discordWebhookUrl: "" }));
+                  }}
+                >
+                  {clearDiscord ? "復原保留" : "清除此設定"}
+                </button>
+              )}
+            </div>
             <Input
               type="text"
-              placeholder={webhooks?.discord?.valueMasked || "https://discord.com/api/webhooks/..."}
+              disabled={clearDiscord}
+              placeholder={clearDiscord ? "（已標記清除，儲存後將移除）" : webhooks?.discord?.valueMasked || "https://discord.com/api/webhooks/..."}
               value={form.discordWebhookUrl}
               onChange={(e) => setForm({ ...form, discordWebhookUrl: e.target.value })}
             />
-          </Field>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="Telegram Bot Token" hint="從 @BotFather 取得之 Bot Token">
-              <Input
-                type="text"
-                placeholder={webhooks?.telegram?.valueMasked || "123456:ABC-DEF..."}
-                value={form.telegramBotToken}
-                onChange={(e) => setForm({ ...form, telegramBotToken: e.target.value })}
-              />
-            </Field>
-            <Field label="Telegram Chat ID" hint="群組、頻道或個人 ID，如 -100123456789">
-              <Input
-                type="text"
-                placeholder={webhooks?.telegram?.extraMasked || "-100123456789"}
-                value={form.telegramChatId}
-                onChange={(e) => setForm({ ...form, telegramChatId: e.target.value })}
-              />
-            </Field>
+            <p className="text-[11.5px] text-ink-4">
+              {clearDiscord ? "⚠️ 儲存時將從資料庫中清除此 Webhook。" : "格式如 https://discord.com/api/webhooks/..."}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[13px] font-medium text-ink">Telegram Bot 通知</label>
+              {webhooks?.telegram?.configured && (
+                <button
+                  type="button"
+                  className="text-xs text-accent-red hover:underline"
+                  onClick={() => {
+                    setClearTelegram(!clearTelegram);
+                    if (!clearTelegram) setForm((f) => ({ ...f, telegramBotToken: "", telegramChatId: "" }));
+                  }}
+                >
+                  {clearTelegram ? "復原保留" : "清除此設定"}
+                </button>
+              )}
+            </div>
+            {clearTelegram ? (
+              <div className="rounded-control bg-bg-sunk p-2.5 text-xs text-ink-3">
+                ⚠️ Telegram Bot Token 與 Chat ID 已標記清除，儲存後將移除。
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Field label="Telegram Bot Token" hint="從 @BotFather 取得之 Bot Token">
+                  <Input
+                    type="text"
+                    placeholder={webhooks?.telegram?.valueMasked || "123456:ABC-DEF..."}
+                    value={form.telegramBotToken}
+                    onChange={(e) => setForm({ ...form, telegramBotToken: e.target.value })}
+                  />
+                </Field>
+                <Field label="Telegram Chat ID" hint="群組、頻道或個人 ID，如 -100123456789">
+                  <Input
+                    type="text"
+                    placeholder={webhooks?.telegram?.extraMasked || "-100123456789"}
+                    value={form.telegramChatId}
+                    onChange={(e) => setForm({ ...form, telegramChatId: e.target.value })}
+                  />
+                </Field>
+              </div>
+            )}
           </div>
         </div>
       </ReasonDialog>

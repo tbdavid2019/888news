@@ -13,11 +13,20 @@ export async function getTelegramConfig(): Promise<{ botToken: string | null; ch
   let chatId: string | null = null;
   try {
     const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
-    if (row?.value?.telegramBotToken) botToken = row.value.telegramBotToken;
-    if (row?.value?.telegramChatId) chatId = row.value.telegramChatId;
+    if (row?.value) {
+      if (row.value.telegramBotToken === "" || row.value.telegramBotToken === "disabled") botToken = null;
+      else if (row.value.telegramBotToken) botToken = row.value.telegramBotToken;
+
+      if (row.value.telegramChatId === "" || row.value.telegramChatId === "disabled") chatId = null;
+      else if (row.value.telegramChatId) chatId = row.value.telegramChatId;
+    }
   } catch {}
-  if (!botToken) botToken = credential("integrations", "TELEGRAM_BOT_TOKEN") || process.env.TELEGRAM_BOT_TOKEN || null;
-  if (!chatId) chatId = credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID || null;
+  if (botToken === null) {
+    botToken = credential("integrations", "TELEGRAM_BOT_TOKEN") || process.env.TELEGRAM_BOT_TOKEN || null;
+  }
+  if (chatId === null) {
+    chatId = credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID || null;
+  }
   cachedTgConfig = { botToken, chatId };
   return cachedTgConfig;
 }

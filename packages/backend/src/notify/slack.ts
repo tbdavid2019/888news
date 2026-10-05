@@ -24,9 +24,15 @@ export async function getSlackWebhookUrl(): Promise<string | null> {
   if (cachedDbSlackUrl !== undefined) return cachedDbSlackUrl;
   try {
     const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
-    if (row?.value?.slackWebhookUrl) {
-      cachedDbSlackUrl = row.value.slackWebhookUrl;
-      return cachedDbSlackUrl;
+    if (row?.value) {
+      if (row.value.slackWebhookUrl === "" || row.value.slackWebhookUrl === "disabled") {
+        cachedDbSlackUrl = null;
+        return null;
+      }
+      if (row.value.slackWebhookUrl) {
+        cachedDbSlackUrl = row.value.slackWebhookUrl;
+        return cachedDbSlackUrl;
+      }
     }
   } catch {}
   cachedDbSlackUrl = credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL || null;

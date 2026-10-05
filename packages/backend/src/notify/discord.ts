@@ -28,9 +28,15 @@ export async function getDiscordWebhookUrl(): Promise<string | null> {
   if (cachedDbDiscordUrl !== undefined) return cachedDbDiscordUrl;
   try {
     const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
-    if (row?.value?.discordWebhookUrl) {
-      cachedDbDiscordUrl = row.value.discordWebhookUrl;
-      return cachedDbDiscordUrl;
+    if (row?.value) {
+      if (row.value.discordWebhookUrl === "" || row.value.discordWebhookUrl === "disabled") {
+        cachedDbDiscordUrl = null;
+        return null;
+      }
+      if (row.value.discordWebhookUrl) {
+        cachedDbDiscordUrl = row.value.discordWebhookUrl;
+        return cachedDbDiscordUrl;
+      }
     }
   } catch {}
   cachedDbDiscordUrl = credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL || null;

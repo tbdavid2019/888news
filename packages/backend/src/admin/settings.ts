@@ -99,10 +99,22 @@ export async function getWebhookSettings(): Promise<WebhooksSettings> {
     if (row?.value) db = row.value;
   } catch {}
 
-  const slackUrl = db.slackWebhookUrl || credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL || null;
-  const discordUrl = db.discordWebhookUrl || credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL || null;
-  const tgToken = db.telegramBotToken || credential("integrations", "TELEGRAM_BOT_TOKEN") || process.env.TELEGRAM_BOT_TOKEN || null;
-  const tgChatId = db.telegramChatId || credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID || null;
+  const slackUrl =
+    db.slackWebhookUrl === "" || db.slackWebhookUrl === "disabled"
+      ? null
+      : db.slackWebhookUrl || credential("integrations", "SLACK_WEBHOOK_URL") || process.env.SLACK_WEBHOOK_URL || null;
+  const discordUrl =
+    db.discordWebhookUrl === "" || db.discordWebhookUrl === "disabled"
+      ? null
+      : db.discordWebhookUrl || credential("integrations", "DISCORD_WEBHOOK_URL") || process.env.DISCORD_WEBHOOK_URL || null;
+  const tgToken =
+    db.telegramBotToken === "" || db.telegramBotToken === "disabled"
+      ? null
+      : db.telegramBotToken || credential("integrations", "TELEGRAM_BOT_TOKEN") || process.env.TELEGRAM_BOT_TOKEN || null;
+  const tgChatId =
+    db.telegramChatId === "" || db.telegramChatId === "disabled"
+      ? null
+      : db.telegramChatId || credential("integrations", "TELEGRAM_CHAT_ID") || process.env.TELEGRAM_CHAT_ID || null;
 
   const mask = (s: string | null, keep = 6) => {
     if (!s) return null;
@@ -131,7 +143,7 @@ export async function getWebhookSettings(): Promise<WebhooksSettings> {
 }
 
 export async function saveWebhookSettings(
-  input: { slackWebhookUrl?: string; discordWebhookUrl?: string; telegramBotToken?: string; telegramChatId?: string },
+  input: { slackWebhookUrl?: string | null; discordWebhookUrl?: string | null; telegramBotToken?: string | null; telegramChatId?: string | null },
   reason: string,
   actor: string,
 ): Promise<WebhooksSettings> {
@@ -140,10 +152,21 @@ export async function saveWebhookSettings(
   const before = row?.value ?? {};
   const next = { ...before };
 
-  if (input.slackWebhookUrl !== undefined) next.slackWebhookUrl = input.slackWebhookUrl.trim();
-  if (input.discordWebhookUrl !== undefined) next.discordWebhookUrl = input.discordWebhookUrl.trim();
-  if (input.telegramBotToken !== undefined) next.telegramBotToken = input.telegramBotToken.trim();
-  if (input.telegramChatId !== undefined) next.telegramChatId = input.telegramChatId.trim();
+  const updateField = (key: string, val: string | null | undefined) => {
+    if (val !== undefined) {
+      const trimmed = (val ?? "").trim();
+      if (!trimmed || trimmed === "-") {
+        delete next[key];
+      } else {
+        next[key] = trimmed;
+      }
+    }
+  };
+
+  updateField("slackWebhookUrl", input.slackWebhookUrl);
+  updateField("discordWebhookUrl", input.discordWebhookUrl);
+  updateField("telegramBotToken", input.telegramBotToken);
+  updateField("telegramChatId", input.telegramChatId);
 
   await sql`
     INSERT INTO settings (key, value, updated_by) VALUES ('webhook_channels', ${sql.json(next)}, ${actor})
