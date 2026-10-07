@@ -102,6 +102,10 @@ export function resetClefState(): void {
   clefState.inFlight = 0;
 }
 
+export function getClefTimeoutMs(): number {
+  return Number(process.env.CLEF_TIMEOUT_MS || 35000);
+}
+
 export async function callClefSystemOne(
   state: string,
   questions: Record<string, JevQuestion>,
@@ -109,7 +113,7 @@ export async function callClefSystemOne(
 ): Promise<{ response: JevResponse; receiptId: number; reused: boolean }> {
   const baseUrl = (process.env.CLEF_BASE_URL ?? "https://clef.aiurl.tw/v1").replace(/\/$/, "");
   const model = process.env.CLEF_MODEL ?? "Cloudflare/clef-flash";
-  const timeoutMs = Number(process.env.CLEF_TIMEOUT_MS || 15000);
+  const timeoutMs = getClefTimeoutMs();
 
   clefState.inFlight++;
   try {
@@ -370,12 +374,14 @@ export function isDecisionEngineAvailable(): boolean {
 
 export const isJevOrClefAvailable = isDecisionEngineAvailable;
 
-function parseDecisionResult(
+export function parseDecisionResult(
   res: { response: JevResponse; receiptId: number; reused: boolean },
   engine: "clef" | "jev"
 ) {
   const relAns = res.response.answers.relevance as JevChoiceAnswer | undefined;
   const scoreAns = res.response.answers.score as JevScoreAnswer | undefined;
+  const catAns = res.response.answers.category as JevChoiceAnswer | undefined;
+  const itemTypeAns = res.response.answers.itemType as JevChoiceAnswer | undefined;
 
   const rawChoice = relAns?.choice?.toUpperCase() ?? "UNKNOWN";
   const label: "PASS" | "BLOCK" | "UNKNOWN" = rawChoice === "BLOCK" ? "BLOCK" : rawChoice === "PASS" ? "PASS" : "UNKNOWN";
@@ -384,10 +390,15 @@ function parseDecisionResult(
   const score = Math.max(0, Math.min(100, Math.round((rawScore / 3.0) * 100)));
   const confidence = relAns?.confidence ?? scoreAns?.confidence ?? 0.8;
 
+  const category = catAns?.choice ? String(catAns.choice).toLowerCase().trim() : null;
+  const itemType = itemTypeAns?.choice ? String(itemTypeAns.choice).toLowerCase().trim() : null;
+
   return {
     label,
     score,
     confidence,
+    category,
+    itemType,
     model: res.response.model || (engine === "clef" ? "Cloudflare/clef-flash" : "jev-latest"),
     engine,
     receiptId: res.receiptId,
@@ -402,6 +413,8 @@ export async function evaluateWithDecisionEngine(
   label: "PASS" | "BLOCK" | "UNKNOWN";
   score: number;
   confidence: number;
+  category: string | null;
+  itemType: string | null;
   model: string;
   engine: "clef" | "jev";
   receiptId: number;
@@ -432,6 +445,31 @@ export async function evaluateWithDecisionEngine(
         "Notable product release, strong paper, meaningful announcement",
         "Major breakthrough, industry-shifting foundation model, breaking milestone",
       ],
+    },
+    category: {
+      type: "choice",
+      instructions: "Classify this tech/AI article into the best primary category",
+      criteria: {
+        "ai-models": "New models, model weights, checkpoints, release evaluations, or architecture updates",
+        "ai-products": "AI applications, end-user tools, product launches, developer APIs, or platform features",
+        "industry": "Company business, hardware, chips, infra, funding, M&A, leadership changes, regulatory policies",
+        "paper": "Academic research papers, preprints, benchmarks, technical datasets",
+        "tip": "Hands-on tutorials, coding guides, prompt engineering tips, developer workflows",
+        "opinion": "Interviews, editorial perspectives, tech critiques, industry commentary",
+      },
+    },
+    itemType: {
+      type: "choice",
+      instructions: "Determine the primary editorial format and item type",
+      criteria: {
+        model_release: "Foundation or fine-tuned model release, weights release, model benchmarks, capabilities update",
+        product_launch: "New AI product, tool feature update, platform launch, developer API release",
+        tool_or_prompt: "Prompts, developer tools, workflows, practical implementation utilities",
+        research_paper: "Academic papers, technical reports, preprint research, datasets, benchmarks",
+        industry_event: "Funding, acquisitions, executive changes, lawsuits, partnerships, hardware or regulatory policies",
+        opinion_analysis: "Editorial perspective, thought leader opinions, expert critiques, deep market commentary",
+        tutorial_explainer: "How-to guide, educational explainer, implementation walkthrough, best practices",
+      },
     },
   };
 

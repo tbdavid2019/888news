@@ -8,6 +8,8 @@ import {
   isClefAvailable,
   resetClefState,
   isDecisionEngineAvailable,
+  getClefTimeoutMs,
+  parseDecisionResult,
 } from "../packages/backend/src/providers/jev.ts";
 
 test("jev provider: parses keys and fallback keys correctly", () => {
@@ -101,3 +103,64 @@ test("clef provider: availability and circuit breaker checks", () => {
     resetClefState();
   }
 });
+
+test("clef timeout configuration: defaults to 35000 and respects env", () => {
+  const orig = process.env.CLEF_TIMEOUT_MS;
+  try {
+    delete process.env.CLEF_TIMEOUT_MS;
+    assert.equal(getClefTimeoutMs(), 35000);
+
+    process.env.CLEF_TIMEOUT_MS = "45000";
+    assert.equal(getClefTimeoutMs(), 45000);
+  } finally {
+    process.env.CLEF_TIMEOUT_MS = orig;
+  }
+});
+
+test("parseDecisionResult: parses all 4 structured fields (relevance, score, category, itemType)", () => {
+  const rawClef = {
+    response: {
+      model: "Cloudflare/clef-flash",
+      answers: {
+        relevance: { type: "choice" as const, choice: "PASS", confidence: 0.95 },
+        score: { type: "score" as const, score: 2.19, confidence: 0.6 },
+        category: { type: "choice" as const, choice: "industry", confidence: 0.88 },
+        itemType: { type: "choice" as const, choice: "product_launch", confidence: 0.75 },
+      },
+    },
+    receiptId: 101,
+    reused: false,
+  };
+
+  const parsed = parseDecisionResult(rawClef, "clef");
+  assert.equal(parsed.label, "PASS");
+  assert.equal(parsed.score, 73); // Math.round((2.19 / 3.0) * 100) = 73
+  assert.equal(parsed.category, "industry");
+  assert.equal(parsed.itemType, "product_launch");
+  assert.equal(parsed.engine, "clef");
+  assert.equal(parsed.model, "Cloudflare/clef-flash");
+  assert.equal(parsed.receiptId, 101);
+});
+
+test("parseDecisionResult: handles missing category/itemType gracefully", () => {
+  const partial = {
+    response: {
+      model: "jev-latest",
+      answers: {
+        relevance: { type: "choice" as const, choice: "BLOCK", confidence: 0.9 },
+        score: { type: "score" as const, score: 0.5, confidence: 0.7 },
+      },
+    },
+    receiptId: 102,
+    reused: true,
+  };
+
+  const parsed = parseDecisionResult(partial, "jev");
+  assert.equal(parsed.label, "BLOCK");
+  assert.equal(parsed.score, 17); // Math.round((0.5 / 3.0) * 100) = 17
+  assert.equal(parsed.category, null);
+  assert.equal(parsed.itemType, null);
+  assert.equal(parsed.engine, "jev");
+});
+
+

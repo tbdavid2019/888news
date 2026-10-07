@@ -14,6 +14,8 @@ process.env.SESSION_SECRET ??= "test-session-secret-0123456789";
 process.env.IMG_PROXY_SIGN_SECRET ??= "test-img-secret-0123456789";
 process.env.FEISHU_CONTENT_PUSH_ENABLED = "false";
 process.env.INDEXNOW_SUBMIT_ENABLED = "false";
+process.env.CLEF_ENABLED = "false";
+process.env.JEV_ENABLED = "false";
 process.env.LOG_LEVEL ??= "error";
 // The tests were written against the named model presets AIHOT assigns to each step (each provider is
 // pointed at a local stub by the test that needs it). The open-source default is one model for every

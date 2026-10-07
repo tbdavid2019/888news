@@ -152,7 +152,16 @@ const STRUCTURE_SYSTEM = promptText("structure", {
 });
 
 export interface AnalysisRun {
-  prefilter: { label: "PASS" | "BLOCK" | "UNKNOWN"; reason: string; model: string; receiptId: number; reused: boolean };
+  prefilter: {
+    label: "PASS" | "BLOCK" | "UNKNOWN";
+    reason: string;
+    model: string;
+    receiptId: number;
+    reused: boolean;
+    fastScore?: number;
+    category?: string | null;
+    itemType?: string | null;
+  };
   /**
    * The independent score calls and the tier threshold they are held against; absent when the material
    * is not scored. `refused`: the model's content filter declined it, so it is not selected.
@@ -192,7 +201,7 @@ function checkAnalysisRunning() {
 const subjectOf = (a: AnalyzeInputArticle) => `article:${a.id}@${a.revision}`;
 const tagged = (attemptTag: string | undefined, step: string) => [attemptTag, step].filter(Boolean).join(":") || undefined;
 
-async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<AnalysisRun["prefilter"] & { fastScore?: number }> {
+async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<AnalysisRun["prefilter"]> {
   checkAnalysisRunning();
   // 1. Try Decision Engine (Tier 0: Clef, Tier 1: Jev) first (free, ultra-fast, 0 Groq token consumption)
   if (isDecisionEngineAvailable() && !opts.scoreModel) {
@@ -209,6 +218,8 @@ async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<Ana
         receiptId: decision.receiptId,
         reused: decision.reused,
         fastScore: decision.score,
+        category: decision.category,
+        itemType: decision.itemType,
       };
     } catch (err) {
       console.warn(`[Prefilter] Decision Engine (Clef/Jev) failed or exhausted, falling back to LLM:`, err instanceof Error ? err.message : String(err));
@@ -264,7 +275,11 @@ async function runScores(a: AnalyzeInputArticle, threshold: number, opts: StepOp
   return { model, threshold, values, receiptIds, reused };
 }
 
-async function runStructure(a: AnalyzeInputArticle, opts: StepOpts): Promise<NonNullable<AnalysisRun["structure"]>> {
+async function runStructure(
+  a: AnalyzeInputArticle,
+  opts: StepOpts,
+  hints?: { category?: string | null; itemType?: string | null }
+): Promise<NonNullable<AnalysisRun["structure"]>> {
   const model = await modelFor("structure");
   checkAnalysisRunning();
   const res = await chatJson({
@@ -280,7 +295,8 @@ async function runStructure(a: AnalyzeInputArticle, opts: StepOpts): Promise<Non
     attemptTag: tagged(opts.attemptTag, "structure"),
   });
   const subjects = [...new Set(res.data.subjects.map((s) => s.trim().toLowerCase()).filter((s) => s in ENTITIES))];
-  return { model: res.model, category: res.data.category, tags: normalizeTags(res.data.tags), subjects, fact: res.data.fact, receiptId: res.receiptId, reused: res.reused };
+  const validCategory = res.data.category ?? (hints?.category && (CATEGORY_KEYS as readonly string[]).includes(hints.category) ? (hints.category as typeof CATEGORY_KEYS[number]) : null);
+  return { model: res.model, category: validCategory, tags: normalizeTags(res.data.tags), subjects, fact: res.data.fact, receiptId: res.receiptId, reused: res.reused };
 }
 
 /** The content understanding; null when the model's content filter declines the material. */
@@ -438,7 +454,7 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
 
   // 3. For articles that passed the noise filter, run structure and writing.
   const near = sum !== null && (sum >= (scores?.threshold ?? 60) * count || sum > UNDERSTAND_FLOOR * count);
-  const structure = await runStructure(a, opts);
+  const structure = await runStructure(a, opts, { category: prefilter.category, itemType: prefilter.itemType });
   const writing = (near ? await runUnderstand(a, opts) : null) ?? (await runSummarize(a, opts));
 
   return { prefilter, scores, writing, structure };
@@ -461,7 +477,14 @@ export function normalizeAnalysis(run: AnalysisRun) {
   const threshold = run.scores?.threshold ?? null;
   const selected = relevance === "pass" && sum !== null && threshold !== null && count > 0 && sum >= threshold * count;
   const subjects = run.structure?.subjects ?? [];
+  const validPrefilterCat = run.prefilter.category && (CATEGORY_KEYS as readonly string[]).includes(run.prefilter.category)
+    ? (run.prefilter.category as typeof CATEGORY_KEYS[number])
+    : null;
+  const category = run.structure?.category ?? validPrefilterCat;
   const tags = [...(run.writing?.tags ?? run.structure?.tags ?? [])];
+  if (tags.length === 0 && run.prefilter.itemType && CATEGORY_BY_ITEM_TYPE[run.prefilter.itemType]) {
+    tags.push(CATEGORY_BY_ITEM_TYPE[run.prefilter.itemType]!);
+  }
   for (const s of subjects) {
     const display = ENTITIES[s]?.displayTag;
     if (display && !tags.includes(display)) tags.push(display);
@@ -474,7 +497,7 @@ export function normalizeAnalysis(run: AnalysisRun) {
     scoreModel: run.scores?.model ?? null,
     scoreRefused: run.scores?.refused ?? false,
     threshold,
-    category: run.structure?.category ?? null,
+    category,
     tags,
     subjects,
     titleZh,
