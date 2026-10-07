@@ -103,7 +103,7 @@ export function resetClefState(): void {
 }
 
 export function getClefTimeoutMs(): number {
-  return Number(process.env.CLEF_TIMEOUT_MS || 35000);
+  return Number(process.env.CLEF_TIMEOUT_MS || 45000);
 }
 
 export async function callClefSystemOne(
@@ -383,6 +383,8 @@ export function parseDecisionResult(
   const catAns = res.response.answers.category as JevChoiceAnswer | undefined;
   const itemTypeAns = res.response.answers.itemType as JevChoiceAnswer | undefined;
 
+  const authorRoleAns = res.response.answers.authorRole as JevChoiceAnswer | undefined;
+
   const rawChoice = relAns?.choice?.toUpperCase() ?? "UNKNOWN";
   const label: "PASS" | "BLOCK" | "UNKNOWN" = rawChoice === "BLOCK" ? "BLOCK" : rawChoice === "PASS" ? "PASS" : "UNKNOWN";
 
@@ -392,6 +394,9 @@ export function parseDecisionResult(
 
   const category = catAns?.choice ? String(catAns.choice).toLowerCase().trim() : null;
   const itemType = itemTypeAns?.choice ? String(itemTypeAns.choice).toLowerCase().trim() : null;
+  const rawAuthorRole = authorRoleAns?.choice ? String(authorRoleAns.choice).toLowerCase().trim() : null;
+  const authorRole: "principal" | "observer" | "relayer" | null =
+    rawAuthorRole === "principal" || rawAuthorRole === "observer" || rawAuthorRole === "relayer" ? rawAuthorRole : null;
 
   return {
     label,
@@ -399,6 +404,7 @@ export function parseDecisionResult(
     confidence,
     category,
     itemType,
+    authorRole,
     model: res.response.model || (engine === "clef" ? "Cloudflare/clef-flash" : "jev-latest"),
     engine,
     receiptId: res.receiptId,
@@ -415,6 +421,7 @@ export async function evaluateWithDecisionEngine(
   confidence: number;
   category: string | null;
   itemType: string | null;
+  authorRole: "principal" | "observer" | "relayer" | null;
   model: string;
   engine: "clef" | "jev";
   receiptId: number;
@@ -471,6 +478,15 @@ export async function evaluateWithDecisionEngine(
         tutorial_explainer: "How-to guide, educational explainer, implementation walkthrough, best practices",
       },
     },
+    authorRole: {
+      type: "choice",
+      instructions: "Determine the primary author or reporting perspective of this material",
+      criteria: {
+        principal: "First-party, official announcement, creator blog, paper author, or company direct release",
+        observer: "Independent third-party analyst, technical evaluation, in-depth reviewer, or commentary",
+        relayer: "News summary, translated reproduction, secondary citation, media relay, or brief wire news",
+      },
+    },
   };
 
   // 1. Try Tier 0: Clef (Local / Self-hosted, free, 0 token cost)
@@ -510,3 +526,146 @@ export async function evaluateWithDecisionEngine(
 }
 
 export const jevEvaluateMaterial = evaluateWithDecisionEngine;
+
+// ---------------------------------------------------------------------------
+// Event Grouping Relations (4-way Decision: SAME_OCCURRENCE / SAME_STORY / UNRELATED / ROUNDUP)
+// ---------------------------------------------------------------------------
+
+export const RELATION_CRITERIA: Record<"SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP", string> = {
+  SAME_OCCURRENCE: "The same real-world happening (identical product launch, exact same announcement, incident, or interview)",
+  SAME_STORY: "Direct progress or development of the same story (teaser vs launch, launch vs review/listing, incident vs official response)",
+  UNRELATED: "Different happenings or distinct events, even if involving the same company or product line",
+  ROUNDUP: "One or both reports is a multi-topic digest, weekly roundup, or listicle",
+};
+
+export async function evaluatePairRelationWithDecisionEngine(
+  reportAText: string,
+  reportBText: string,
+  opts: { purpose?: string; subject?: string; attemptTag?: string } = {}
+): Promise<{
+  relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP";
+  confidence: number;
+  engine: "clef" | "jev";
+  receiptId: number;
+  reused: boolean;
+}> {
+  const state = [reportAText.trim(), reportBText.trim(), "这两篇报道是什么关系？"].join("\n\n");
+  const questions: Record<string, JevQuestion> = {
+    relation: {
+      type: "choice",
+      instructions: "Determine the factual relationship between Report A and Report B",
+      criteria: RELATION_CRITERIA,
+    },
+  };
+
+  if (isClefAvailable()) {
+    try {
+      const res = await callClefSystemOne(state, questions, {
+        purpose: opts.purpose ?? "group_pair",
+        subject: opts.subject ?? "relation:pair",
+        attemptTag: opts.attemptTag,
+      });
+      const ans = res.response.answers.relation as JevChoiceAnswer | undefined;
+      const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
+      const relation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
+      return {
+        relation,
+        confidence: ans?.confidence ?? 0.8,
+        engine: "clef",
+        receiptId: res.receiptId,
+        reused: res.reused,
+      };
+    } catch (err) {
+      console.warn(`[DecisionEngine] Clef pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Jev Tier 1`);
+    }
+  }
+
+  if (isJevAvailable()) {
+    try {
+      const res = await callJevSystemOne(state, questions, {
+        purpose: opts.purpose ?? "group_pair",
+        subject: opts.subject ?? "relation:pair",
+        attemptTag: opts.attemptTag,
+      });
+      const ans = res.response.answers.relation as JevChoiceAnswer | undefined;
+      const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
+      const relation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
+      return {
+        relation,
+        confidence: ans?.confidence ?? 0.8,
+        engine: "jev",
+        receiptId: res.receiptId,
+        reused: res.reused,
+      };
+    } catch (err) {
+      console.warn(`[DecisionEngine] Jev pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 2`);
+      throw err;
+    }
+  }
+
+  throw new Error("No decision engine available for pair relation");
+}
+
+export async function evaluateBatchRelationWithDecisionEngine(
+  stateText: string,
+  candidateIds: string[],
+  opts: { purpose?: string; subject?: string; attemptTag?: string } = {}
+): Promise<{
+  decisions: Array<{ id: string; relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP"; confidence: number }>;
+  engine: "clef" | "jev";
+  receiptId: number;
+  reused: boolean;
+}> {
+  const questions: Record<string, JevQuestion> = {};
+  for (const id of candidateIds) {
+    questions[id] = {
+      type: "choice",
+      instructions: `Determine the factual relationship between the query report and candidate ${id}`,
+      criteria: RELATION_CRITERIA,
+    };
+  }
+
+  const parseBatch = (res: { response: JevResponse; receiptId: number; reused: boolean }, engine: "clef" | "jev") => {
+    const decisions: Array<{ id: string; relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP"; confidence: number }> = [];
+    for (const id of candidateIds) {
+      const ans = res.response.answers[id] as JevChoiceAnswer | undefined;
+      const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
+      const relation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
+      decisions.push({
+        id,
+        relation,
+        confidence: ans?.confidence ?? 0.8,
+      });
+    }
+    return { decisions, engine, receiptId: res.receiptId, reused: res.reused };
+  };
+
+  if (isClefAvailable()) {
+    try {
+      const res = await callClefSystemOne(stateText, questions, {
+        purpose: opts.purpose ?? "group_batch",
+        subject: opts.subject ?? "relation:batch",
+        attemptTag: opts.attemptTag,
+      });
+      return parseBatch(res, "clef");
+    } catch (err) {
+      console.warn(`[DecisionEngine] Clef batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Jev Tier 1`);
+    }
+  }
+
+  if (isJevAvailable()) {
+    try {
+      const res = await callJevSystemOne(stateText, questions, {
+        purpose: opts.purpose ?? "group_batch",
+        subject: opts.subject ?? "relation:batch",
+        attemptTag: opts.attemptTag,
+      });
+      return parseBatch(res, "jev");
+    } catch (err) {
+      console.warn(`[DecisionEngine] Jev batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 2`);
+      throw err;
+    }
+  }
+
+  throw new Error("No decision engine available for batch relation");
+}

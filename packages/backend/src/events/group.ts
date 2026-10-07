@@ -26,9 +26,14 @@ import { publishArticle } from "../publication/publish.ts";
 import { mergeStoryInto } from "./merge.ts";
 import {
   BATCH_SYSTEM, BatchSchema, PAIR_SYSTEM, PairSchema, RELATE_PROMPT_VERSION, SIGNAL_SYSTEM, STORY_REVIEW_MIN_CONFIDENCE, SignalSchema, TIE_MIN_CONFIDENCE,
-  batchUser, firmlyTied, lexicalSimilarity, looksLikeRoundup, pairUser, reportText, sameOccurrence, signalTarget, storyForDevelopment, verdictsByFact,
+  batchUser, candidateKey, describeReport, firmlyTied, lexicalSimilarity, looksLikeRoundup, pairUser, reportText, sameOccurrence, signalTarget, storyForDevelopment, verdictsByFact,
   type CandidateView, type Relation, type ReportView, type Verdict,
 } from "./relate.ts";
+import {
+  isDecisionEngineAvailable,
+  evaluateBatchRelationWithDecisionEngine,
+  evaluatePairRelationWithDecisionEngine,
+} from "../providers/jev.ts";
 
 export const GROUP_PROMPT_VERSION = RELATE_PROMPT_VERSION;
 /** Reports discovered this recently are candidates (keyed on discovery, so an old page found today still meets its peers). */
@@ -277,6 +282,20 @@ async function candidateViews(recalled: Recalled[]): Promise<CandidateView[]> {
 // ---------------------------------------------------------------------------
 
 async function judgeBatch(articleId: string, query: ReportView, cands: CandidateView[]): Promise<{ verdicts: Map<number, Verdict>; receiptId: number }> {
+  if (isDecisionEngineAvailable()) {
+    try {
+      const userText = batchUser(query, cands);
+      const candIds = cands.map((_, i) => candidateKey(i));
+      const decision = await evaluateBatchRelationWithDecisionEngine(userText, candIds, {
+        purpose: "group_article",
+        subject: `article:${articleId}`,
+      });
+      return { verdicts: verdictsByFact(decision.decisions, cands), receiptId: decision.receiptId };
+    } catch (err) {
+      console.warn(`[Group] Decision engine batch relation failed, falling back to LLM:`, err instanceof Error ? err.message : String(err));
+    }
+  }
+
   const res = await chatJson({
     model: await modelFor("group"), purpose: "group_article", subject: `article:${articleId}`, promptVersion: RELATE_PROMPT_VERSION,
     system: BATCH_SYSTEM, user: batchUser(query, cands), schema: BatchSchema, temperature: 0, maxTokens: 200 + 90 * cands.length,
@@ -286,6 +305,19 @@ async function judgeBatch(articleId: string, query: ReportView, cands: Candidate
 
 /** The review model reads both reports on their own; a merge stands only when it agrees. */
 async function confirmMerge(articleId: string, query: ReportView, cand: CandidateView): Promise<{ relation: Relation; receiptId: number }> {
+  if (isDecisionEngineAvailable()) {
+    try {
+      const decision = await evaluatePairRelationWithDecisionEngine(
+        describeReport(query, "报道 A"),
+        describeReport(cand.report, "报道 B"),
+        { purpose: "group_review", subject: `article:${articleId}:fact:${cand.factId}` }
+      );
+      return { relation: decision.relation, receiptId: decision.receiptId };
+    } catch (err) {
+      console.warn(`[Group] Decision engine pair relation failed, falling back to LLM:`, err instanceof Error ? err.message : String(err));
+    }
+  }
+
   const res = await chatJson({
     model: await modelFor("groupReview"), purpose: "group_review", subject: `article:${articleId}:fact:${cand.factId}`, promptVersion: RELATE_PROMPT_VERSION,
     system: PAIR_SYSTEM, user: pairUser(query, cand.report), schema: PairSchema, temperature: 0, maxTokens: 400,
@@ -294,6 +326,20 @@ async function confirmMerge(articleId: string, query: ReportView, cand: Candidat
 }
 
 async function judgeSignal(articleId: string, query: ReportView, cands: CandidateView[]): Promise<{ verdicts: Map<number, Verdict>; receiptId: number }> {
+  if (isDecisionEngineAvailable()) {
+    try {
+      const userText = batchUser(query, cands, "帖子");
+      const candIds = cands.map((_, i) => candidateKey(i));
+      const decision = await evaluateBatchRelationWithDecisionEngine(userText, candIds, {
+        purpose: "group_signal",
+        subject: `article:${articleId}`,
+      });
+      return { verdicts: verdictsByFact(decision.decisions, cands), receiptId: decision.receiptId };
+    } catch (err) {
+      console.warn(`[Group] Decision engine signal relation failed, falling back to LLM:`, err instanceof Error ? err.message : String(err));
+    }
+  }
+
   const res = await chatJson({
     model: await modelFor("group"), purpose: "group_signal", subject: `article:${articleId}`, promptVersion: RELATE_PROMPT_VERSION,
     system: SIGNAL_SYSTEM, user: batchUser(query, cands, "帖子"), schema: SignalSchema, temperature: 0, maxTokens: 150 + 60 * cands.length,
@@ -451,6 +497,19 @@ async function storyRoot(storyId: number): Promise<StoryRoot | null> {
 }
 
 async function judgeStories(capability: "group" | "groupReview", a: StoryRoot, b: StoryRoot): Promise<{ relation: Relation; confidence: number; difference: string; receiptId: number }> {
+  if (isDecisionEngineAvailable()) {
+    try {
+      const decision = await evaluatePairRelationWithDecisionEngine(
+        describeReport(a.report, "报道 A"),
+        describeReport(b.report, "报道 B"),
+        { purpose: capability === "group" ? "group_story" : "group_story_review", subject: `story:${a.storyId}:${b.storyId}` }
+      );
+      return { relation: decision.relation, confidence: decision.confidence, difference: "", receiptId: decision.receiptId };
+    } catch (err) {
+      console.warn(`[Group] Decision engine judgeStories failed, falling back to LLM:`, err instanceof Error ? err.message : String(err));
+    }
+  }
+
   const res = await chatJson({
     model: await modelFor(capability), purpose: capability === "group" ? "group_story" : "group_story_review", subject: `story:${a.storyId}:${b.storyId}`,
     promptVersion: RELATE_PROMPT_VERSION, system: PAIR_SYSTEM, user: pairUser(a.report, b.report), schema: PairSchema, temperature: 0, maxTokens: 400,

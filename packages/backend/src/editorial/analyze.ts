@@ -161,6 +161,7 @@ export interface AnalysisRun {
     fastScore?: number;
     category?: string | null;
     itemType?: string | null;
+    authorRole?: "principal" | "observer" | "relayer" | null;
   };
   /**
    * The independent score calls and the tier threshold they are held against; absent when the material
@@ -220,6 +221,7 @@ async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<Ana
         fastScore: decision.score,
         category: decision.category,
         itemType: decision.itemType,
+        authorRole: decision.authorRole,
       };
     } catch (err) {
       console.warn(`[Prefilter] Decision Engine (Clef/Jev) failed or exhausted, falling back to LLM:`, err instanceof Error ? err.message : String(err));
@@ -300,9 +302,23 @@ async function runStructure(
 }
 
 /** The content understanding; null when the model's content filter declines the material. */
-async function runUnderstand(a: AnalyzeInputArticle, opts: StepOpts): Promise<AnalysisRun["writing"]> {
+async function runUnderstand(
+  a: AnalyzeInputArticle,
+  opts: StepOpts,
+  hints?: { itemType?: string | null; authorRole?: string | null }
+): Promise<AnalysisRun["writing"]> {
   const model = await modelFor("understand");
-  const text = understandUser(a);
+  let text = understandUser(a);
+  if (hints?.itemType || hints?.authorRole) {
+    const guidance = [
+      hints.itemType ? `【前置判定內容類型】\n${hints.itemType}` : "",
+      hints.authorRole ? `【前置判定作者視角】\n${hints.authorRole}` : "",
+      "請在此前置判定基礎上，專注於撰寫高品質繁體中文標題（titleZh）與精闢摘要（summaryZh）。",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    text = `${guidance}\n\n${text}`;
+  }
   const call = (image: ContentPart | null) => {
     checkAnalysisRunning();
     return chatJson({
@@ -329,9 +345,11 @@ async function runUnderstand(a: AnalyzeInputArticle, opts: StepOpts): Promise<An
   }
   const d = res.data;
   const copy = finalizeCopy(translateInputOf(a), { titleZh: d.titleZh, summaryZh: d.summaryZh });
+  const finalItemType = (hints?.itemType && (ITEM_TYPES as readonly string[]).includes(hints.itemType)) ? (hints.itemType as typeof ITEM_TYPES[number]) : d.itemType;
+  const finalAuthorRole = (hints?.authorRole === "principal" || hints?.authorRole === "observer" || hints?.authorRole === "relayer") ? hints.authorRole : d.authorRole;
   return {
     kind: "understand", model: res.model, titleZh: copy.titleZh, summaryZh: copy.summaryZh, reasonZh: d.editorialJudgment.trim() || null,
-    tags: normalizeTags(d.tags, { fallbackCategory: CATEGORY_BY_ITEM_TYPE[d.itemType] }), itemType: d.itemType, authorRole: d.authorRole,
+    tags: normalizeTags(d.tags, { fallbackCategory: CATEGORY_BY_ITEM_TYPE[finalItemType] }), itemType: finalItemType, authorRole: finalAuthorRole,
     identityGuard: copy.identityGuard, receiptIds: [res.receiptId], reused: res.reused,
   };
 }
@@ -455,7 +473,7 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
   // 3. For articles that passed the noise filter, run structure and writing.
   const near = sum !== null && (sum >= (scores?.threshold ?? 60) * count || sum > UNDERSTAND_FLOOR * count);
   const structure = await runStructure(a, opts, { category: prefilter.category, itemType: prefilter.itemType });
-  const writing = (near ? await runUnderstand(a, opts) : null) ?? (await runSummarize(a, opts));
+  const writing = (near ? await runUnderstand(a, opts, { itemType: prefilter.itemType, authorRole: prefilter.authorRole }) : null) ?? (await runSummarize(a, opts));
 
   return { prefilter, scores, writing, structure };
 }

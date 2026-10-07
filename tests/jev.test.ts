@@ -104,20 +104,20 @@ test("clef provider: availability and circuit breaker checks", () => {
   }
 });
 
-test("clef timeout configuration: defaults to 35000 and respects env", () => {
+test("clef timeout configuration: defaults to 45000 and respects env", () => {
   const orig = process.env.CLEF_TIMEOUT_MS;
   try {
     delete process.env.CLEF_TIMEOUT_MS;
-    assert.equal(getClefTimeoutMs(), 35000);
-
-    process.env.CLEF_TIMEOUT_MS = "45000";
     assert.equal(getClefTimeoutMs(), 45000);
+
+    process.env.CLEF_TIMEOUT_MS = "60000";
+    assert.equal(getClefTimeoutMs(), 60000);
   } finally {
     process.env.CLEF_TIMEOUT_MS = orig;
   }
 });
 
-test("parseDecisionResult: parses all 4 structured fields (relevance, score, category, itemType)", () => {
+test("parseDecisionResult: parses all 5 structured fields (relevance, score, category, itemType, authorRole)", () => {
   const rawClef = {
     response: {
       model: "Cloudflare/clef-flash",
@@ -126,6 +126,7 @@ test("parseDecisionResult: parses all 4 structured fields (relevance, score, cat
         score: { type: "score" as const, score: 2.19, confidence: 0.6 },
         category: { type: "choice" as const, choice: "industry", confidence: 0.88 },
         itemType: { type: "choice" as const, choice: "product_launch", confidence: 0.75 },
+        authorRole: { type: "choice" as const, choice: "principal", confidence: 0.94 },
       },
     },
     receiptId: 101,
@@ -137,12 +138,13 @@ test("parseDecisionResult: parses all 4 structured fields (relevance, score, cat
   assert.equal(parsed.score, 73); // Math.round((2.19 / 3.0) * 100) = 73
   assert.equal(parsed.category, "industry");
   assert.equal(parsed.itemType, "product_launch");
+  assert.equal(parsed.authorRole, "principal");
   assert.equal(parsed.engine, "clef");
   assert.equal(parsed.model, "Cloudflare/clef-flash");
   assert.equal(parsed.receiptId, 101);
 });
 
-test("parseDecisionResult: handles missing category/itemType gracefully", () => {
+test("parseDecisionResult: handles missing optional fields gracefully", () => {
   const partial = {
     response: {
       model: "jev-latest",
@@ -160,7 +162,17 @@ test("parseDecisionResult: handles missing category/itemType gracefully", () => 
   assert.equal(parsed.score, 17); // Math.round((0.5 / 3.0) * 100) = 17
   assert.equal(parsed.category, null);
   assert.equal(parsed.itemType, null);
+  assert.equal(parsed.authorRole, null);
   assert.equal(parsed.engine, "jev");
 });
+
+test("event grouping relation criteria: contains 4 expected relation keys", async () => {
+  const { RELATION_CRITERIA } = await import("../packages/backend/src/providers/jev.ts");
+  assert.ok(RELATION_CRITERIA.SAME_OCCURRENCE);
+  assert.ok(RELATION_CRITERIA.SAME_STORY);
+  assert.ok(RELATION_CRITERIA.UNRELATED);
+  assert.ok(RELATION_CRITERIA.ROUNDUP);
+});
+
 
 
