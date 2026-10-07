@@ -5,6 +5,9 @@ import {
   resetJevKeyPool,
   getKeyPool,
   isJevAvailable,
+  isClefAvailable,
+  resetClefState,
+  isDecisionEngineAvailable,
 } from "../packages/backend/src/providers/jev.ts";
 
 test("jev provider: parses keys and fallback keys correctly", () => {
@@ -77,5 +80,24 @@ test("jev provider: key pool status transitions on failure and cooldown", () => 
   } finally {
     process.env.JEV_API_KEY = origKey;
     resetJevKeyPool();
+  }
+});
+
+test("clef provider: availability and circuit breaker checks", () => {
+  const origClefEnabled = process.env.CLEF_ENABLED;
+  try {
+    resetClefState();
+    delete process.env.CLEF_ENABLED;
+    assert.equal(isClefAvailable(), true);
+
+    process.env.CLEF_ENABLED = "false";
+    assert.equal(isClefAvailable(), false);
+
+    process.env.CLEF_ENABLED = "true";
+    assert.equal(isClefAvailable(), true);
+    assert.equal(isDecisionEngineAvailable(), true);
+  } finally {
+    process.env.CLEF_ENABLED = origClefEnabled;
+    resetClefState();
   }
 });

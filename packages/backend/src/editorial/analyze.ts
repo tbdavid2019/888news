@@ -20,7 +20,7 @@ import { modelFor } from "./models.ts";
 import { buildMaterial, firstImagePart, loadAnalyzeInput, type AnalyzeInputArticle } from "./input.ts";
 import { pageFetchable } from "../content/extract.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
-import { isJevAvailable, jevEvaluateMaterial } from "../providers/jev.ts";
+import { isDecisionEngineAvailable, evaluateWithDecisionEngine } from "../providers/jev.ts";
 import {
   buildArticlePrompt, buildLongTweetPrompt, buildShortTweetPrompt, finalizeCopy, isShortTweetInput, looksZh, MAX_BODY_CHARS, missingEvidence,
   needsShortTweetTranslation, parseTranslateOutput, PREFILTER_SYSTEM, prefilterUser, translateInputOf, UNDERSTAND_SYSTEM, understandUser,
@@ -194,24 +194,24 @@ const tagged = (attemptTag: string | undefined, step: string) => [attemptTag, st
 
 async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<AnalysisRun["prefilter"] & { fastScore?: number }> {
   checkAnalysisRunning();
-  // 1. Try Jev first if configured and available (ultra-fast, 0 Groq token consumption)
-  if (isJevAvailable() && !opts.scoreModel) {
+  // 1. Try Decision Engine (Tier 0: Clef, Tier 1: Jev) first (free, ultra-fast, 0 Groq token consumption)
+  if (isDecisionEngineAvailable() && !opts.scoreModel) {
     try {
-      const jev = await jevEvaluateMaterial(
+      const decision = await evaluateWithDecisionEngine(
         { title: a.title, bodyText: a.bodyText, excerpt: a.excerpt },
         { purpose: "prefilter_article", subject: subjectOf(a), attemptTag: opts.attemptTag }
       );
-      const label = jev.label === "BLOCK" && missingEvidence(a) ? "UNKNOWN" : jev.label;
+      const label = decision.label === "BLOCK" && missingEvidence(a) ? "UNKNOWN" : decision.label;
       return {
         label,
-        reason: jev.label === "BLOCK" ? "Jev Filter: off-topic/noise" : "",
-        model: jev.model,
-        receiptId: jev.receiptId,
-        reused: jev.reused,
-        fastScore: jev.score,
+        reason: decision.label === "BLOCK" ? `${decision.engine.toUpperCase()}: off-topic/noise` : "",
+        model: decision.model,
+        receiptId: decision.receiptId,
+        reused: decision.reused,
+        fastScore: decision.score,
       };
     } catch (err) {
-      console.warn(`[Prefilter] Jev evaluation failed or keys exhausted, falling back to LLM:`, err instanceof Error ? err.message : String(err));
+      console.warn(`[Prefilter] Decision Engine (Clef/Jev) failed or exhausted, falling back to LLM:`, err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -405,8 +405,12 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
     return { prefilter, scores, writing, structure: null };
   }
 
-  // 2. Run scoring sequentially so low-value articles can short-circuit before structure/writing calls.
-  const scores = threshold === null ? null : await runScores(a, threshold, opts);
+  // 2. Option A: Run single precision scoring via Groq/LLM with industry rubric (SCORE_CALLS=1).
+  // (If SCORE_BY_DECISION_ENGINE=true, bypass Groq scoring completely)
+  const bypassGroqScore = process.env.SCORE_BY_DECISION_ENGINE === "true" && prefilter.fastScore !== undefined;
+  const scores = threshold === null ? null : bypassGroqScore
+    ? { model: prefilter.model, threshold, values: [prefilter.fastScore!], receiptIds: [prefilter.receiptId], reused: prefilter.reused }
+    : await runScores(a, threshold, opts);
   const count = scores?.values.length ?? 0;
   const sum = scores && !scores.refused && count > 0 ? scores.values.reduce((total, v) => total + v, 0) : null;
   const meanScore = sum !== null && count > 0 ? Math.floor(sum / count) : null;

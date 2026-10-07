@@ -1,6 +1,9 @@
-// TypeSafe AI Jev (System One) Provider.
+// TypeSafe AI Jev & Clef (System One) Provider.
 // Dedicated structured decision engine for boolean (noul), choice (categorical), and numeric scoring.
-// Offers 200x speed and 400x cost efficiency, operating with zero token consumption on primary LLMs.
+// Multi-tier architecture:
+//   Tier 0: Clef (Local / self-hosted, 0 tokens, free)
+//   Tier 1: Jev (Cloud System One, 350ms, multi-key rotation)
+//   Tier 2: Primary LLM (Groq / Gemini / OpenAI fallback)
 import { credential } from "../config.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { paidRequest, ProviderRejectedError } from "./receipts.ts";
@@ -54,6 +57,7 @@ export interface JevResponse {
     input_tokens: number;
     output_tokens: number;
   };
+  latency_seconds?: number;
 }
 
 export class AllJevKeysExhaustedError extends Error {
@@ -62,6 +66,118 @@ export class AllJevKeysExhaustedError extends Error {
     this.name = "AllJevKeysExhaustedError";
   }
 }
+
+// ---------------------------------------------------------------------------
+// Tier 0: Clef (Local / Self-hosted Decision Engine)
+// ---------------------------------------------------------------------------
+
+interface ClefState {
+  failureCount: number;
+  circuitOpenUntil: number;
+  inFlight: number;
+}
+
+const clefState: ClefState = {
+  failureCount: 0,
+  circuitOpenUntil: 0,
+  inFlight: 0,
+};
+
+export function isClefAvailable(): boolean {
+  if (process.env.CLEF_ENABLED === "false") return false;
+  const now = Date.now();
+  if (clefState.circuitOpenUntil > 0 && now < clefState.circuitOpenUntil) {
+    return false;
+  }
+  const maxConcurrency = Number(process.env.CLEF_MAX_CONCURRENCY || 3);
+  if (clefState.inFlight >= maxConcurrency) {
+    return false;
+  }
+  return true;
+}
+
+export function resetClefState(): void {
+  clefState.failureCount = 0;
+  clefState.circuitOpenUntil = 0;
+  clefState.inFlight = 0;
+}
+
+export async function callClefSystemOne(
+  state: string,
+  questions: Record<string, JevQuestion>,
+  opts: { purpose: string; subject: string; attemptTag?: string }
+): Promise<{ response: JevResponse; receiptId: number; reused: boolean }> {
+  const baseUrl = (process.env.CLEF_BASE_URL ?? "https://clef.aiurl.tw/v1").replace(/\/$/, "");
+  const model = process.env.CLEF_MODEL ?? "Cloudflare/clef-flash";
+  const timeoutMs = Number(process.env.CLEF_TIMEOUT_MS || 15000);
+
+  clefState.inFlight++;
+  try {
+    const receipt = await paidRequest(
+      {
+        service: "clef",
+        model,
+        purpose: opts.purpose,
+        subject: opts.subject,
+        identity: { model, state, questions },
+        requestSummary: { model, stateSnippet: state.slice(0, 200), questionKeys: Object.keys(questions) },
+        attemptTag: opts.attemptTag,
+      },
+      async () => {
+        const res = await guardedFetch(`${baseUrl}/systemone`, {
+          method: "POST",
+          route: "direct",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ model, state, questions }),
+          timeoutMs,
+          maxBytes: 2 * 1024 * 1024,
+        });
+
+        if (res.status === 200) {
+          clefState.failureCount = 0;
+          clefState.circuitOpenUntil = 0;
+          const data = JSON.parse(res.text()) as JevResponse;
+          const inTokens = data.usage?.input_tokens ?? 0;
+          const outTokens = data.usage?.output_tokens ?? 0;
+          return {
+            response: data,
+            requestId: res.headers.get("x-request-id"),
+            usage: { input_tokens: inTokens, output_tokens: outTokens },
+            cost: { amount: 0, currency: "USD", basis: "actual" as const },
+          };
+        }
+
+        const errText = res.text();
+        throw new ProviderRejectedError(`Clef HTTP ${res.status}: ${errText}`, res.status, res.status >= 500);
+      }
+    );
+
+    return {
+      response: receipt.response as JevResponse,
+      receiptId: receipt.receiptId,
+      reused: receipt.reused,
+    };
+  } catch (err) {
+    clefState.failureCount++;
+    if (clefState.failureCount >= 2) {
+      clefState.circuitOpenUntil = Date.now() + 60_000;
+      void dispatchAlert("Clef circuit opened", [
+        `Failures: ${clefState.failureCount}`,
+        `Reason: ${err instanceof Error ? err.message : String(err)}`,
+        "Action: Routing decision traffic to Jev Tier 1 for 60s",
+      ]).catch(() => {});
+    }
+    throw err;
+  } finally {
+    clefState.inFlight = Math.max(0, clefState.inFlight - 1);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tier 1: Jev (Cloud Decision Engine with Multi-Key Rotation)
+// ---------------------------------------------------------------------------
 
 export interface KeySlot {
   key: string;
@@ -244,7 +360,42 @@ export async function callJevSystemOne(
   };
 }
 
-export async function jevEvaluateMaterial(
+// ---------------------------------------------------------------------------
+// Unified Decision Engine (Clef Tier 0 -> Jev Tier 1)
+// ---------------------------------------------------------------------------
+
+export function isDecisionEngineAvailable(): boolean {
+  return isClefAvailable() || isJevAvailable();
+}
+
+export const isJevOrClefAvailable = isDecisionEngineAvailable;
+
+function parseDecisionResult(
+  res: { response: JevResponse; receiptId: number; reused: boolean },
+  engine: "clef" | "jev"
+) {
+  const relAns = res.response.answers.relevance as JevChoiceAnswer | undefined;
+  const scoreAns = res.response.answers.score as JevScoreAnswer | undefined;
+
+  const rawChoice = relAns?.choice?.toUpperCase() ?? "UNKNOWN";
+  const label: "PASS" | "BLOCK" | "UNKNOWN" = rawChoice === "BLOCK" ? "BLOCK" : rawChoice === "PASS" ? "PASS" : "UNKNOWN";
+
+  const rawScore = typeof scoreAns?.score === "number" ? scoreAns.score : 1.5;
+  const score = Math.max(0, Math.min(100, Math.round((rawScore / 3.0) * 100)));
+  const confidence = relAns?.confidence ?? scoreAns?.confidence ?? 0.8;
+
+  return {
+    label,
+    score,
+    confidence,
+    model: res.response.model || (engine === "clef" ? "Cloudflare/clef-flash" : "jev-latest"),
+    engine,
+    receiptId: res.receiptId,
+    reused: res.reused,
+  };
+}
+
+export async function evaluateWithDecisionEngine(
   material: { title: string; bodyText?: string | null; excerpt?: string | null },
   opts: { purpose?: string; subject?: string; attemptTag?: string } = {}
 ): Promise<{
@@ -252,6 +403,7 @@ export async function jevEvaluateMaterial(
   score: number;
   confidence: number;
   model: string;
+  engine: "clef" | "jev";
   receiptId: number;
   reused: boolean;
 }> {
@@ -283,28 +435,40 @@ export async function jevEvaluateMaterial(
     },
   };
 
-  const res = await callJevSystemOne(text, questions, {
-    purpose: opts.purpose ?? "prefilter_article",
-    subject: opts.subject ?? "article:material",
-    attemptTag: opts.attemptTag,
-  });
+  // 1. Try Tier 0: Clef (Local / Self-hosted, free, 0 token cost)
+  if (isClefAvailable()) {
+    try {
+      const res = await callClefSystemOne(text, questions, {
+        purpose: opts.purpose ?? "prefilter_article",
+        subject: opts.subject ?? "article:material",
+        attemptTag: opts.attemptTag,
+      });
+      return parseDecisionResult(res, "clef");
+    } catch (clefErr) {
+      console.warn(
+        `[DecisionEngine] Clef Tier 0 failed or timed out (${clefErr instanceof Error ? clefErr.message : String(clefErr)}), falling back to Jev Tier 1`
+      );
+    }
+  }
 
-  const relAns = res.response.answers.relevance as JevChoiceAnswer | undefined;
-  const scoreAns = res.response.answers.score as JevScoreAnswer | undefined;
+  // 2. Try Tier 1: Jev (Cloud System One, fast & paid)
+  if (isJevAvailable()) {
+    try {
+      const res = await callJevSystemOne(text, questions, {
+        purpose: opts.purpose ?? "prefilter_article",
+        subject: opts.subject ?? "article:material",
+        attemptTag: opts.attemptTag,
+      });
+      return parseDecisionResult(res, "jev");
+    } catch (jevErr) {
+      console.warn(
+        `[DecisionEngine] Jev Tier 1 failed or exhausted (${jevErr instanceof Error ? jevErr.message : String(jevErr)}), falling back to LLM Tier 2`
+      );
+      throw jevErr;
+    }
+  }
 
-  const rawChoice = relAns?.choice?.toUpperCase() ?? "UNKNOWN";
-  const label: "PASS" | "BLOCK" | "UNKNOWN" = rawChoice === "BLOCK" ? "BLOCK" : rawChoice === "PASS" ? "PASS" : "UNKNOWN";
-
-  const rawScore = typeof scoreAns?.score === "number" ? scoreAns.score : 1.5;
-  const score = Math.max(0, Math.min(100, Math.round((rawScore / 3.0) * 100)));
-  const confidence = relAns?.confidence ?? scoreAns?.confidence ?? 0.8;
-
-  return {
-    label,
-    score,
-    confidence,
-    model: res.response.model || "jev-latest",
-    receiptId: res.receiptId,
-    reused: res.reused,
-  };
+  throw new Error("No decision engine (Clef or Jev) available");
 }
+
+export const jevEvaluateMaterial = evaluateWithDecisionEngine;
