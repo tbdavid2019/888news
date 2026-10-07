@@ -43,6 +43,7 @@
 | **行動端與 PWA** | 一般響應式網頁 | **完整 PWA 化**，支援 Android / iOS Safari「加到主畫面」獨立安裝與離線快取 |
 | **Docker 鏡像** | 需本機自行編譯 | **官方 GHCR 多架構預編譯映像檔** (`ghcr.io/tbdavid2019/888news`)，隨拉即跑 |
 | **自動化部署** | 手動拉取更新 | **GitHub Actions 矩陣建置 + Watchtower** 無感自動輪詢熱更新 |
+| **決策與 Token 優化** | 僅依賴常規生成式大模型 | **本地 Clef-flash + 雲端 Jev 雙決策引擎**，80%+ 雜訊 0 元攔截，告別 Rate Limit |
 
 ---
 
@@ -52,7 +53,7 @@
 
 每天科技圈有成千上萬條資訊發布，但其中 90% 都是同質公關稿、轉述水文與瑣碎雜訊。888news 透過完整的流水線處理：
 1. **盯住海量信源**：官方部落格、科技媒體、X / Twitter、GitHub Releases、研究機構等。
-2. **兩次獨立模型評分**：先預篩剔除雜訊，再由獨立大模型評分，只有跨越門檻的高價值情報才能入選。
+2. **雙引擎決策預篩與深度評分**：先由本地 Clef-flash / Jev 決策引擎秒級過濾低分雜訊（0 Token 消耗），再由精選大模型進行五維品味裁決，只有高價值情報才能入選。
 3. **事件聚類與熱度榜**：運用向量相似度與模型二次驗證，將多篇報導同一事件的內容歸組為單一事件，計算獨立討論源，真實反映熱點排行。
 4. **全平台交付**：提供網頁、PWA 應用、深淺色切換、RSS 訂閱、RESTful OpenAPI、MCP (Model Context Protocol) 以及 `llms.txt`。
 
@@ -84,11 +85,18 @@
 - **三級容災架構 (`Primary` $\rightarrow$ `Fallback 1` $\rightarrow$ `Fallback 2`)**：遇到 Rate Limit (HTTP 429) 或 5xx 故障時自動無縫降級，保障 24/7 流水線不停擺。
 - **熔斷器 (Circuit Breaker) & 防驚群效應 (Anti-Thundering Herd)**：具備隨機抖動退避與併發限制信號量，徹底消除峰值流量瞬間壓垮備用 LLM 的驚群效應。
 
-### 📡 6. 多渠道 Webhook 通知 (Slack / Discord / Telegram)
+### ⚡ 6. 本地/雲端雙引擎結構化決策加速（Clef-flash & TypeSafe Jev System One）
+- **徹底告別 Groq Token 消耗與 Rate Limit**：將「大模型深度寫作」與「前置結構化決策」職責分離。大量進線材料先由專屬決策引擎處理，預篩 BLOCK 或初評 < 35 分雜訊直接短路丟棄，**Groq Token 消耗暴降 80%~90%**。
+- **三層級聯決策架構**：
+  - **Tier 0（本地自建免費）**：優先呼叫自建 `clef.aiurl.tw`（基於 `Cloudflare/clef-flash`，[Swagger 文件](https://clef.aiurl.tw/docs)），0 Token 成本、免金鑰吸收 90%+ 流量。
+  - **Tier 1（雲端極速備援）**：內建 TypeSafe Jev 決策模型（`api.typesafe.ai/v1/systemone`），延遲僅 ~350ms，支援多金鑰自動輪換與 402/429 故障轉移。
+  - **Tier 2（常規大模型兜底）**：當決策引擎均不可用時，自動平滑降級回常規 LLM 預篩，確保服務 100% 不中斷。
+
+### 📡 7. 多渠道 Webhook 通知 (Slack / Discord / Telegram)
 - 揮別單一通訊軟體限制，全方位支援 **Slack**、**Discord**、**Telegram** 即時 Webhook 與 Bot 通知。
 - 系統告警（如 LLM 降級觸發、採集靜默警報、每日情報摘要）與使用者提交之意見反饋均可即時、非同步並行廣播至指定頻道。
 
-### 🔌 7. 為 AI Agent 與開放生態而生
+### 🔌 8. 為 AI Agent 與開放生態而生
 - **Model Context Protocol (MCP)**：內建 MCP Server，任何 AI Agent（如 Claude Desktop、Cursor、Cline）均可直接掛載為工具，呼叫最新情報與搜尋。
 - **RSS 與 OpenAPI**：包含精選、全文、日報、主題分類多維度 RSS 與無須授權的唯讀 RESTful 介面。
 
@@ -165,6 +173,14 @@ docker compose up -d --build
 | **`LLM_MODEL`** | 主要大模型名稱 | `gpt-4o-mini` / `deepseek-flash` 等 |
 | **`LLM_FALLBACK_1_*`** | 第一級容災大模型配置（BaseURL, Key, Model） | 選填，故障時自動切換 |
 | **`LLM_FALLBACK_2_*`** | 第二級容災大模型配置（BaseURL, Key, Model） | 選填，次級故障時切換 |
+| **`CLEF_ENABLED`** | 啟用本地自建 Clef-flash 決策引擎（Tier 0） | `true`（預設啟用，0 Token 成本） |
+| **`CLEF_BASE_URL`** | Clef 決策引擎 API 端點（[文件](https://clef.aiurl.tw/docs)） | `https://clef.aiurl.tw/v1` |
+| **`CLEF_MODEL`** | Clef 決策模型名稱 | `Cloudflare/clef-flash` |
+| **`CLEF_TIMEOUT_MS`** | Clef 請求逾時毫秒（逾時無縫降級 Jev） | `15000`（15 秒） |
+| **`JEV_ENABLED`** | 啟用 TypeSafe Jev 雲端決策引擎（Tier 1） | `true`（填寫金鑰時生效） |
+| **`JEV_API_KEY`** | Jev API 金鑰（支援多把逗號分隔） | `apikey_...` |
+| **`JEV_FALLBACK_API_KEYS`** | Jev 第二把、第三把備用金鑰 | 選填，402 額度用盡自動無縫輪換 |
+| **`SCORE_BY_DECISION_ENGINE`** | 是否完全跳過 Groq 評分（方案 B 開關） | `false`（預設方案 A：Clef 擋雜訊，Groq 精確定分） |
 | **`READER_BASE_URL`** | 動態反爬網頁渲染器 | `https://2md.aiurl.tw` |
 | **`SLACK_WEBHOOK_URL`** | Slack 告警與反饋通知 Webhook URL | 選填 |
 | **`DISCORD_WEBHOOK_URL`** | Discord 告警與反饋通知 Webhook URL | 選填 |
