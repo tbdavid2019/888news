@@ -6,15 +6,37 @@
 
 ## [2026-10-07]
 
-### ⚡️ 模型調用量與成本優化 (Performance & Cost Optimization)
+### ⚡️ Clef-Flash & TypeSafe Jev 決策引擎整合與大模型成本優化 (Decision Engine & Pipeline Overhaul)
 
-- **管線防洪與 LLM 請求削減（預估降低 75%～80% 成本）：**
-  - **單次評分機制 (`SCORE_CALLS=1`)**：將預設雙重打分改為單次打分（可由環境變數動態覆寫），打分階段直接省下 50% API 調用（每週少呼叫 ~2,600 次）。
-  - **雜訊短路防線 (Noise Short-Circuiting)**：打分改為循序執行，若評分低於 35 分（`NOISE_SCORE_CUTOFF=35`，通常為單句推文、表情符號或廣告雜訊），全面跳過後續昂貴的 `structure`（實體抽取）與 `summarize/understand`（深度摘要寫作），採用乾淨原文回退處理。單此項再砍掉 ~2,400 次調用。
-  - **事件分組防洪過濾**：在 `processArticle` 階段，僅允許入選（`selected`）或評分達標（`score >= 45`）的文章推入事件分組佇列（`QUEUES.group`），防止大量低分雜訊湧入分組與故事鏈。
-  - **單篇報導故事跳過 Digest 重寫**：資料庫中 80% 的事件僅含 1 篇獨立報導；針對此類事件直接採用該報導摘要作為故事摘要，不再呼叫 LLM 重複生成；僅在匯聚 2 篇以上不同報導時才觸發跨信源整合。
-  - **事件摘要防抖延遲 (Debounce)**：將 `QUEUES.digest` 延遲時間由 60 秒延長至 600 秒（10 分鐘），避免短時間內同一事件多篇報導湧入時頻繁重複生成過渡期 digest。
-  - **實測效益**：每週 API 調用總數預計從 ~18,000 次驟降至 ~3,500 次，Groq 帳單支出由每週 $7.55 USD 降至約 $1.50 USD（平均每天僅約 $0.25 USD）。
+- **三層級聯自動容災體系 (Tier 0 / Tier 1 / Tier 2 Cascade)：**
+  - **Tier 0（本地自建 Clef-Flash）**：基於 Cloudflare/clef-flash 部署的本地 System One 決策服務，免授權金鑰、0 Token 費用，優先承載 100% 篩選與關係決策流量。
+  - **Tier 1（雲端 TypeSafe Jev 備援）**：雲端極速決策模型（api.typesafe.ai/v1/systemone），延遲約 260ms；支援多把 API Key 輪換池與自動冷卻機制（402 額度用盡降級、429 自動退避），在 Clef 超時或併發滿載時無縫接管。
+  - **Tier 2（常規大模型保底）**：當決策引擎全數不可用時，平滑回退至 Groq / Gemini / OpenAI 主模型，確保管線永不停擺。
+
+- **擴充 1 & 2：全維度元數據一次判定（一呼五題）：**
+  - 新文章進線時，在單次 Clef / Jev 請求中同時評估 5 個結構化維度：
+    1. `relevance`：相關性門檻（`PASS` / `BLOCK` / `UNKNOWN`）。
+    2. `attentionScore`：注意力初評（0~3 分有序評分，換算 0~100 分，低於 35 分直接短路拋棄，0 Groq Token 消耗）。
+    3. `category`：網站主分類（`ai-models`、`ai-products`、`industry`、`paper`、`tip`、`opinion` 6 大分類）。
+    4. `itemType`：題材格式（模型發布、產品更新、實用工具、論文研究、產業動態、專家觀點、教學解析 7 大題材）。
+    5. `authorRole`：作者/報導視角（第一方官方發布 `principal`、獨立觀察評測 `observer`、媒體轉述編譯 `relayer`）。
+  - **低分雜訊補全**：被短路拋棄的雜訊文章依然保留 Clef 裁決的主分類與分類標籤，保障資料庫檢索與統計完整性。
+
+- **精選中文寫作 (Groq) 提示詞大幅瘦身：**
+  - 將 Clef / Jev 事先裁決的 `itemType` 與 `authorRole` 作為權威前置判定傳入 `runUnderstand`，Groq 不再需要消耗推理算力猜測作者視角與題材類型，專注文筆潤色與正體中文標題、摘要生成。
+
+- **事件歸組 (Event Grouping) 全面由 Clef 4選1 關係裁決接管：**
+  - 將原本高昂的事件關聯 LLM 比對全面改由 Clef 執行 4 選 1 關係裁決：同事件 (`SAME_OCCURRENCE`)、進展 (`SAME_STORY`)、無關 (`UNRELATED`)、綜述 (`ROUNDUP`)。
+  - 覆蓋新文章多候選事實批次比對（`judgeBatch`、`judgeSignal`）、雙向複核（`confirmMerge`）與故事根合併（`judgeStories`）。
+  - 實測同事件裁決置信度 88.7%、無關裁決置信度 87.0%，事件歸組階段之 Groq Token 消耗降至 0。
+
+- **管線防洪與 LLM 請求削減（預估降低 85%～90% 成本）：**
+  - **單次評分機制 (`SCORE_CALLS=1`)**：將預設雙重打分改為單次打分（可由環境變數動態覆寫），打分階段直接省下 50% API 調用。
+  - **雜訊短路防線 (Noise Short-Circuiting)**：評分低於 35 分（`NOISE_SCORE_CUTOFF=35`）的文章，全面跳過後續昂貴的 `structure`（實體抽取）與 `summarize/understand`（深度摘要寫作）。
+  - **事件分組防洪過濾**：在 `processArticle` 階段，僅允許入選（`selected`）或評分達標（`score >= 45`）的文章推入事件分組佇列（`QUEUES.group`）。
+  - **單篇報導故事跳過 Digest 重寫**：資料庫中 80% 的事件僅含 1 篇獨立報導，直接採用該報導摘要作為故事摘要；僅匯聚 2 篇以上不同報導時才觸發跨信源整合。
+  - **事件摘要防抖延遲 (Debounce)**：將 `QUEUES.digest` 延遲時間由 60 秒延長至 600 秒（10 分鐘）。
+  - **超時與併發控制**：`CLEF_TIMEOUT_MS` 設定為 45,000ms（45秒），內建併發信號量保護（`CLEF_MAX_CONCURRENCY=3`）。
 
 ---
 
