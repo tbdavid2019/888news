@@ -20,6 +20,7 @@ import { modelFor } from "./models.ts";
 import { buildMaterial, firstImagePart, loadAnalyzeInput, type AnalyzeInputArticle } from "./input.ts";
 import { pageFetchable } from "../content/extract.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
+import { isJevAvailable, jevEvaluateMaterial } from "../providers/jev.ts";
 import {
   buildArticlePrompt, buildLongTweetPrompt, buildShortTweetPrompt, finalizeCopy, isShortTweetInput, looksZh, MAX_BODY_CHARS, missingEvidence,
   needsShortTweetTranslation, parseTranslateOutput, PREFILTER_SYSTEM, prefilterUser, translateInputOf, UNDERSTAND_SYSTEM, understandUser,
@@ -191,7 +192,30 @@ function checkAnalysisRunning() {
 const subjectOf = (a: AnalyzeInputArticle) => `article:${a.id}@${a.revision}`;
 const tagged = (attemptTag: string | undefined, step: string) => [attemptTag, step].filter(Boolean).join(":") || undefined;
 
-async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<AnalysisRun["prefilter"]> {
+async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<AnalysisRun["prefilter"] & { fastScore?: number }> {
+  checkAnalysisRunning();
+  // 1. Try Jev first if configured and available (ultra-fast, 0 Groq token consumption)
+  if (isJevAvailable() && !opts.scoreModel) {
+    try {
+      const jev = await jevEvaluateMaterial(
+        { title: a.title, bodyText: a.bodyText, excerpt: a.excerpt },
+        { purpose: "prefilter_article", subject: subjectOf(a), attemptTag: opts.attemptTag }
+      );
+      const label = jev.label === "BLOCK" && missingEvidence(a) ? "UNKNOWN" : jev.label;
+      return {
+        label,
+        reason: jev.label === "BLOCK" ? "Jev Filter: off-topic/noise" : "",
+        model: jev.model,
+        receiptId: jev.receiptId,
+        reused: jev.reused,
+        fastScore: jev.score,
+      };
+    } catch (err) {
+      console.warn(`[Prefilter] Jev evaluation failed or keys exhausted, falling back to LLM:`, err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  // 2. Fallback to standard LLM chatJson
   const model = await modelFor("prefilter");
   checkAnalysisRunning();
   const res = await chatJson({
@@ -346,15 +370,49 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
     const scores = threshold === null ? null : await runScores(a, threshold, opts);
     return { prefilter, scores, writing: null, structure: null };
   }
-  // 1. Run scoring sequentially so low-value articles can short-circuit before structure/writing calls.
+  const noiseCutoff = process.env.NOISE_SCORE_CUTOFF ? Number(process.env.NOISE_SCORE_CUTOFF) : 35;
+
+  // 1. Fast Gatekeeper short-circuit via Jev:
+  // If Jev already evaluated the score and it is clearly below the noise cutoff,
+  // we record the score and short-circuit immediately without calling Groq for scoring!
+  if (
+    prefilter.fastScore !== undefined &&
+    prefilter.fastScore < noiseCutoff &&
+    threshold !== null &&
+    !opts.attemptTag
+  ) {
+    const scores: NonNullable<AnalysisRun["scores"]> = {
+      model: prefilter.model,
+      threshold,
+      values: [prefilter.fastScore],
+      receiptIds: [prefilter.receiptId],
+      reused: prefilter.reused,
+    };
+    const t = translateInputOf(a);
+    const main = collapseWhitespace(t.mainText || t.title);
+    const isZh = looksZh(main);
+    const writing: AnalysisRun["writing"] = {
+      kind: isZh ? "verbatim" : "none",
+      model: null,
+      titleZh: isZh ? (looksZh(t.title) ? t.title : main.slice(0, 100)) : "",
+      summaryZh: isZh ? main.slice(0, 200) : "",
+      reasonZh: null,
+      tags: null,
+      identityGuard: undefined,
+      receiptIds: [],
+      reused: true,
+    };
+    return { prefilter, scores, writing, structure: null };
+  }
+
+  // 2. Run scoring sequentially so low-value articles can short-circuit before structure/writing calls.
   const scores = threshold === null ? null : await runScores(a, threshold, opts);
   const count = scores?.values.length ?? 0;
   const sum = scores && !scores.refused && count > 0 ? scores.values.reduce((total, v) => total + v, 0) : null;
   const meanScore = sum !== null && count > 0 ? Math.floor(sum / count) : null;
 
-  // 2. Short-circuit: if the article scored below cutoff and has no custom attempt tag, it is noise.
+  // 3. Short-circuit: if the article scored below cutoff and has no custom attempt tag, it is noise.
   // We skip expensive structure extraction and deep writing LLM calls.
-  const noiseCutoff = process.env.NOISE_SCORE_CUTOFF ? Number(process.env.NOISE_SCORE_CUTOFF) : 35;
   const isLowNoise = meanScore !== null && meanScore < noiseCutoff && !opts.attemptTag;
   if (isLowNoise) {
     const t = translateInputOf(a);
