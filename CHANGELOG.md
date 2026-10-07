@@ -6,6 +6,14 @@
 
 ## [2026-10-07]
 
+### 🌐 新增 Hacker News 官方 RSS 信源並存支援 (Sources & Ingestion)
+
+- **Hacker News 雙軌信源並存**：
+  - 保留既有 `hackernews100`（基於 hnrss.org 的高權重精選源），並新增官方即時信源 `hackernews-official`（`https://news.ycombinator.com/rss`）。
+  - 得益於 Clef-Flash（Tier 0 免費決策引擎）之 5 維元數據前置裁決，HN 首頁約 60%~70% 的非 AI/非科技雜訊文章將在初篩直接短路拋棄（0 Groq Token 消耗），唯有入圍的重大 AI 熱點才會傳遞至後續模型寫作，實現高頻率抓取而無顯著 Token 成本。
+- **RSS 相對路徑自動標準化容錯**：
+  - 強化 `packages/backend/src/sources/rss.ts` 解析器，針對 RSS Feed 中少數未帶 domain 的相對路徑（如 Ask HN 討論連結）自動以 `feedUrl` 基礎網址解析為完整絕對路徑，提升候選文章擷取穩定性。
+
 ### ⚡️ Clef-Flash & TypeSafe Jev 決策引擎整合與大模型成本優化 (Decision Engine & Pipeline Overhaul)
 
 - **三層級聯自動容災體系 (Tier 0 / Tier 1 / Tier 2 Cascade)：**

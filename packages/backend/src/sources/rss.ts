@@ -153,9 +153,13 @@ export async function fetchRss(source: SourceRow, opts: { force?: boolean } = {}
   if (channel) {
     const items = arr(doc.rss?.channel?.item ?? doc["rdf:RDF"]?.item);
     for (const it of items) {
-      const link = text(it.link) || text(it.guid);
+      let link = text(it.link) || text(it.guid);
+      if (!link) continue;
+      try {
+        link = new URL(link, url).toString();
+      } catch {}
       const title = collapseWhitespace(stripTags(text(it.title)));
-      if (!link || !title) continue;
+      if (!title) continue;
       const contentEncoded = text(it["content:encoded"]);
       const description = text(it.description);
       const bodyHtmlRaw = contentEncoded || (summaryIsBody ? description : "");

@@ -1,6 +1,17 @@
 {
-  "latestVersion": "2026-10-07 17:00",
+  "latestVersion": "2026-10-07 17:30",
   "releases": [
+    {
+      "date": "2026-10-07",
+      "time": "17:30",
+      "kind": "信源擴充",
+      "title": "Hacker News 官方即時 RSS 信源雙軌並存導入",
+      "body": [
+        "信源雙軌並存：保留高熱度 hackernews100 精選源，同時引入 Hacker News 官方即時 RSS（news.ycombinator.com/rss）。",
+        "零成本雜訊過濾：結合 Clef-Flash 前置決策，HN 首頁非 AI 雜訊文章於初篩直接攔截拋棄，兼顧即時爆料與 0 Token 成本。",
+        "解析容錯強化：RSS 解析器全面支援相對連結安全正規化，防止討論串連結解析失效。"
+      ]
+    },
     {
       "date": "2026-10-07",
       "time": "17:00",

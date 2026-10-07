@@ -221,6 +221,25 @@
       "syndicate_fulltext": true
     },
     {
+      "id": "hackernews-official",
+      "name": "Hacker News (官方 RSS)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://news.ycombinator.com/rss"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 20,
+      "tags": [
+        "技術討論",
+        "社群"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "ilyasut",
       "name": "Ilya Sutskever (@ilyasut)",
       "kind": "x_search",
