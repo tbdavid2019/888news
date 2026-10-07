@@ -4,6 +4,47 @@
 
 ---
 
+## [2026-10-07]
+
+### ⚡️ 模型調用量與成本優化 (Performance & Cost Optimization)
+
+- **管線防洪與 LLM 請求削減（預估降低 75%～80% 成本）：**
+  - **單次評分機制 (`SCORE_CALLS=1`)**：將預設雙重打分改為單次打分（可由環境變數動態覆寫），打分階段直接省下 50% API 調用（每週少呼叫 ~2,600 次）。
+  - **雜訊短路防線 (Noise Short-Circuiting)**：打分改為循序執行，若評分低於 35 分（`NOISE_SCORE_CUTOFF=35`，通常為單句推文、表情符號或廣告雜訊），全面跳過後續昂貴的 `structure`（實體抽取）與 `summarize/understand`（深度摘要寫作），採用乾淨原文回退處理。單此項再砍掉 ~2,400 次調用。
+  - **事件分組防洪過濾**：在 `processArticle` 階段，僅允許入選（`selected`）或評分達標（`score >= 45`）的文章推入事件分組佇列（`QUEUES.group`），防止大量低分雜訊湧入分組與故事鏈。
+  - **單篇報導故事跳過 Digest 重寫**：資料庫中 80% 的事件僅含 1 篇獨立報導；針對此類事件直接採用該報導摘要作為故事摘要，不再呼叫 LLM 重複生成；僅在匯聚 2 篇以上不同報導時才觸發跨信源整合。
+  - **事件摘要防抖延遲 (Debounce)**：將 `QUEUES.digest` 延遲時間由 60 秒延長至 600 秒（10 分鐘），避免短時間內同一事件多篇報導湧入時頻繁重複生成過渡期 digest。
+  - **實測效益**：每週 API 調用總數預計從 ~18,000 次驟降至 ~3,500 次，Groq 帳單支出由每週 $7.55 USD 降至約 $1.50 USD（平均每天僅約 $0.25 USD）。
+
+---
+
+## [2026-10-05]
+
+### ⚙️ 後台管理與設定優化 (Admin & Integrations)
+
+- **Webhook 刪除與清空支援**：
+  - 修復後台系統設定中無法刪除已寫入之 Slack、Discord 與 Telegram Webhook 的問題，支援留白保存清空。
+- **評測榜單與 API 相容性**：
+  - 支援 `AA_API_KEY` 作為 `ARTIFICIAL_ANALYSIS_API_KEY` 之標準別名。
+  - 修復 Vals AI Finance Agent Leaderboard 資料讀取異常（支援 `benchmarkViewUrl` 外部 JSON 格式，修正 `undefined.tasks` 錯誤）。
+- **選拔門檻校準與信源分級**：
+  - 微調精選門檻（T1_5 門檻調優至 60，T2 門檻調優至 68），平衡收錄品質與產業熱點敏感度。
+  - 將 `ollama-release` 升級為 T1 官方信源。
+- **日報報頭繁體化與統計修復**：
+  - 修正日報模型發布數統計區塊名稱（支援繁體「模型發布」），解決發布數量顯示為 0 之統計異常。
+  - 報頭「報」字字型在地化，使用 Noto Sans TC 重新生成正體報頭圖樣。
+
+---
+
+## [2026-10-04]
+
+### 📊 數據統計與分析 (Analytics & Tracking)
+
+- **Google Analytics 4 (GA4) 整合**：
+  - 前台全站注入 Google Tag (`gtag.js`，評估 ID: `G-FYPFFMVB2F`)，提供精準造訪流量與讀者互動數據追蹤。
+
+---
+
 ## [2026-10-01]
 
 ### 🚀 新增與架構升級 (Features & Architecture)
