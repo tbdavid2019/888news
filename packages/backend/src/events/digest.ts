@@ -40,6 +40,20 @@ export async function composeStoryDigest(storyId: number, opts: { afterCorrectio
     WHERE f.story_id = ${storyId} AND p.visibility = 'public' AND p.eligible
     ORDER BY p.article_id`;
   if (reports.length === 0) return { updated: false };
+  // A story with only one report uses that report's summary directly; multi-report synthesis runs for 2+ reports.
+  if (reports.length === 1 && !opts.afterCorrection) {
+    const single = reports[0]!;
+    if (!story.digest && single.summary) {
+      await sql`
+        UPDATE stories 
+        SET digest = ${single.summary}, latest = ${single.title}, digest_updated_at = now(),
+            title = CASE WHEN origin = 'manual' OR title <> '' THEN title ELSE ${single.title} END,
+            updated_at = now()
+        WHERE id = ${storyId} AND digest IS NULL
+      `;
+    }
+    return { updated: false };
+  }
   reports.sort((a, b) => a.at.getTime() - b.at.getTime());
   const ids = reports.map((r) => r.id).sort();
   // What this version is written from: the reports and what they currently say (corrections included).

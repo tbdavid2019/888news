@@ -115,8 +115,11 @@ export async function processArticle(articleId: string, opts: { attemptTag?: str
     }
     if (result.stale) return { state: "stale" }; // the newer revision has its own job
     await publishArticle(articleId);
-    // History is archived but founds no event (isHistorical).
-    if (result.output.relevance === "pass" && !row.historical) await enqueue(QUEUES.group, { articleId }, { singletonKey: articleId, priority: PRIORITY.live });
+    // Only group selected or meaningful items (score >= 45) into events, preventing low-score noise from flooding grouping & digest queues.
+    const isPromising = result.output.selected || (result.output.score !== null && result.output.score >= 45);
+    if (result.output.relevance === "pass" && !row.historical && isPromising) {
+      await enqueue(QUEUES.group, { articleId }, { singletonKey: articleId, priority: PRIORITY.live });
+    }
     return { state: result.output.relevance };
   } catch (error) {
     if (error instanceof AnalysisInterruptedError || shutdownSignal.signal.aborted) throw error;

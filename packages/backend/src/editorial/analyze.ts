@@ -42,12 +42,12 @@ export const ANALYZE_PROMPT_VERSION = Object.values(PROMPT_VERSIONS).join("+");
 
 // ── Scoring ───────────────────────────────────────────────────────────────────────────────
 
-/** Independent score calls per article; their sum decides, their mean (floored) is shown. */
-export const SCORE_CALLS = 2;
+/** Score calls per article (default 1 to minimize token cost; can be overridden via SCORE_CALLS env). */
+export const SCORE_CALLS = process.env.SCORE_CALLS ? Math.max(1, Number(process.env.SCORE_CALLS)) : 1;
 
 /**
  * The thresholds on the mean score, per source tier (industry/selection.ts): selected when
- * score1 + score2 >= 2 × threshold. Tiers without a threshold are not scored for 精选.
+ * sum >= SCORE_CALLS × threshold. Tiers without a threshold are not scored for 精选.
  */
 export function tierThreshold(tier: string): number | null {
   return SELECTION.thresholds[tier] ?? null;
@@ -346,21 +346,40 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
     const scores = threshold === null ? null : await runScores(a, threshold, opts);
     return { prefilter, scores, writing: null, structure: null };
   }
-  // The structure step needs nothing from the scores: it runs beside them.
-  const structure = runStructure(a, opts).then((value) => ({ value }), (error: unknown) => ({ error }));
-  try {
-    const scores = threshold === null ? null : await runScores(a, threshold, opts);
-    const sum = scores && !scores.refused && scores.values.length === SCORE_CALLS ? scores.values.reduce((total, v) => total + v, 0) : null;
-    const near = sum !== null && (sum >= scores!.threshold * SCORE_CALLS || sum > UNDERSTAND_FLOOR * SCORE_CALLS);
-    const writing = (near ? await runUnderstand(a, opts) : null) ?? (await runSummarize(a, opts));
-    const s = await structure;
-    if ("error" in s) throw s.error;
-    return { prefilter, scores, writing, structure: s.value };
-  } finally {
-    // A score/writing error or deploy must not let the job finish while a paid structure request
-    // still owns a response. It settles and stores its receipt before shutdown can close the DB.
-    await structure;
+  // 1. Run scoring sequentially so low-value articles can short-circuit before structure/writing calls.
+  const scores = threshold === null ? null : await runScores(a, threshold, opts);
+  const count = scores?.values.length ?? 0;
+  const sum = scores && !scores.refused && count > 0 ? scores.values.reduce((total, v) => total + v, 0) : null;
+  const meanScore = sum !== null && count > 0 ? Math.floor(sum / count) : null;
+
+  // 2. Short-circuit: if the article scored below cutoff and has no custom attempt tag, it is noise.
+  // We skip expensive structure extraction and deep writing LLM calls.
+  const noiseCutoff = process.env.NOISE_SCORE_CUTOFF ? Number(process.env.NOISE_SCORE_CUTOFF) : 35;
+  const isLowNoise = meanScore !== null && meanScore < noiseCutoff && !opts.attemptTag;
+  if (isLowNoise) {
+    const t = translateInputOf(a);
+    const main = collapseWhitespace(t.mainText || t.title);
+    const isZh = looksZh(main);
+    const writing: AnalysisRun["writing"] = {
+      kind: isZh ? "verbatim" : "none",
+      model: null,
+      titleZh: isZh ? (looksZh(t.title) ? t.title : main.slice(0, 100)) : "",
+      summaryZh: isZh ? main.slice(0, 200) : "",
+      reasonZh: null,
+      tags: null,
+      identityGuard: undefined,
+      receiptIds: [],
+      reused: true,
+    };
+    return { prefilter, scores, writing, structure: null };
   }
+
+  // 3. For articles that passed the noise filter, run structure and writing.
+  const near = sum !== null && (sum >= (scores?.threshold ?? 60) * count || sum > UNDERSTAND_FLOOR * count);
+  const structure = await runStructure(a, opts);
+  const writing = (near ? await runUnderstand(a, opts) : null) ?? (await runSummarize(a, opts));
+
+  return { prefilter, scores, writing, structure };
 }
 
 /** One judgement from the steps: the selection rule, the reader-facing copy and the structure. */
@@ -371,13 +390,14 @@ export function normalizeAnalysis(run: AnalysisRun) {
   // Past the prefilter (PASS or UNKNOWN) an item is relevant, but without a usable Chinese title and
   // summary it cannot be published: it waits.
   const relevance = label === "BLOCK" ? "block" : run.writing && (!titleZh || !summaryZh) ? "unknown" : "pass";
-  // Selected when the two scores add up to twice the tier threshold; the mean, floored,
+  // Selected when the scores add up to count × tier threshold; the mean, floored,
   // is the score shown (it never decides a half point on its own).
   const values = run.scores && !run.scores.refused ? run.scores.values : null;
-  const sum = values?.length === SCORE_CALLS ? values.reduce((total, v) => total + v, 0) : null;
-  const score = sum === null ? null : Math.floor(sum / SCORE_CALLS);
+  const count = values?.length ?? 0;
+  const sum = count > 0 ? values!.reduce((total, v) => total + v, 0) : null;
+  const score = sum === null ? null : Math.floor(sum / count);
   const threshold = run.scores?.threshold ?? null;
-  const selected = relevance === "pass" && sum !== null && threshold !== null && sum >= threshold * SCORE_CALLS;
+  const selected = relevance === "pass" && sum !== null && threshold !== null && count > 0 && sum >= threshold * count;
   const subjects = run.structure?.subjects ?? [];
   const tags = [...(run.writing?.tags ?? run.structure?.tags ?? [])];
   for (const s of subjects) {
