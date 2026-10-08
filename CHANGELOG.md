@@ -4,6 +4,19 @@
 
 ---
 
+## [2026-10-08]
+
+### ⚡️ 升級 Clef 決策引擎至高效能節點 clef.create360.ai (Decision Engine Upgrade)
+
+- **高效能節點遷移動態支援**：
+  - 將 Tier 0 Clef-Flash 決策端點預設位址切換至高速節點 `https://clef.create360.ai/v1`。
+  - 實測單次結構化推論延遲由原本約 5,100ms 大幅降至 130ms～300ms（加速 15~40 倍），顯著提升進線管線吞吐量。
+- **路徑與模型參數正規化防禦**：
+  - 自動偵測並標準化 `CLEF_BASE_URL`，無論結尾是否帶有 `/v1` 均自動相容至 `/v1/systemone`。
+  - 自動相容模型別名（如 `Cloudflare/clef-flash` 自動映射至標準 `clef-flash`），杜絕 FastAPI Schema 驗證錯誤。
+
+---
+
 ## [2026-10-07]
 
 ### 🌐 新增 Hacker News 官方 RSS 信源並存支援 (Sources & Ingestion)

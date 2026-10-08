@@ -111,8 +111,12 @@ export async function callClefSystemOne(
   questions: Record<string, JevQuestion>,
   opts: { purpose: string; subject: string; attemptTag?: string }
 ): Promise<{ response: JevResponse; receiptId: number; reused: boolean }> {
-  const baseUrl = (process.env.CLEF_BASE_URL ?? "https://clef.aiurl.tw/v1").replace(/\/$/, "");
-  const model = process.env.CLEF_MODEL ?? "Cloudflare/clef-flash";
+  let baseUrl = (process.env.CLEF_BASE_URL ?? "https://clef.create360.ai/v1").replace(/\/$/, "");
+  if (!baseUrl.endsWith("/v1")) {
+    baseUrl = `${baseUrl}/v1`;
+  }
+  const rawModel = process.env.CLEF_MODEL ?? "clef-flash";
+  const model = rawModel.includes("clef-flash") ? "clef-flash" : rawModel;
   const timeoutMs = getClefTimeoutMs();
 
   clefState.inFlight++;
@@ -405,7 +409,7 @@ export function parseDecisionResult(
     category,
     itemType,
     authorRole,
-    model: res.response.model || (engine === "clef" ? "Cloudflare/clef-flash" : "jev-latest"),
+    model: res.response.model || (engine === "clef" ? "clef-flash" : "jev-latest"),
     engine,
     receiptId: res.receiptId,
     reused: res.reused,
