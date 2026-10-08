@@ -106,6 +106,37 @@ export function getClefTimeoutMs(): number {
   return Number(process.env.CLEF_TIMEOUT_MS || 45000);
 }
 
+function getQuestionOptionCount(q: JevQuestion): number {
+  if (q.type === "choice") {
+    return Object.keys(q.criteria).length;
+  }
+  if (q.type === "score") {
+    return q.criteria.length;
+  }
+  return 2; // noul
+}
+
+function chunkQuestionsForClef(
+  questions: Record<string, JevQuestion>,
+  maxOptionsPerChunk = 10
+): Array<Record<string, JevQuestion>> {
+  const chunks: Array<Record<string, JevQuestion>> = [];
+  let cur: Record<string, JevQuestion> = {};
+  let cnt = 0;
+  for (const [k, q] of Object.entries(questions)) {
+    const opts = getQuestionOptionCount(q);
+    if (cnt > 0 && cnt + opts > maxOptionsPerChunk) {
+      chunks.push(cur);
+      cur = {};
+      cnt = 0;
+    }
+    cur[k] = q;
+    cnt += opts;
+  }
+  if (Object.keys(cur).length > 0) chunks.push(cur);
+  return chunks;
+}
+
 export async function callClefSystemOne(
   state: string,
   questions: Record<string, JevQuestion>,
@@ -132,33 +163,50 @@ export async function callClefSystemOne(
         attemptTag: opts.attemptTag,
       },
       async () => {
-        const res = await guardedFetch(`${baseUrl}/systemone`, {
-          method: "POST",
-          route: "direct",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({ model, state, questions }),
-          timeoutMs,
-          maxBytes: 2 * 1024 * 1024,
-        });
+        const chunks = chunkQuestionsForClef(questions, 10);
+        const mergedAnswers: JevResponse["answers"] = {};
+        let totalInTokens = 0;
+        let totalOutTokens = 0;
+        let lastRequestId: string | null = null;
 
-        if (res.status === 200) {
-          clefState.failureCount = 0;
-          clefState.circuitOpenUntil = 0;
-          const data = JSON.parse(res.text()) as JevResponse;
-          const inTokens = data.usage?.input_tokens ?? 0;
-          const outTokens = data.usage?.output_tokens ?? 0;
-          return {
-            response: data,
-            requestId: res.headers.get("x-request-id"),
-            usage: { input_tokens: inTokens, output_tokens: outTokens },
-            cost: { amount: 0, currency: "USD", basis: "actual" as const },
-          };
+        for (const chunk of chunks) {
+          const res = await guardedFetch(`${baseUrl}/systemone`, {
+            method: "POST",
+            route: "direct",
+            headers: {
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({ model, state, questions: chunk }),
+            timeoutMs,
+            maxBytes: 2 * 1024 * 1024,
+          });
+
+          if (res.status === 200) {
+            clefState.failureCount = 0;
+            clefState.circuitOpenUntil = 0;
+            const data = JSON.parse(res.text()) as JevResponse;
+            Object.assign(mergedAnswers, data.answers);
+            totalInTokens += data.usage?.input_tokens ?? 0;
+            totalOutTokens += data.usage?.output_tokens ?? 0;
+            lastRequestId = res.headers.get("x-request-id");
+          } else {
+            const errText = res.text();
+            throw new ProviderRejectedError(`Clef HTTP ${res.status}: ${errText}`, res.status, res.status >= 500);
+          }
         }
 
-        const errText = res.text();
-        throw new ProviderRejectedError(`Clef HTTP ${res.status}: ${errText}`, res.status, res.status >= 500);
+        const combinedResponse: JevResponse = {
+          model,
+          answers: mergedAnswers,
+          usage: { input_tokens: totalInTokens, output_tokens: totalOutTokens },
+        };
+
+        return {
+          response: combinedResponse,
+          requestId: lastRequestId,
+          usage: { input_tokens: totalInTokens, output_tokens: totalOutTokens },
+          cost: { amount: 0, currency: "USD", basis: "actual" as const },
+        };
       }
     );
 
@@ -434,7 +482,7 @@ export async function evaluateWithDecisionEngine(
   const body = (material.bodyText ?? material.excerpt ?? "").trim();
   const text = [
     `【標題】\n${material.title.trim()}`,
-    `【完整內文】\n${body ? body.slice(0, 3000) : material.title.trim()}`,
+    `【內文摘要】\n${body ? body.slice(0, 300) : material.title.trim()}`,
   ].join("\n\n");
 
   const questions: Record<string, JevQuestion> = {
