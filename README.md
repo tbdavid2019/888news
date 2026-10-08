@@ -87,8 +87,9 @@
 
 ### ⚡ 6. 本地/雲端雙引擎結構化決策加速（Clef-flash & TypeSafe Jev System One）
 - **徹底告別 Groq Token 消耗與 Rate Limit**：將「大模型深度寫作」與「前置結構化決策」職責分離。大量進線材料先由專屬決策引擎處理，預篩 BLOCK 或初評 < 35 分雜訊直接短路丟棄，**Groq Token 消耗暴降 80%~90%**。
-- **三層級聯決策架構**：
-  - **Tier 0（本地自建免費）**：優先呼叫自建 `clef.create360.ai`（基於 `Clef-Flash`，[Swagger 文件](https://clef.create360.ai/docs)），0 Token 成本、免金鑰吸收 90%+ 流量。
+- **四層級聯決策架構**：
+  - **Tier 0-A（自建 Clef 主力端點，GPU 極速）**：優先呼叫 `https://clef.create360.ai/v1`（RTX A4000 GPU，`--ubatch 4096`，延遲 ~0.5s，0 Token 成本）。
+  - **Tier 0-B（自建 Clef 備援端點，自建雙機容災）**：主力異常或逾時自動平滑切換至 `https://clef.aiurl.tw/v1`。
   - **Tier 1（雲端極速備援）**：內建 TypeSafe Jev 決策模型（`api.typesafe.ai/v1/systemone`），延遲僅 ~350ms，支援多金鑰自動輪換與 402/429 故障轉移。
   - **Tier 2（常規大模型兜底）**：當決策引擎均不可用時，自動平滑降級回常規 LLM 預篩，確保服務 100% 不中斷。
 
@@ -174,9 +175,10 @@ docker compose up -d --build
 | **`LLM_FALLBACK_1_*`** | 第一級容災大模型配置（BaseURL, Key, Model） | 選填，故障時自動切換 |
 | **`LLM_FALLBACK_2_*`** | 第二級容災大模型配置（BaseURL, Key, Model） | 選填，次級故障時切換 |
 | **`CLEF_ENABLED`** | 啟用本地自建 Clef-flash 決策引擎（Tier 0） | `true`（預設啟用，0 Token 成本） |
-| **`CLEF_BASE_URL`** | Clef 決策引擎 API 端點（[文件](https://clef.create360.ai/docs)） | `https://clef.create360.ai/v1` |
+| **`CLEF_BASE_URL`** | Clef 主力決策端點（[文件](https://clef.create360.ai/docs)） | `https://clef.create360.ai/v1` |
+| **`CLEF_FALLBACK_BASE_URL`** | Clef 備援決策端點（[文件](https://clef.aiurl.tw/docs)） | `https://clef.aiurl.tw/v1` |
 | **`CLEF_MODEL`** | Clef 決策模型名稱 | `clef-flash` |
-| **`CLEF_TIMEOUT_MS`** | Clef 請求逾時毫秒（逾時無縫降級 Jev） | `45000`（45 秒） |
+| **`CLEF_TIMEOUT_MS`** | Clef 請求逾時毫秒（逾時無縫降級備援端點） | `45000`（45 秒） |
 | **`JEV_ENABLED`** | 啟用 TypeSafe Jev 雲端決策引擎（Tier 1） | `true`（填寫金鑰時生效） |
 | **`JEV_API_KEY`** | Jev API 金鑰（支援多把逗號分隔） | `apikey_...` |
 | **`JEV_FALLBACK_API_KEYS`** | Jev 第二把、第三把備用金鑰 | 選填，402 額度用盡自動無縫輪換 |

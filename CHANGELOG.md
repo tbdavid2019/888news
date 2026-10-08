@@ -6,14 +6,17 @@
 
 ## [2026-10-08]
 
-### ⚡️ 升級 Clef 決策引擎至高效能節點 clef.create360.ai (Decision Engine Upgrade)
+### ⚡️ Clef-Flash 主備雙端點自建高可用與 4K ubatch 極速單呼 (Dual-Endpoint HA & Fast Path)
 
-- **高效能節點遷移動態支援**：
-  - 將 Tier 0 Clef-Flash 決策端點預設位址切換至高速節點 `https://clef.create360.ai/v1`。
-  - 實測單次結構化推論延遲由原本約 5,100ms 大幅降至 130ms～300ms（加速 15~40 倍），顯著提升進線管線吞吐量。
-- **路徑與模型參數正規化防禦**：
-  - 自動偵測並標準化 `CLEF_BASE_URL`，無論結尾是否帶有 `/v1` 均自動相容至 `/v1/systemone`。
-  - 自動相容模型別名（如 `Cloudflare/clef-flash` 自動映射至標準 `clef-flash`），杜絕 FastAPI Schema 驗證錯誤。
+- **自建 Clef 主備雙機高可用體系 (Primary + Fallback Dual-Node HA)**：
+  - **主力端點 (`CLEF_BASE_URL`)**：指向 `https://clef.create360.ai/v1/systemone`（RTX A4000 GPU 節點，已解鎖 `--ubatch-size 4096`，單次 5 題 23 選項推論僅 ~570ms）。
+  - **備援端點 (`CLEF_FALLBACK_BASE_URL`)**：指向 `https://clef.aiurl.tw/v1/systemone`，當主力節點遇連線異常或 5xx 故障時，系統自動秒級轉移至備援節點。
+  - **四層級聯容災**：`Clef 主力 (GPU)` $\rightarrow$ `Clef 備援 (CPU)` $\rightarrow$ `Jev 雲端` $\rightarrow$ `主 LLM (Groq/Gemini/OpenAI)`。
+- **快慢自適應推論管線**：
+  - 預設直接單次並行發送所有問題（極速路徑，~0.5s 完成）。
+  - 遇到受限批次節點（如 512 token 上限）時，自動透明降級為每批 $\le 10$ 選項之安全分塊調用，兼具極限速度與 100% 穩定度。
+- **端點 URL 智慧自動正規化**：
+  - 匯入 `normalizeClefEndpoint`，無論使用者在 `.env` 填入帶有 `/systemone`、`/v1` 或純網域名稱，均自動標準化至規格相容端點。
 
 ---
 

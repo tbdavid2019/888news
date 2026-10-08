@@ -102,6 +102,37 @@ export function resetClefState(): void {
   clefState.inFlight = 0;
 }
 
+export function normalizeClefEndpoint(rawUrl: string): string {
+  let u = rawUrl.trim().replace(/\/$/, "");
+  if (u.endsWith("/systemone")) {
+    u = u.slice(0, -"/systemone".length);
+  }
+  u = u.replace(/\/$/, "");
+  if (!u.endsWith("/v1")) {
+    u = `${u}/v1`;
+  }
+  return u;
+}
+
+export function getClefEndpoints(): string[] {
+  const primary = (process.env.CLEF_BASE_URL ?? "https://clef.create360.ai/v1").trim();
+  const fallback = (process.env.CLEF_FALLBACK_BASE_URL ?? "https://clef.aiurl.tw/v1").trim();
+  const list = [primary];
+  if (fallback && fallback !== primary) {
+    list.push(fallback);
+  }
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const raw of list) {
+    const norm = normalizeClefEndpoint(raw);
+    if (!seen.has(norm)) {
+      seen.add(norm);
+      normalized.push(norm);
+    }
+  }
+  return normalized;
+}
+
 export function getClefTimeoutMs(): number {
   return Number(process.env.CLEF_TIMEOUT_MS || 45000);
 }
@@ -142,10 +173,7 @@ export async function callClefSystemOne(
   questions: Record<string, JevQuestion>,
   opts: { purpose: string; subject: string; attemptTag?: string }
 ): Promise<{ response: JevResponse; receiptId: number; reused: boolean }> {
-  let baseUrl = (process.env.CLEF_BASE_URL ?? "https://clef.create360.ai/v1").replace(/\/$/, "");
-  if (!baseUrl.endsWith("/v1")) {
-    baseUrl = `${baseUrl}/v1`;
-  }
+  const endpoints = getClefEndpoints();
   const rawModel = process.env.CLEF_MODEL ?? "clef-flash";
   const model = rawModel.includes("clef-flash") ? "clef-flash" : rawModel;
   const timeoutMs = getClefTimeoutMs();
@@ -163,50 +191,114 @@ export async function callClefSystemOne(
         attemptTag: opts.attemptTag,
       },
       async () => {
-        const chunks = chunkQuestionsForClef(questions, 10);
-        const mergedAnswers: JevResponse["answers"] = {};
-        let totalInTokens = 0;
-        let totalOutTokens = 0;
-        let lastRequestId: string | null = null;
+        let lastError: Error | null = null;
 
-        for (const chunk of chunks) {
-          const res = await guardedFetch(`${baseUrl}/systemone`, {
-            method: "POST",
-            route: "direct",
-            headers: {
-              "content-type": "application/json",
-            },
-            body: JSON.stringify({ model, state, questions: chunk }),
-            timeoutMs,
-            maxBytes: 2 * 1024 * 1024,
-          });
+        for (let i = 0; i < endpoints.length; i++) {
+          const baseUrl = endpoints[i]!;
 
-          if (res.status === 200) {
-            clefState.failureCount = 0;
-            clefState.circuitOpenUntil = 0;
-            const data = JSON.parse(res.text()) as JevResponse;
-            Object.assign(mergedAnswers, data.answers);
-            totalInTokens += data.usage?.input_tokens ?? 0;
-            totalOutTokens += data.usage?.output_tokens ?? 0;
-            lastRequestId = res.headers.get("x-request-id");
-          } else {
-            const errText = res.text();
-            throw new ProviderRejectedError(`Clef HTTP ${res.status}: ${errText}`, res.status, res.status >= 500);
+          try {
+            // 1. Fast path: evaluate all questions in a single request (supported on ubatch >= 4096)
+            const directRes = await guardedFetch(`${baseUrl}/systemone`, {
+              method: "POST",
+              route: "direct",
+              headers: {
+                "content-type": "application/json",
+              },
+              body: JSON.stringify({ model, state, questions }),
+              timeoutMs,
+              maxBytes: 2 * 1024 * 1024,
+            });
+
+            if (directRes.status === 200) {
+              clefState.failureCount = 0;
+              clefState.circuitOpenUntil = 0;
+              const data = JSON.parse(directRes.text()) as JevResponse;
+              return {
+                response: data,
+                requestId: directRes.headers.get("x-request-id"),
+                usage: {
+                  input_tokens: data.usage?.input_tokens ?? 0,
+                  output_tokens: data.usage?.output_tokens ?? 0,
+                },
+                cost: { amount: 0, currency: "USD", basis: "actual" as const },
+              };
+            }
+
+            const directErr = directRes.text();
+            // If the endpoint failed because of physical batch size (e.g. 512 tokens limit), auto-chunk and retry:
+            if (
+              directRes.status === 500 &&
+              (directErr.includes("batch size") || directErr.includes("tokens") || directErr.includes("too large"))
+            ) {
+              const chunks = chunkQuestionsForClef(questions, 10);
+              const mergedAnswers: JevResponse["answers"] = {};
+              let totalInTokens = 0;
+              let totalOutTokens = 0;
+              let lastReqId: string | null = null;
+              let chunkFailed = false;
+
+              for (const chunk of chunks) {
+                const chunkRes = await guardedFetch(`${baseUrl}/systemone`, {
+                  method: "POST",
+                  route: "direct",
+                  headers: {
+                    "content-type": "application/json",
+                  },
+                  body: JSON.stringify({ model, state, questions: chunk }),
+                  timeoutMs,
+                  maxBytes: 2 * 1024 * 1024,
+                });
+
+                if (chunkRes.status === 200) {
+                  const data = JSON.parse(chunkRes.text()) as JevResponse;
+                  Object.assign(mergedAnswers, data.answers);
+                  totalInTokens += data.usage?.input_tokens ?? 0;
+                  totalOutTokens += data.usage?.output_tokens ?? 0;
+                  lastReqId = chunkRes.headers.get("x-request-id");
+                } else {
+                  chunkFailed = true;
+                  lastError = new ProviderRejectedError(
+                    `Clef chunk HTTP ${chunkRes.status} on ${baseUrl}: ${chunkRes.text()}`,
+                    chunkRes.status,
+                    chunkRes.status >= 500
+                  );
+                  break;
+                }
+              }
+
+              if (!chunkFailed) {
+                clefState.failureCount = 0;
+                clefState.circuitOpenUntil = 0;
+                return {
+                  response: {
+                    model,
+                    answers: mergedAnswers,
+                    usage: { input_tokens: totalInTokens, output_tokens: totalOutTokens },
+                  },
+                  requestId: lastReqId,
+                  usage: { input_tokens: totalInTokens, output_tokens: totalOutTokens },
+                  cost: { amount: 0, currency: "USD", basis: "actual" as const },
+                };
+              }
+            } else {
+              lastError = new ProviderRejectedError(
+                `Clef HTTP ${directRes.status} on ${baseUrl}: ${directErr}`,
+                directRes.status,
+                directRes.status >= 500
+              );
+            }
+          } catch (err) {
+            lastError = err as Error;
+          }
+
+          if (i < endpoints.length - 1) {
+            console.warn(
+              `[Clef] Endpoint ${baseUrl} failed (${lastError?.message}), falling back to ${endpoints[i + 1]}`
+            );
           }
         }
 
-        const combinedResponse: JevResponse = {
-          model,
-          answers: mergedAnswers,
-          usage: { input_tokens: totalInTokens, output_tokens: totalOutTokens },
-        };
-
-        return {
-          response: combinedResponse,
-          requestId: lastRequestId,
-          usage: { input_tokens: totalInTokens, output_tokens: totalOutTokens },
-          cost: { amount: 0, currency: "USD", basis: "actual" as const },
-        };
+        throw lastError ?? new ProviderRejectedError("All Clef endpoints failed", 500, true);
       }
     );
 

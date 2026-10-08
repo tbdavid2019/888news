@@ -10,6 +10,8 @@ import {
   isDecisionEngineAvailable,
   getClefTimeoutMs,
   parseDecisionResult,
+  normalizeClefEndpoint,
+  getClefEndpoints,
 } from "../packages/backend/src/providers/jev.ts";
 
 test("jev provider: parses keys and fallback keys correctly", () => {
@@ -114,6 +116,44 @@ test("clef timeout configuration: defaults to 45000 and respects env", () => {
     assert.equal(getClefTimeoutMs(), 60000);
   } finally {
     process.env.CLEF_TIMEOUT_MS = orig;
+  }
+});
+
+test("clef endpoints: normalizes URLs correctly and supports primary + fallback", () => {
+  assert.equal(normalizeClefEndpoint("https://clef.create360.ai/v1/systemone"), "https://clef.create360.ai/v1");
+  assert.equal(normalizeClefEndpoint("https://clef.create360.ai/v1/systemone/"), "https://clef.create360.ai/v1");
+  assert.equal(normalizeClefEndpoint("https://clef.create360.ai/v1"), "https://clef.create360.ai/v1");
+  assert.equal(normalizeClefEndpoint("https://clef.create360.ai"), "https://clef.create360.ai/v1");
+  assert.equal(normalizeClefEndpoint("https://clef.aiurl.tw/v1/systemone"), "https://clef.aiurl.tw/v1");
+
+  const origBase = process.env.CLEF_BASE_URL;
+  const origFallback = process.env.CLEF_FALLBACK_BASE_URL;
+  try {
+    delete process.env.CLEF_BASE_URL;
+    delete process.env.CLEF_FALLBACK_BASE_URL;
+
+    // Default: primary create360.ai + fallback aiurl.tw
+    const defaultEndpoints = getClefEndpoints();
+    assert.deepEqual(defaultEndpoints, [
+      "https://clef.create360.ai/v1",
+      "https://clef.aiurl.tw/v1",
+    ]);
+
+    // Custom endpoints
+    process.env.CLEF_BASE_URL = "https://custom-clef.example.com/v1/systemone";
+    process.env.CLEF_FALLBACK_BASE_URL = "https://backup-clef.example.com";
+    assert.deepEqual(getClefEndpoints(), [
+      "https://custom-clef.example.com/v1",
+      "https://backup-clef.example.com/v1",
+    ]);
+
+    // Deduplication when fallback is same as primary
+    process.env.CLEF_BASE_URL = "https://same.example.com/v1";
+    process.env.CLEF_FALLBACK_BASE_URL = "https://same.example.com/v1/systemone";
+    assert.deepEqual(getClefEndpoints(), ["https://same.example.com/v1"]);
+  } finally {
+    process.env.CLEF_BASE_URL = origBase;
+    process.env.CLEF_FALLBACK_BASE_URL = origFallback;
   }
 });
 
