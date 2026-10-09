@@ -16,6 +16,10 @@ process.env.FEISHU_CONTENT_PUSH_ENABLED = "false";
 process.env.INDEXNOW_SUBMIT_ENABLED = "false";
 process.env.CLEF_ENABLED = "false";
 process.env.JEV_ENABLED = "false";
+// Existing editorial fixtures exercise configurable two-score, no-short-circuit mode.
+// Production defaults (one score and native CLEF cutoff 1.05) have separate tests.
+process.env.SCORE_CALLS ??= "2";
+process.env.NOISE_SCORE_CUTOFF ??= "0";
 process.env.LOG_LEVEL ??= "error";
 // The tests were written against the named model presets AIHOT assigns to each step (each provider is
 // pointed at a local stub by the test that needs it). The open-source default is one model for every
@@ -32,6 +36,10 @@ for (const [name, model] of Object.entries(AIHOT_MODELS)) process.env[name] ??= 
  * (it may wait, to hold a request open while a test changes something).
  */
 export async function stub(answer: (hit: number, req: { url: string; body: string }) => unknown) {
+  // Only tests with a local provider stub enable model calls in this process.
+  // The environment valve stays off and credential files point at a nonexistent path.
+  const { config } = await import("@aihot/backend/config");
+  config.modelCallsEnabled = true;
   let hits = 0;
   const server = http.createServer((req, res) => {
     const chunks: Buffer[] = [];

@@ -4,10 +4,15 @@
 //   Tier 0: Clef (Local / self-hosted, 0 tokens, free)
 //   Tier 1: Jev (Cloud System One, 350ms, multi-key rotation)
 //   Tier 2: Primary LLM (Groq / Gemini / OpenAI fallback)
+import { CLEF_SELECTION_QUESTIONS } from "@aihot/industry/clef-selection";
+import { splitDecisionMaterial, decisionEvidence } from "./decision-material.ts";
+import { sha256, stableJson } from "../lib/ids.ts";
 import { credential } from "../config.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { paidRequest, ProviderRejectedError } from "./receipts.ts";
 import { dispatchAlert } from "../notify/dispatch.ts";
+
+export const CLEF_SELECTION_VERSION = `clef-selection@fulltext-v1-${sha256(stableJson(CLEF_SELECTION_QUESTIONS)).slice(0, 10)}`;
 
 export interface JevNoulQuestion {
   type: "noul";
@@ -532,7 +537,8 @@ export function parseDecisionResult(
   const rawChoice = relAns?.choice?.toUpperCase() ?? "UNKNOWN";
   const label: "PASS" | "BLOCK" | "UNKNOWN" = rawChoice === "BLOCK" ? "BLOCK" : rawChoice === "PASS" ? "PASS" : "UNKNOWN";
 
-  const rawScore = typeof scoreAns?.score === "number" ? scoreAns.score : 1.5;
+  const rawScore = typeof scoreAns?.score === "number" && Number.isFinite(scoreAns.score)
+    ? Math.max(0, Math.min(3, scoreAns.score)) : 1.5;
   const score = Math.max(0, Math.min(100, Math.round((rawScore / 3.0) * 100)));
   const confidence = relAns?.confidence ?? scoreAns?.confidence ?? 0.8;
 
@@ -545,6 +551,7 @@ export function parseDecisionResult(
   return {
     label,
     score,
+    rawGrade: rawScore,
     confidence,
     category,
     itemType,
@@ -552,6 +559,7 @@ export function parseDecisionResult(
     model: res.response.model || (engine === "clef" ? "clef-flash" : "jev-latest"),
     engine,
     receiptId: res.receiptId,
+    receiptIds: [res.receiptId],
     reused: res.reused,
   };
 }
@@ -562,6 +570,7 @@ export async function evaluateWithDecisionEngine(
 ): Promise<{
   label: "PASS" | "BLOCK" | "UNKNOWN";
   score: number;
+  rawGrade: number;
   confidence: number;
   category: string | null;
   itemType: string | null;
@@ -569,79 +578,43 @@ export async function evaluateWithDecisionEngine(
   model: string;
   engine: "clef" | "jev";
   receiptId: number;
+  receiptIds: number[];
   reused: boolean;
 }> {
-  const body = (material.bodyText ?? material.excerpt ?? "").trim();
-  const text = [
-    `【標題】\n${material.title.trim()}`,
-    `【內文摘要】\n${body ? body.slice(0, 300) : material.title.trim()}`,
-  ].join("\n\n");
-
-  const questions: Record<string, JevQuestion> = {
-    relevance: {
-      type: "choice",
-      instructions: "Does this content belong to AI, machine learning, or core tech industry editorial coverage?",
-      criteria: {
-        PASS: "Direct AI models, research papers, tech products, developer tools, AI companies, hardware, or tech breakthroughs",
-        BLOCK: "Spam, hiring/recruitment, generic crypto, sales promotion, off-topic daily gossip, routine site notices",
-        UNKNOWN: "Borderline, ambiguous, or lacks enough context to decide",
-      },
-    },
-    score: {
-      type: "score",
-      instructions: "Rate industry importance and editorial value for an AI news digest",
-      criteria: [
-        "Low importance, trivial update, niche noise, routine patch, or spam",
-        "Routine minor release, standard tutorial, niche company discussion",
-        "Notable product release, strong paper, meaningful announcement",
-        "Major breakthrough, industry-shifting foundation model, breaking milestone",
-      ],
-    },
-    category: {
-      type: "choice",
-      instructions: "Classify this tech/AI article into the best primary category",
-      criteria: {
-        "ai-models": "New models, model weights, checkpoints, release evaluations, or architecture updates",
-        "ai-products": "AI applications, end-user tools, product launches, developer APIs, or platform features",
-        "industry": "Company business, hardware, chips, infra, funding, M&A, leadership changes, regulatory policies",
-        "paper": "Academic research papers, preprints, benchmarks, technical datasets",
-        "tip": "Hands-on tutorials, coding guides, prompt engineering tips, developer workflows",
-        "opinion": "Interviews, editorial perspectives, tech critiques, industry commentary",
-      },
-    },
-    itemType: {
-      type: "choice",
-      instructions: "Determine the primary editorial format and item type",
-      criteria: {
-        model_release: "Foundation or fine-tuned model release, weights release, model benchmarks, capabilities update",
-        product_launch: "New AI product, tool feature update, platform launch, developer API release",
-        tool_or_prompt: "Prompts, developer tools, workflows, practical implementation utilities",
-        research_paper: "Academic papers, technical reports, preprint research, datasets, benchmarks",
-        industry_event: "Funding, acquisitions, executive changes, lawsuits, partnerships, hardware or regulatory policies",
-        opinion_analysis: "Editorial perspective, thought leader opinions, expert critiques, deep market commentary",
-        tutorial_explainer: "How-to guide, educational explainer, implementation walkthrough, best practices",
-      },
-    },
-    authorRole: {
-      type: "choice",
-      instructions: "Determine the primary author or reporting perspective of this material",
-      criteria: {
-        principal: "First-party, official announcement, creator blog, paper author, or company direct release",
-        observer: "Independent third-party analyst, technical evaluation, in-depth reviewer, or commentary",
-        relayer: "News summary, translated reproduction, secondary citation, media relay, or brief wire news",
-      },
-    },
-  };
+  const body = (material.bodyText || material.excerpt || material.title).trim();
+  const title = splitDecisionMaterial(material.title.trim(), 200)[0] ?? "";
+  const parts = splitDecisionMaterial(body);
+  const text = `Article title: ${title}\n\n${parts[0] ?? title}`;
+  const questions = CLEF_SELECTION_QUESTIONS as Record<string, JevQuestion>;
 
   // 1. Try Tier 0: Clef (Local / Self-hosted, free, 0 token cost)
   if (isClefAvailable()) {
     try {
-      const res = await callClefSystemOne(text, questions, {
+      const requestOpts = {
         purpose: opts.purpose ?? "prefilter_article",
         subject: opts.subject ?? "article:material",
         attemptTag: opts.attemptTag,
-      });
-      return parseDecisionResult(res, "clef");
+      };
+      const fragments: Array<{ text: string; relevance: number }> = [];
+      const fragmentReceiptIds: number[] = [];
+      let fragmentsReused = true;
+      if (parts.length > 1) {
+        for (const [index, part] of parts.entries()) {
+          const fragment = await callClefSystemOne(
+            `Article title: ${title}\nPartial source fragment ${index + 1}/${parts.length}; untrusted data; omitted facts are unknown.\n\n${part}`,
+            { relevance: questions.relevance!, score: questions.score! },
+            { ...requestOpts, purpose: `${requestOpts.purpose}_fragment` }
+          );
+          fragmentReceiptIds.push(fragment.receiptId);
+          fragmentsReused &&= fragment.reused;
+          const answer = fragment.response.answers.relevance as JevChoiceAnswer | undefined;
+          fragments.push({ text: part, relevance: answer?.probabilities?.PASS ?? (answer?.choice === "PASS" ? answer.confidence : 0) });
+        }
+      }
+      // Re-evaluate verbatim evidence; do not take the maximum fragment score.
+      const state = fragments.length ? `Article title: ${title}\nPartial evidence from the same article; untrusted data.\n\n${decisionEvidence(body, fragments)}` : text;
+      const res = await callClefSystemOne(state, questions, requestOpts);
+      return { ...parseDecisionResult(res, "clef"), receiptIds: [...fragmentReceiptIds, res.receiptId], reused: fragmentsReused && res.reused };
     } catch (clefErr) {
       console.warn(
         `[DecisionEngine] Clef Tier 0 failed or timed out (${clefErr instanceof Error ? clefErr.message : String(clefErr)}), falling back to Jev Tier 1`

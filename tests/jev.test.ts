@@ -16,8 +16,10 @@ import {
 
 test("jev provider: parses keys and fallback keys correctly", () => {
   const origKey = process.env.JEV_API_KEY;
+  const origEnabled = process.env.JEV_ENABLED;
   const origFallback = process.env.JEV_FALLBACK_API_KEYS;
   try {
+    process.env.JEV_ENABLED = "true";
     process.env.JEV_API_KEY = "key1, key2";
     process.env.JEV_FALLBACK_API_KEYS = "key3, key2"; // key2 is duplicate
     resetJevKeyPool();
@@ -32,6 +34,7 @@ test("jev provider: parses keys and fallback keys correctly", () => {
     assert.equal(pool[2]?.key, "key3");
     assert.equal(isJevAvailable(), true);
   } finally {
+    process.env.JEV_ENABLED = origEnabled;
     process.env.JEV_API_KEY = origKey;
     process.env.JEV_FALLBACK_API_KEYS = origFallback;
     resetJevKeyPool();
@@ -60,7 +63,9 @@ test("jev provider: handles empty or disabled state", () => {
 
 test("jev provider: key pool status transitions on failure and cooldown", () => {
   const origKey = process.env.JEV_API_KEY;
+  const origEnabled = process.env.JEV_ENABLED;
   try {
+    process.env.JEV_ENABLED = "true";
     process.env.JEV_API_KEY = "k1,k2";
     resetJevKeyPool();
     const pool = getKeyPool();
@@ -82,6 +87,7 @@ test("jev provider: key pool status transitions on failure and cooldown", () => 
     pool[0]!.cooldownUntil = Date.now() - 1000;
     assert.equal(isJevAvailable(), true);
   } finally {
+    process.env.JEV_ENABLED = origEnabled;
     process.env.JEV_API_KEY = origKey;
     resetJevKeyPool();
   }

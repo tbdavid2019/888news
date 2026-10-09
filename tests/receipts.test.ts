@@ -9,6 +9,7 @@ import { config } from "@aihot/backend/config";
 import { closeDb, sql } from "@aihot/backend/db";
 import { chatJson, ModelOutputError } from "@aihot/backend/providers/llm";
 import { embeddingsAvailable } from "@aihot/backend/providers/embeddings";
+import { resetCircuit } from "@aihot/backend/providers/circuit-breaker";
 import { BudgetExceededError, paidRequest, ReceiptUnknownError } from "@aihot/backend/providers/receipts";
 import { autoReleaseUnknownReceipts, releaseReceipt } from "@aihot/backend/admin/runs";
 import { upsertMaterial } from "@aihot/backend/content/materials";
@@ -68,6 +69,8 @@ test("retries of unusable answers stop at the budget, and every request sent is 
   const outcomes: string[] = [];
   const unusableReceiptIds: number[] = [];
   for (let i = 0; i < 5; i++) {
+    // Exercise the budget independently of the separately tested circuit breaker.
+    resetCircuit("deepseek-flash");
     // What a job retry does: the same logical request again.
     await ask(subject).then(
       () => outcomes.push("ok"),

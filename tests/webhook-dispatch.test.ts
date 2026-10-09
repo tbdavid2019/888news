@@ -1,4 +1,7 @@
-import test from "node:test";
+import "./setup.ts";
+import test, { after } from "node:test";
+import { closeDb } from "@aihot/backend/db";
+after(closeDb);
 import assert from "node:assert/strict";
 import {
   sendSlackAlert,

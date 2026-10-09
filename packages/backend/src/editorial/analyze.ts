@@ -20,7 +20,8 @@ import { modelFor } from "./models.ts";
 import { buildMaterial, firstImagePart, loadAnalyzeInput, type AnalyzeInputArticle } from "./input.ts";
 import { pageFetchable } from "../content/extract.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
-import { isDecisionEngineAvailable, evaluateWithDecisionEngine } from "../providers/jev.ts";
+import { belowDecisionCutoff } from "../providers/decision-material.ts";
+import { isDecisionEngineAvailable, evaluateWithDecisionEngine, CLEF_SELECTION_VERSION } from "../providers/jev.ts";
 import {
   buildArticlePrompt, buildLongTweetPrompt, buildShortTweetPrompt, finalizeCopy, isShortTweetInput, looksZh, MAX_BODY_CHARS, missingEvidence,
   needsShortTweetTranslation, parseTranslateOutput, PREFILTER_SYSTEM, prefilterUser, translateInputOf, UNDERSTAND_SYSTEM, understandUser,
@@ -32,6 +33,7 @@ import { promptText, promptVersion } from "./prompts.ts";
 export { buildMaterial, loadAnalyzeInput, type AnalyzeInputArticle };
 
 export const PROMPT_VERSIONS = {
+  clef: CLEF_SELECTION_VERSION,
   prefilter: promptVersion("prefilter"),
   score: promptVersion("selection-score"),
   understand: promptVersion("understand"),
@@ -158,7 +160,9 @@ export interface AnalysisRun {
     model: string;
     receiptId: number;
     reused: boolean;
+    receiptIds?: number[];
     fastScore?: number;
+    rawGrade?: number;
     category?: string | null;
     itemType?: string | null;
     authorRole?: "principal" | "observer" | "relayer" | null;
@@ -208,7 +212,13 @@ async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<Ana
   if (isDecisionEngineAvailable() && !opts.scoreModel) {
     try {
       const decision = await evaluateWithDecisionEngine(
-        { title: a.title, bodyText: a.bodyText, excerpt: a.excerpt },
+        {
+          title: a.title,
+          bodyText: a.xPost
+            ? [a.xPost.text, a.xPost.quoted?.text].filter(Boolean).join("\n\n[Quoted source]\n")
+            : a.bodyText,
+          excerpt: a.excerpt,
+        },
         { purpose: "prefilter_article", subject: subjectOf(a), attemptTag: opts.attemptTag }
       );
       const label = decision.label === "BLOCK" && missingEvidence(a) ? "UNKNOWN" : decision.label;
@@ -217,8 +227,10 @@ async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<Ana
         reason: decision.label === "BLOCK" ? `${decision.engine.toUpperCase()}: off-topic/noise` : "",
         model: decision.model,
         receiptId: decision.receiptId,
+        receiptIds: decision.receiptIds,
         reused: decision.reused,
         fastScore: decision.score,
+        rawGrade: decision.rawGrade,
         category: decision.category,
         itemType: decision.itemType,
         authorRole: decision.authorRole,
@@ -406,12 +418,11 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
   }
   const noiseCutoff = process.env.NOISE_SCORE_CUTOFF ? Number(process.env.NOISE_SCORE_CUTOFF) : 35;
 
-  // 1. Fast Gatekeeper short-circuit via Jev:
-  // If Jev already evaluated the score and it is clearly below the noise cutoff,
-  // we record the score and short-circuit immediately without calling Groq for scoring!
+  // Compare the native 0–3 grade before display rounding, preserving the
+  // configured 0–100 cutoff. Low-value material skips secondary scoring.
   if (
     prefilter.fastScore !== undefined &&
-    prefilter.fastScore < noiseCutoff &&
+    belowDecisionCutoff(prefilter.rawGrade, prefilter.fastScore, noiseCutoff) &&
     threshold !== null &&
     !opts.attemptTag
   ) {
@@ -546,12 +557,14 @@ export async function analyzeArticle(articleId: string, opts: StepOpts = {}): Pr
   if (waitsForPage(input)) return { analysisId: null, stale: false, needsBody: true, output: null, receiptIds: [], reused: true };
   const run = await runAnalysis(input, opts);
   const out = normalizeAnalysis(run);
-  const receiptIds = [
-    run.prefilter.receiptId, ...(run.scores?.receiptIds ?? []), ...(run.writing?.receiptIds ?? []), ...(run.structure ? [run.structure.receiptId] : []),
-  ];
+  const receiptIds = [...new Set([
+    ...(run.prefilter.receiptIds ?? [run.prefilter.receiptId]), ...(run.scores?.receiptIds ?? []), ...(run.writing?.receiptIds ?? []), ...(run.structure ? [run.structure.receiptId] : []),
+  ])];
   const w = run.writing;
   const detail = {
-    prefilter: { label: run.prefilter.label, reason: run.prefilter.reason },
+    prefilter: { label: run.prefilter.label, reason: run.prefilter.reason,
+      ...(run.prefilter.rawGrade !== undefined ? { rawGrade: run.prefilter.rawGrade, displayScore: run.prefilter.fastScore } : {}),
+    },
     scores: out.scores, scoreModel: out.scoreModel, threshold: out.threshold, ...(out.scoreRefused ? { scoreRefused: true } : {}),
     ...(w ? { writer: w.kind, writerModel: w.model, itemType: w.itemType ?? null, authorRole: w.authorRole ?? null } : {}),
     ...(w?.identityGuard?.outcome === "fallback" ? { identityGuard: w.identityGuard } : {}),
