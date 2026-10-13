@@ -79,6 +79,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="application-name" content={SITE.name} />
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-FYPFFMVB2F" />
+        <script defer src="https://flow.aiurl.tw/script.js?siteId=de7c42c0-7168-4191-acf5-7bcb028f7ddc" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
