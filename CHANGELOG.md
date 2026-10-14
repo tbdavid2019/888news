@@ -4,6 +4,38 @@
 
 ---
 
+## [2026-10-14] — 🎙️ 全球 Podcast 智庫頻道、即時美股/台股行情聯動、雙向打通與 12pt Zen Kaku 字型升級
+
+### 🎙️ 全球頂級 Podcast 智庫與 100+ 頻道目錄 (Podcast Intelligence & Directory)
+- **100+ 頂尖 Podcast 頻道收錄與動態同步**：
+  - 新增 [`industry/podcasts.json`](file:///Users/david/Documents/git/tbdavid2019/888news/industry/podcasts.json) 目錄與資料庫 Migration (`0040_podcasts.sql`、`0041_podcast_audio_url_nullable.sql`)，收錄全球 100+ 頂級 AI、科技創業、半導體與財經 Podcast 頻道。
+  - 定時同步 RSS Feed 節目元數據、發布時間、節目音訊/影音直連網址與 BigGo 真實主題實體標籤。
+- **零磁碟 HTML5 音訊串流播放器 (Zero-Disk Audio Streaming)**：
+  - 嚴格落實「零磁碟政策」：所有音訊以 HTML5 `<audio>` 直連第三方 CDN/伺服器串流播放，完全不下載、不佔用本機伺服器磁碟與頻寬。
+  - 底部浮動播放列支援播放/暫停、15 秒快進/倒退、進度拖曳與真實時長計算。
+  - 支援「訂閱/關注頻道」與「收藏單集」，採用 Local-First (`useSyncExternalStore`) 離線本機儲存，無須登入即可跨頁面記憶。
+
+### 📈 Yahoo Finance 即時上市公司行情聯動 (Live Market Quotes — 100% Real Data)
+- **杜絕假資料與 0.00% 佔位**：
+  - 徹底清除任何靜態假數據，全面串接 Yahoo Finance 即時 API ([`packages/backend/src/providers/market.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/providers/market.ts))。
+  - 自動於 PostgreSQL `market_quotes` 快取 118+ 檔美股/台股標的即時數據（如 NVDA、TSMC 2330.TW、UMC、META、AMZN、MSFT、GOOGL、GS、JPM 等），畫面精準渲染漲跌百分比與即時股價。
+  - 具備未命中快取時的非同步自動補全與後台容錯機制。
+
+### 🔄 雙向打通：Podcast 全面匯流進主站內容生態 (Bi-directional Feed Federation)
+- **資料庫層級自動同步與打分橋接**：
+  - 實作 [`packages/backend/src/publication/podcast-bridge.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/publication/podcast-bridge.ts)，將 Podcast 頻道登記為新聞來源（`sources`，kind: `external`），並將精選節目無縫映射入 `articles`、`analyses` 及 `publications`。
+  - 支援 CLEF / JEV 決策標註與規則評分（精選評分 85 分，分類為 `opinion` 專家觀點）。
+- **全站動態與標籤整合**：
+  - 「全部 AI 動態」(`/all`) 與「精選」(`/`) 同步收錄 Podcast 單集，卡片標記 `🎙️ Podcast` 專屬音訊徽章。
+  - 詳情頁（[`/items/pod_*`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/web/app/routes/item.tsx)）內嵌「Podcast 專家音訊節目」導流卡片，支援點擊一鍵返回 Podcast 推薦智庫。
+  - 支援 `#Podcast` 專屬話題聚合頁面，方便讀者快速檢索音訊新聞。
+
+### 🎨 視覺與排版標準升級 (Typography & Accessibility)
+- **Google Fonts 雙字型整合**：全站引入 `Zen Kaku Gothic New:wght@500`（正文字體）與 `JetBrains Mono:wght@500`（等寬代碼與數字字體）。
+- **嚴格執行 12pt（16px）中文字級標準**：全站根節點 `body` 預設字號提升至 16px（行高 1.6）；標題提升至 17~18px、正文與摘要 16px、標籤 14~15px，徹底消除小字號中文字不易閱讀的問題。
+
+---
+
 ## 2026-10-09 — CLEF 全文预筛与原生评级
 
 - CLEF 使用四级 `Score`（连续 0–3 加权评级），同时重视重大 AI 新闻与有具体依据的实用工具、方法、隐私与成本收益；普通非 AI 科技消息不因“科技”自动通过。

@@ -44,6 +44,8 @@
 | **Docker 鏡像** | 需本機自行編譯 | **官方 GHCR 多架構預編譯映像檔** (`ghcr.io/tbdavid2019/888news`)，隨拉即跑 |
 | **自動化部署** | 手動拉取更新 | **GitHub Actions 矩陣建置 + Watchtower** 無感自動輪詢熱更新 |
 | **決策與 Token 優化** | 僅依賴常規生成式大模型 | **本地 Clef-flash + 雲端 Jev 雙決策引擎**，80%+ 雜訊 0 元攔截，告別 Rate Limit |
+| **Podcast 智庫與上市公司行情** | 無 | **收錄 100+ 全球頂尖 Podcast、零磁碟串流播放器、聯動 Yahoo Finance 即時美股/台股行情，並雙向匯流全站動態** |
+| **閱讀排版與字體規範** | 預設系統無襯線字體 | **導入 Google Fonts `Zen Kaku Gothic New` & `JetBrains Mono`，嚴格落實中文字級 $\ge$ 12pt (16px) 標準** |
 
 ---
 
@@ -100,6 +102,17 @@
 ### 🔌 8. 為 AI Agent 與開放生態而生
 - **Model Context Protocol (MCP)**：內建 MCP Server，任何 AI Agent（如 Claude Desktop、Cursor、Cline）均可直接掛載為工具，呼叫最新情報與搜尋。
 - **RSS 與 OpenAPI**：包含精選、全文、日報、主題分類多維度 RSS 與無須授權的唯讀 RESTful 介面。
+
+### 🎙️ 9. 全球 Podcast 智庫頻道、零磁碟串流與上市公司即時行情 (Podcast Intelligence & Live Markets)
+- **100+ 全球頂尖 Podcast 頻道收錄**：涵蓋科技、AI 創業、半導體與總體財經（包含 Lex Fridman、Acquired、Founders、Latent Space、Bloomberg、BG2 等），定時自動同步最新單集與音訊/影音直連。
+- **零磁碟 HTML5 音訊串流播放器**：嚴格落實「零磁碟政策」，直接由客戶端串流遠端媒體，不下載、不佔用本機伺服器磁碟；支援 15 秒快進/倒退、浮動播放列、進度拖曳與時長計算。
+- **Local-First 頻道關注與單集收藏**：採用 `useSyncExternalStore` 離線狀態管理，無須登入即可跨頁面記憶關注與收藏。
+- **Yahoo Finance 上市公司行情聯動（100% 真實數據）**：徹底剔除假資料與 0.00% 佔位符，快取 118+ 檔美股/台股（如 NVDA、TSMC 2330.TW、UMC、META、AMZN、GOOGL、MSFT、GS、JPM 等）即時價格與漲跌百分比。
+- **雙向生態打通**：Podcast 節目自動登記為正式信源並經由決策引擎評分（85分）歸類為 `#專家觀點`，無縫匯流進入「全部 AI 動態」與「精選」串流，並於單篇詳情頁內建專屬引流導航卡片。
+
+### 📖 10. 頂級正體中文排版規範與 Google Fonts (Craft & Typography)
+- **Google Fonts 雙字型整合**：引入 `Zen Kaku Gothic New:wght@500`（正文字體）與 `JetBrains Mono:wght@500`（等寬代碼與數字字體），字型兼具現代感與高可讀性。
+- **嚴格執行 12pt（16px）中文字級標準**：全站中文字級嚴格遵守 $\ge$ 16px 規範，標題 17~18px、正文與摘要 16px、標籤 14~15px，徹底消除小字號中文字不易閱讀的問題。
 
 ---
 
@@ -201,10 +214,11 @@ docker compose up -d --build
 ```text
 industry/
 ├── site.ts          # 站名、品牌標語、首頁文案、GitHub 與 ICP 參數
-├── taxonomy.ts      # 分類標籤、主題維度定義
+├── taxonomy.ts      # 分類標籤、主題維度、上市公司股票代碼映射
+├── podcasts.json    # 全球頂級 Podcast 智庫頻道目錄
 ├── topics.json      # 專題追蹤主題
 ├── sources.json     # 初始信源清單
-├── prompts/         # 篩選評分標準、摘要撰寫、事件聚類提示詞
+├── prompts/         # 篩選評分標準、摘要撰寫、Podcast 解讀提示詞
 ├── selection.ts     # 入選門檻閥值
 └── brand/           # Logo、圖示與視覺資產
 ```
