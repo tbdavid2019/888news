@@ -36,6 +36,9 @@ async function main() {
     // Sample audio stream for interactive testing
     const audioUrl = ep.audio_url || "https://traffic.libsyn.com/secure/founders/sample.mp3";
 
+    // Extract speaker names cleanly
+    const speakers = (ep.speakers || []).map((s: any) => typeof s === "string" ? s : s?.name || s?.title).filter(Boolean);
+
     await sql`
       INSERT INTO podcast_episodes (
         id, podcast_id, guid, url, title, title_zh, published_at, audio_url,
@@ -44,13 +47,14 @@ async function main() {
       ) VALUES (
         ${epId}, ${podcastId}, ${ep.id}, ${ep.url}, ${ep.title}, ${ep.title},
         ${publishedAt}, ${audioUrl}, ${durationSec}, ${durationStr},
-        ${ep.speakers || []}, ${[]}, ${ep.language || "zh-TW"},
+        ${speakers}, ${[]}, ${ep.language || "zh-TW"},
         ${ep.summary || ep.quick_take || ""}, ${ep.topics || []},
         ${ep.source_image_url || null}, true, 85, now()
       )
       ON CONFLICT (podcast_id, guid) DO UPDATE SET
         title = EXCLUDED.title,
         title_zh = EXCLUDED.title_zh,
+        hosts = EXCLUDED.hosts,
         summary_zh = EXCLUDED.summary_zh,
         key_points = EXCLUDED.key_points,
         selected = true,

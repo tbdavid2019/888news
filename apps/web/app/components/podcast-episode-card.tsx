@@ -16,8 +16,18 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
   const isStarred = useIsPodcastEpisodeStarred(episode.id);
 
   const displayTitle = episode.titleZh || episode.title;
-  const hostsText = episode.hosts?.length > 0 ? `Host: ${episode.hosts.join(", ")}` : "";
-  const guestsText = episode.guests?.length > 0 ? `Guest: ${episode.guests.join(", ")}` : "";
+
+  const formatPerson = (p: unknown): string => {
+    if (!p) return "";
+    if (typeof p === "string") return p;
+    if (typeof p === "object" && p !== null) return (p as Record<string, unknown>).name as string || (p as Record<string, unknown>).title as string || "";
+    return String(p);
+  };
+
+  const hosts = (episode.hosts || []).map(formatPerson).filter(Boolean);
+  const guests = (episode.guests || []).map(formatPerson).filter(Boolean);
+  const hostsText = hosts.length > 0 ? `Host: ${hosts.join(", ")}` : "";
+  const guestsText = guests.length > 0 ? `Guest: ${guests.join(", ")}` : "";
   const speakersText = [hostsText, guestsText].filter(Boolean).join(" · ");
 
   return (
