@@ -37,6 +37,9 @@ async function main() {
     // Genuine audio stream if provided, otherwise null (canonical link preserved in ep.url)
     const audioUrl = ep.audio_url || null;
 
+    // Extract speaker names cleanly
+    const speakers = (ep.speakers || []).map((s: any) => typeof s === "string" ? s : s?.name || s?.title).filter(Boolean);
+
     // Combine topics and key_entities so search and filters find all real subjects
     const rawTopics = Array.isArray(ep.topics) ? ep.topics : [];
     const rawEntities = Array.isArray(ep.key_entities) ? ep.key_entities : [];
