@@ -86,18 +86,58 @@ export async function loadPodcastChannels(params: {
   };
 }
 
+const TAG_KEYWORD_MAP: Record<string, string[]> = {
+  amazon: ["amazon", "amzn", "aws", "亞馬遜", "亚马逊"],
+  google: ["google", "googl", "goog", "alphabet", "gemini", "deepmind", "谷歌"],
+  meta: ["meta", "facebook", "llama"],
+  microsoft: ["microsoft", "msft", "copilot", "微軟", "微软"],
+  nvidia: ["nvidia", "nvda", "輝達", "英伟达"],
+  apple: ["apple", "aapl", "蘋果", "苹果"],
+  tsmc: ["tsmc", "2330", "2330.tw", "台積電"],
+  uber: ["uber"],
+  slack: ["slack"],
+  claude: ["claude", "claude code", "anthropic"],
+  anthropic: ["anthropic", "claude"],
+  openai: ["openai", "chatgpt", "gpt", "sora"],
+  gpt: ["gpt", "chatgpt", "gpt-4", "gpt-5"],
+  github: ["github", "copilot"],
+  codex: ["codex"],
+  mcp: ["mcp", "model context protocol"],
+  cursor: ["cursor", "anysphere"],
+  gemini: ["gemini", "google"],
+};
+
 export async function loadPodcastRecommend(params: {
   entity?: string | null;
   ticker?: string | null;
+  tag?: string | null;
   channelId?: string | null;
   limit?: number;
   offset?: number;
 } = {}): Promise<{ total: number; episodes: PodcastEpisodeItem[] }> {
   const limit = Math.min(60, Math.max(1, params.limit ?? 24));
   const offset = Math.max(0, params.offset ?? 0);
-  const entity = params.entity?.trim() ?? "";
-  const ticker = params.ticker?.trim() ?? "";
   const channelId = params.channelId?.trim() ?? "";
+
+  const rawKey = (params.tag || params.entity || params.ticker || "").trim();
+  const lowerKey = rawKey.toLowerCase();
+
+  const searchKeywords: string[] = [];
+  if (rawKey) {
+    searchKeywords.push(rawKey, lowerKey);
+    if (TAG_KEYWORD_MAP[lowerKey]) {
+      searchKeywords.push(...TAG_KEYWORD_MAP[lowerKey]);
+    }
+    for (const [id, def] of Object.entries(ENTITIES)) {
+      if (id === lowerKey || def.name.toLowerCase() === lowerKey || def.ticker?.symbol.toLowerCase() === lowerKey) {
+        searchKeywords.push(id, def.name, def.name.toLowerCase());
+        if (def.ticker) searchKeywords.push(def.ticker.symbol, def.ticker.symbol.toLowerCase());
+        searchKeywords.push(...def.aliases.map((a) => a.toLowerCase()));
+      }
+    }
+  }
+  const uniqueKeywords = Array.from(new Set(searchKeywords.map((k) => k.trim()).filter(Boolean)));
+  const searchPatterns = uniqueKeywords.map((k) => `%${k}%`);
 
   const rows = await sql<{
     id: string;
@@ -148,8 +188,25 @@ export async function loadPodcastRecommend(params: {
     LEFT JOIN podcast_episode_tickers pt ON pt.episode_id = e.id
     WHERE e.selected = true
       AND (${channelId === ""} OR e.podcast_id = ${channelId} OR p.slug = ${channelId})
-      AND (${ticker === ""} OR pt.ticker = ${ticker})
-      AND (${entity === ""} OR pt.entity_id = ${entity})
+      AND (
+        ${uniqueKeywords.length === 0}
+        OR EXISTS (
+          SELECT 1 FROM podcast_episode_tickers pt2
+          WHERE pt2.episode_id = e.id
+            AND (
+              pt2.ticker ILIKE ANY(${uniqueKeywords})
+              OR pt2.entity_id ILIKE ANY(${uniqueKeywords})
+            )
+        )
+        OR EXISTS (
+          SELECT 1 FROM unnest(e.key_points) kp
+          WHERE kp ILIKE ANY(${searchPatterns})
+        )
+        OR e.title ILIKE ANY(${searchPatterns})
+        OR e.title_zh ILIKE ANY(${searchPatterns})
+        OR e.summary_zh ILIKE ANY(${searchPatterns})
+        OR e.search_text ILIKE ANY(${searchPatterns})
+      )
     GROUP BY e.id, p.id
     ORDER BY e.published_at DESC
     LIMIT ${limit} OFFSET ${offset}
@@ -199,22 +256,36 @@ export async function loadPodcastRecommend(params: {
 export async function loadPodcastTickers(): Promise<
   Array<{ entityId: string; name: string; ticker: string; price: number; changePercent: number }>
 > {
-  const publicEntities = Object.entries(ENTITIES)
-    .filter(([_, def]) => Boolean(def.ticker))
-    .map(([id, def]) => ({
-      entityId: id,
-      name: def.name,
-      ticker: def.ticker!.symbol,
-    }));
+  const targetEntities: Array<{ entityId: string; name: string; tickerSymbol?: string }> = [
+    { entityId: "claude", name: "Claude" },
+    { entityId: "openai", name: "OpenAI" },
+    { entityId: "anthropic", name: "Anthropic" },
+    { entityId: "gpt", name: "GPT" },
+    { entityId: "github", name: "GitHub" },
+    { entityId: "codex", name: "Codex" },
+    { entityId: "mcp", name: "MCP" },
+    { entityId: "google", name: "Google", tickerSymbol: "GOOGL" },
+    { entityId: "nvidia", name: "NVIDIA", tickerSymbol: "NVDA" },
+    { entityId: "cursor", name: "Cursor" },
+    { entityId: "meta", name: "Meta", tickerSymbol: "META" },
+    { entityId: "amazon", name: "Amazon", tickerSymbol: "AMZN" },
+    { entityId: "gemini", name: "Gemini" },
+    { entityId: "uber", name: "Uber", tickerSymbol: "UBER" },
+    { entityId: "microsoft", name: "Microsoft", tickerSymbol: "MSFT" },
+    { entityId: "slack", name: "Slack" },
+    { entityId: "apple", name: "Apple", tickerSymbol: "AAPL" },
+    { entityId: "tsmc", name: "台積電", tickerSymbol: "2330.TW" },
+  ];
 
-  const quotes = await getCachedMarketQuotes(publicEntities.map((e) => e.ticker));
+  const tickersToFetch = targetEntities.map((e) => e.tickerSymbol).filter(Boolean) as string[];
+  const quotes = await getCachedMarketQuotes(tickersToFetch);
 
-  return publicEntities.map((e) => {
-    const q = quotes[e.ticker];
+  return targetEntities.map((e) => {
+    const q = e.tickerSymbol ? quotes[e.tickerSymbol] : undefined;
     return {
       entityId: e.entityId,
       name: e.name,
-      ticker: e.ticker,
+      ticker: e.tickerSymbol || "",
       price: q?.price ?? 0,
       changePercent: q?.changePercent ?? 0,
     };

@@ -4,6 +4,7 @@ import path from "node:path";
 import { REPO_ROOT } from "@aihot/backend/config";
 import { closeDb, sql } from "@aihot/backend/db";
 import { guardedFetch } from "@aihot/backend/lib/http-fetch";
+import { ENTITIES } from "@aihot/industry/taxonomy";
 
 async function main() {
   let episodes: any[] = [];
@@ -36,20 +37,32 @@ async function main() {
     // Genuine audio stream if provided, otherwise null (canonical link preserved in ep.url)
     const audioUrl = ep.audio_url || null;
 
-    // Extract speaker names cleanly
-    const speakers = (ep.speakers || []).map((s: any) => typeof s === "string" ? s : s?.name || s?.title).filter(Boolean);
+    // Combine topics and key_entities so search and filters find all real subjects
+    const rawTopics = Array.isArray(ep.topics) ? ep.topics : [];
+    const rawEntities = Array.isArray(ep.key_entities) ? ep.key_entities : [];
+    const combinedKeyPoints = Array.from(new Set([...rawTopics, ...rawEntities]));
+
+    const searchText = [
+      ep.title,
+      ep.title_zh,
+      ep.summary,
+      ep.quick_take,
+      ...combinedKeyPoints,
+      ...(ep.companies || []).map((c: any) => `${c.name || ""} ${c.symbol || ""}`),
+      ...speakers,
+    ].filter(Boolean).join(" ").toLowerCase();
 
     await sql`
       INSERT INTO podcast_episodes (
         id, podcast_id, guid, url, title, title_zh, published_at, audio_url,
         audio_duration_sec, audio_duration_str, hosts, guests, language,
-        summary_zh, key_points, cover_url, selected, score, updated_at
+        summary_zh, key_points, cover_url, search_text, selected, score, updated_at
       ) VALUES (
         ${epId}, ${podcastId}, ${ep.id}, ${ep.url}, ${ep.title}, ${ep.title},
         ${publishedAt}, ${audioUrl}, ${durationSec}, ${durationStr},
         ${speakers}, ${[]}, ${ep.language || "zh-TW"},
-        ${ep.summary || ep.quick_take || ""}, ${ep.topics || []},
-        ${ep.source_image_url || null}, true, 85, now()
+        ${ep.summary || ep.quick_take || ""}, ${combinedKeyPoints},
+        ${ep.source_image_url || null}, ${searchText}, true, 85, now()
       )
       ON CONFLICT (podcast_id, guid) DO UPDATE SET
         url = EXCLUDED.url,
@@ -59,6 +72,7 @@ async function main() {
         hosts = EXCLUDED.hosts,
         summary_zh = EXCLUDED.summary_zh,
         key_points = EXCLUDED.key_points,
+        search_text = EXCLUDED.search_text,
         selected = true,
         score = 85,
         updated_at = now()
@@ -68,10 +82,25 @@ async function main() {
     if (Array.isArray(ep.companies)) {
       for (const comp of ep.companies) {
         if (comp.symbol) {
+          const sym = comp.symbol.toUpperCase();
+          let entityId = comp.name || sym;
+          const lowerName = (comp.name || "").toLowerCase();
+          for (const [taxId, taxDef] of Object.entries(ENTITIES)) {
+            if (
+              taxId === lowerName ||
+              taxDef.name.toLowerCase() === lowerName ||
+              taxDef.ticker?.symbol.toUpperCase() === sym ||
+              taxDef.aliases.some((a) => a.toLowerCase() === lowerName)
+            ) {
+              entityId = taxId;
+              break;
+            }
+          }
+
           await sql`
             INSERT INTO podcast_episode_tickers (episode_id, ticker, entity_id)
-            VALUES (${epId}, ${comp.symbol}, ${comp.name || comp.symbol})
-            ON CONFLICT DO NOTHING
+            VALUES (${epId}, ${sym}, ${entityId})
+            ON CONFLICT (episode_id, ticker) DO UPDATE SET entity_id = EXCLUDED.entity_id
           `;
         }
       }

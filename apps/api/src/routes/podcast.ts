@@ -13,6 +13,7 @@ export function registerPodcast(app: FastifyInstance) {
     const q = req.query as Record<string, string | undefined>;
     const entity = q.entity?.trim() || null;
     const ticker = q.ticker?.trim() || null;
+    const tag = q.tag?.trim() || null;
     const channelId = q.channelId?.trim() || null;
     const limit = Number.parseInt(String(q.limit ?? "24"), 10) || 24;
     const offset = Number.parseInt(String(q.offset ?? "0"), 10) || 0;
@@ -20,6 +21,7 @@ export function registerPodcast(app: FastifyInstance) {
     const data = await loadPodcastRecommend({
       entity,
       ticker,
+      tag,
       channelId,
       limit,
       offset,
