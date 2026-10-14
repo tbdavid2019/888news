@@ -81,21 +81,21 @@ export default function PodcastRecommendPage() {
             <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
               Podcast 智庫推薦
             </h1>
-            <p className="mt-1 text-sm text-ink-3">
+            <p className="mt-1.5 text-[16px] leading-relaxed text-ink-3">
               收錄全球頂級科技、AI 與財經頻道，AI 精華摘要與上市公司即時行情聯動
             </p>
           </div>
 
-          <div className="flex items-center gap-1 rounded-xl bg-bg-sunk p-1 border border-line-soft text-xs font-medium">
+          <div className="flex items-center gap-1.5 rounded-xl bg-bg-sunk p-1 border border-line-soft text-[15px] font-medium">
             <Link
               to="/podcast/recommend"
-              className="rounded-lg bg-bg-card px-3.5 py-1.5 text-ink shadow-xs transition-colors"
+              className="rounded-lg bg-bg-card px-4 py-2 text-ink shadow-xs transition-colors"
             >
               推薦單集
             </Link>
             <Link
               to="/podcast/channels"
-              className="rounded-lg px-3.5 py-1.5 text-ink-3 hover:text-ink transition-colors"
+              className="rounded-lg px-4 py-2 text-ink-3 hover:text-ink transition-colors"
             >
               全部頻道目錄
             </Link>
@@ -117,8 +117,8 @@ export default function PodcastRecommendPage() {
         {episodes.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-line-soft p-12 text-center">
             <span className="text-3xl">🎙️</span>
-            <h3 className="mt-3 text-base font-semibold text-ink">暫無相關單集</h3>
-            <p className="mt-1 text-sm text-ink-3">
+            <h3 className="mt-3 text-[18px] font-semibold text-ink">暫無相關單集</h3>
+            <p className="mt-1 text-[16px] text-ink-3">
               目前篩選條件下沒有收錄的單集，請嘗試切換其他實體標籤。
             </p>
           </div>

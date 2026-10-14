@@ -320,6 +320,30 @@ export default function ItemPage() {
             </section>
           )}
 
+          {item.tags.includes("Podcast") && (
+            <div className="mt-6 rounded-2xl border border-line-soft bg-bg-card p-5 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-2xl text-accent">
+                    🎙️
+                  </div>
+                  <div>
+                    <h4 className="text-[16px] font-bold text-ink">Podcast 專家音訊節目</h4>
+                    <p className="text-[14px] text-ink-3">收錄於 888news Podcast 智庫專區，包含精華摘要與上市公司即時行情</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/podcast/recommend"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-[14px] font-semibold text-white shadow-xs hover:bg-accent/90 transition-colors"
+                  >
+                    前往 Podcast 智庫
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           {item.reason && !summaryOnly && (
             <section className="mt-6 border-t border-line pt-4 lg:hidden">
               <div className="mb-1 text-[12px] font-semibold text-ink-3">{t("item.why_recommended")}</div>

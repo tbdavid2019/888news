@@ -3,6 +3,7 @@
 import { sql } from "../db.ts";
 import { parsePodcastFeedXml } from "./podcast-rss.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
+import { bridgePodcastsToPublications } from "../publication/podcast-bridge.ts";
 
 export async function syncPodcastFeeds(): Promise<{ synced: number; episodesAdded: number }> {
   // Query enabled podcasts with a feed URL
@@ -61,6 +62,12 @@ export async function syncPodcastFeeds(): Promise<{ synced: number; episodesAdde
     } catch {
       await sql`UPDATE podcasts SET last_fetch_at = now() WHERE id = ${c.id}`.catch(() => {});
     }
+  }
+
+  if (episodesAdded > 0) {
+    await bridgePodcastsToPublications().catch((err) => {
+      console.error("Failed to bridge podcast episodes to publications:", err);
+    });
   }
 
   return { synced, episodesAdded };

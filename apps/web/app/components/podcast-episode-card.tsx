@@ -39,15 +39,15 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
             <img
               src={episode.podcastCoverUrl}
               alt={episode.podcastTitle}
-              className="size-7 shrink-0 rounded-md object-cover border border-line-soft"
+              className="size-8 shrink-0 rounded-md object-cover border border-line-soft"
               loading="lazy"
             />
           ) : (
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-xs font-semibold text-accent">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-accent-soft text-sm font-semibold text-accent">
               🎙️
             </div>
           )}
-          <span className="truncate text-xs font-medium text-ink-2 group-hover:text-ink">
+          <span className="truncate text-[15px] sm:text-[16px] font-medium text-ink-2 group-hover:text-ink">
             {episode.podcastTitle}
           </span>
         </div>
@@ -104,7 +104,7 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
 
       {/* Main Body: Title, Speakers, TL;DR */}
       <div className="flex-1 space-y-2.5">
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-ink group-hover:text-accent">
+        <h3 className="line-clamp-2 text-[17px] sm:text-[18px] font-bold leading-snug text-ink group-hover:text-accent">
           <a
             href={episode.url || episode.audioUrl || "#"}
             target="_blank"
@@ -116,13 +116,13 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
         </h3>
 
         {speakersText && (
-          <p className="line-clamp-1 text-xs text-ink-3">
+          <p className="line-clamp-1 text-[15px] text-ink-3">
             {speakersText}
           </p>
         )}
 
         {episode.summaryZh && (
-          <p className="line-clamp-3 text-xs leading-relaxed text-ink-2">
+          <p className="line-clamp-3 text-[16px] leading-[1.65] text-ink-2">
             {episode.summaryZh}
           </p>
         )}
@@ -133,7 +133,7 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
             {episode.keyPoints.slice(0, 3).map((kp, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center rounded-md bg-bg-sunk px-2 py-0.5 text-[11px] font-normal text-ink-3 border border-line-soft/60"
+                className="inline-flex items-center rounded-md bg-bg-sunk px-2.5 py-1 text-[14px] font-normal text-ink-2 border border-line-soft/60"
               >
                 {kp}
               </span>
@@ -143,13 +143,13 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
       </div>
 
       {/* Footer: Meta & Stock Badges */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-line-soft/60 pt-3 text-xs text-ink-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-line-soft/60 pt-3 text-[15px] text-ink-3">
         <div className="flex items-center gap-2">
           {onPlay && episode.audioUrl ? (
             <button
               type="button"
               onClick={() => onPlay(episode)}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[14px] font-medium transition-colors ${
                 isPlaying
                   ? "bg-accent text-white"
                   : "bg-accent-soft text-accent hover:bg-accent hover:text-white"
@@ -166,7 +166,7 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="size-3"
+                    className="size-3.5"
                   >
                     <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84z" />
                   </svg>
@@ -179,14 +179,14 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
               href={episode.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium bg-bg-sunk text-ink-3 hover:bg-accent hover:text-white transition-colors border border-line-soft"
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[14px] font-medium bg-bg-sunk text-ink-3 hover:bg-accent hover:text-white transition-colors border border-line-soft"
               title={episode.url.includes("youtube") ? "在 YouTube 開啟收看" : "開啟原文連結"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                className="size-3"
+                className="size-3.5"
               >
                 <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84z" />
               </svg>
@@ -195,13 +195,13 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
           ) : null}
 
           {episode.audioDurationStr && (
-            <span className="font-mono text-[11px] text-ink-4">
+            <span className="font-mono text-[13px] text-ink-4">
               {episode.audioDurationStr}
             </span>
           )}
 
           {episode.language && (
-            <span className="rounded bg-bg-sunk px-1.5 py-0.5 text-[10px] font-medium text-ink-4 border border-line-soft">
+            <span className="rounded bg-bg-sunk px-2 py-0.5 text-[12px] font-medium text-ink-4 border border-line-soft">
               {episode.language}
             </span>
           )}
@@ -215,13 +215,13 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
               return (
                 <span
                   key={st.ticker}
-                  className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-mono text-[10px] font-medium ${
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono text-[12px] font-medium ${
                     isPositive
                       ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                       : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
                   }`}
                 >
-                  <span>{st.ticker}</span>
+                  <span className="font-semibold">{st.ticker}</span>
                   <span>{isPositive ? "↑" : "↓"}</span>
                   <span>{Math.abs(st.changePercent).toFixed(2)}%</span>
                 </span>

@@ -93,6 +93,24 @@ export async function getCachedMarketQuotes(tickers: string[]): Promise<Record<s
       marketTime: r.market_time,
     };
   }
+
+  // Auto-fetch missing tickers on demand so quotes are always real
+  const missing = tickers.filter((t) => !map[t]);
+  if (missing.length > 0) {
+    const toFetch = missing.slice(0, 10);
+    await Promise.all(
+      toFetch.map(async (ticker) => {
+        try {
+          const q = await fetchTickerQuote(ticker);
+          if (q) {
+            map[ticker] = q;
+            upsertMarketQuote(q).catch(() => {});
+          }
+        } catch {}
+      })
+    );
+  }
+
   return map;
 }
 

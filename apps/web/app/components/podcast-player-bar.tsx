@@ -103,10 +103,10 @@ export const PodcastPlayerBar: FC<PodcastPlayerBarProps> = ({ episode, onClose }
             </div>
           )}
           <div className="min-w-0">
-            <h4 className="truncate text-xs font-semibold text-ink sm:text-sm">
+            <h4 className="truncate text-[15px] sm:text-[16px] font-semibold text-ink">
               {episode.titleZh || episode.title}
             </h4>
-            <p className="truncate text-[11px] text-ink-3">
+            <p className="truncate text-[13px] sm:text-[14px] text-ink-3">
               {episode.podcastTitle}
             </p>
           </div>
@@ -169,7 +169,7 @@ export const PodcastPlayerBar: FC<PodcastPlayerBarProps> = ({ episode, onClose }
 
           {/* Slider and Timers */}
           <div className="flex w-full items-center gap-2">
-            <span className="font-mono text-[10px] text-ink-4 w-9 text-right">
+            <span className="font-mono text-[12px] text-ink-4 w-10 text-right">
               {formatTime(currentTime)}
             </span>
             <input
@@ -180,7 +180,7 @@ export const PodcastPlayerBar: FC<PodcastPlayerBarProps> = ({ episode, onClose }
               onChange={handleSeek}
               className="h-1 flex-1 cursor-pointer appearance-none rounded-lg bg-line-soft accent-accent"
             />
-            <span className="font-mono text-[10px] text-ink-4 w-9">
+            <span className="font-mono text-[12px] text-ink-4 w-10">
               {formatTime(duration)}
             </span>
           </div>

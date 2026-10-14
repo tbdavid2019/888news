@@ -31,14 +31,14 @@ export const PodcastChannelCard: FC<PodcastChannelCardProps> = ({ channel }) => 
         )}
 
         <div className="min-w-0 flex-1 space-y-1">
-          <h3 className="truncate text-sm font-semibold text-ink group-hover:text-accent">
+          <h3 className="truncate text-[17px] sm:text-[18px] font-bold text-ink group-hover:text-accent">
             {channel.title}
           </h3>
-          <div className="flex items-center gap-2 text-xs text-ink-3">
+          <div className="flex items-center gap-2 text-[15px] text-ink-3">
             <span>共 {channel.episodeCount} 集</span>
             {channel.followerClaim && (
-              <span className="flex items-center gap-1 font-mono text-ink-4">
-                <span className="text-red-500 text-[10px]">▶</span>
+              <span className="flex items-center gap-1 font-mono text-ink-4 text-[15px]">
+                <span className="text-red-500 text-[11px]">▶</span>
                 {channel.followerClaim} 位追蹤者
               </span>
             )}

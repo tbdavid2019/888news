@@ -44,7 +44,7 @@ export const PodcastEntityRibbon: FC<PodcastEntityRibbonProps> = ({
         <button
           type="button"
           onClick={() => onSelect(null)}
-          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+          className={`shrink-0 rounded-full px-4 py-1.5 text-[15px] sm:text-[16px] font-medium transition-all ${
             selectedEntity === null
               ? "bg-accent text-white shadow-sm ring-2 ring-accent/30"
               : "border border-line-soft bg-bg-sunk text-ink-2 hover:border-line hover:bg-bg-subtle hover:text-ink"
@@ -60,7 +60,7 @@ export const PodcastEntityRibbon: FC<PodcastEntityRibbonProps> = ({
               key={item.id}
               type="button"
               onClick={() => onSelect(isActive ? null : item.id)}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+              className={`shrink-0 rounded-full px-4 py-1.5 text-[15px] sm:text-[16px] font-medium transition-all ${
                 isActive
                   ? "bg-accent text-white shadow-sm ring-2 ring-accent/30"
                   : "border border-line-soft bg-bg-sunk text-ink-2 hover:border-line hover:bg-bg-subtle hover:text-ink"

@@ -42,6 +42,11 @@ export const FeedItem = memo(function FeedItem({ item, group, filters, read = fa
             <SelectedBadge />
           </span>
         )}
+        {item.tags?.includes("Podcast") && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11.5px] font-semibold text-accent border border-accent/20">
+            🎙️ Podcast
+          </span>
+        )}
         <span className="ml-auto flex shrink-0 items-center gap-1.5 pl-2">
           <span className="hidden lg:inline-flex">
             <ScoreLabel score={item.score} />

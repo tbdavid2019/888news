@@ -87,16 +87,16 @@ export default function PodcastChannelDetailPage() {
 
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[10px] font-semibold text-accent">
+              <span className="rounded-full bg-accent-soft px-3 py-1 text-[12px] font-semibold text-accent">
                 {channel.category}
               </span>
-              <span className="text-xs text-ink-4">共 {channel.episodeCount} 集</span>
+              <span className="text-[15px] text-ink-4">共 {channel.episodeCount} 集</span>
             </div>
             <h1 className="text-xl font-bold text-ink sm:text-2xl">
               {channel.title}
             </h1>
             {channel.followerClaim && (
-              <p className="text-xs text-ink-3">
+              <p className="text-[15px] text-ink-3">
                 ▶ {channel.followerClaim} 位追蹤者
               </p>
             )}
@@ -107,7 +107,7 @@ export default function PodcastChannelDetailPage() {
           <button
             type="button"
             onClick={() => toggleFollowPodcast(channel.id)}
-            className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-[15px] font-medium transition-all ${
               isFollowed
                 ? "bg-ok-soft text-ok border border-ok/20 hover:bg-rose-500/10 hover:text-rose-500"
                 : "bg-accent text-white shadow-xs hover:bg-accent/90"
@@ -120,7 +120,7 @@ export default function PodcastChannelDetailPage() {
 
       {/* Description */}
       {channel.description && (
-        <div className="mt-4 rounded-xl border border-line-soft bg-bg-sunk/50 p-4 text-xs leading-relaxed text-ink-3">
+        <div className="mt-4 rounded-xl border border-line-soft bg-bg-sunk/50 p-4 text-[16px] leading-[1.65] text-ink-3">
           {channel.description}
         </div>
       )}
