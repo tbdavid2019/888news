@@ -34,8 +34,8 @@
 ## 6. Remote Verification & Acceptance (`news2.david888.com`)
 
 - [x] 6.1 Execute local static typecheck (`npm run typecheck`) ensuring zero local audio file generation and minimal disk footprint
-- [ ] 6.2 Push committed changes to Git repository, pull on remote server `news2.david888.com`, run database migration (`0040_podcasts.sql`), and rebuild Docker containers
-- [ ] 6.3 Verify live API endpoints and visual UX on `https://news2.david888.com/podcast/recommend` and `/podcast/channels`
+- [x] 6.2 Push committed changes to Git repository, pull on remote server `news2.david888.com`, run database migration (`0040_podcasts.sql`), and rebuild Docker containers
+- [x] 6.3 Verify live API endpoints and visual UX on `https://news2.david888.com/podcast/recommend` and `/podcast/channels`
 
 ## Workflow follow-up
 
