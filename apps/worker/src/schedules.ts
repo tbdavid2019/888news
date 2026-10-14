@@ -25,6 +25,7 @@ import { backupConfigured, runBackup } from "@aihot/backend/operations/backup";
 import { sourceHealthWeekly } from "@aihot/backend/operations/reports";
 import { markStalePendingReceipts } from "@aihot/backend/providers/receipts";
 import { markStaleDeliveries } from "@aihot/backend/notify/deliver";
+import { syncPodcastFeeds } from "@aihot/backend/sources/podcast-sync";
 
 interface Scheduled {
   name: string;
@@ -84,6 +85,7 @@ export const SCHEDULES: Scheduled[] = [
         { name: "sources.adapt-intervals", cron: "20 4 * * *", run: adaptIntervals },
         // WeChat official accounts (paid), each once per its interval.
         { name: "sources.mp-reconcile", cron: "*/15 * * * *", run: () => scheduleMpReconcile() },
+        { name: "podcasts.sync", cron: "*/30 * * * *", run: () => syncPodcastFeeds() },
       ]
     : []),
   // Codex reset monitor: checked every minute, scanned every 5 (every 3 while hot).

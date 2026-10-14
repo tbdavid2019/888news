@@ -4,7 +4,7 @@ import { FEATURES } from "@aihot/industry/features";
 import type { ReactNode } from "react";
 import type { TranslationKey } from "../../lib/i18n";
 import {
-  IconApps, IconBolt, IconBookmark, IconChart, IconDoc, IconFlame, IconGrid, IconHeart, IconHistory, IconList, IconMessage, IconPlug,
+  IconApps, IconBolt, IconBookmark, IconChart, IconDoc, IconFlame, IconGrid, IconHeart, IconHistory, IconList, IconMessage, IconMic, IconPlug,
 } from "../icons";
 
 export interface NavItem {
@@ -31,6 +31,7 @@ export function getSidebar(t: (key: TranslationKey) => string, locale: string = 
         { to: "/hot", label: t("nav.hot"), icon: IconFlame },
         { to: "/daily", label: dailyLabel, icon: IconDoc },
         { to: "/topics", label: t("nav.topics"), icon: IconGrid },
+        { to: "/podcast/recommend", label: "Podcast", icon: IconMic },
         { to: "/starred", label: t("nav.starred"), icon: IconBookmark },
       ],
     },
@@ -71,7 +72,7 @@ export const SIDEBAR = getSidebar((k) => k);
 export const TABBAR = getTabBar((k) => k);
 
 /** Pages reached from the mobile "更多" tab keep that tab highlighted. */
-export const MORE_PATHS = ["/more", "/hot", "/topics", "/starred", "/leaderboard", "/agent", "/about", "/feedback", "/terms", "/privacy"];
+export const MORE_PATHS = ["/more", "/hot", "/topics", "/starred", "/podcast", "/leaderboard", "/agent", "/about", "/feedback", "/terms", "/privacy"];
 
 export function tabIsActive(item: NavItem, pathname: string): boolean {
   if (item.end) return pathname === item.to;

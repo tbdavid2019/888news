@@ -50,4 +50,7 @@ if (FEATURES.leaderboard) {
   const { models, aliases } = await importModelDirectory();
   console.log(`leaderboard directory: ${models} models, ${aliases} names added`);
 }
+const { seedPodcastCatalog } = await import("./seed-podcasts.ts");
+const podcastStats = await seedPodcastCatalog();
+console.log(`podcasts: ${podcastStats.added} added, ${podcastStats.updated} updated (total: ${podcastStats.total})`);
 await closeDb();

@@ -91,20 +91,86 @@ export const CATEGORY_BY_ITEM_TYPE: Readonly<Record<string, string>> = {
 
 // ── 公司与主体 ──────────────────────────────────────────────────────────────────────────
 
-/** 公司主题：id → 显示名、卡片上显示的标签（null 表示只用 entity:<id> 归类）、别名。 */
-export const ENTITIES: Record<string, { name: string; displayTag: string | null; aliases: string[] }> = {
+export interface EntityDefinition {
+  name: string;
+  displayTag: string | null;
+  aliases: string[];
+  ticker?: {
+    symbol: string;
+    exchange: string;
+    shortName?: string;
+  };
+}
+
+/** 公司主题：id → 显示名、卡片上显示的标签（null 表示只用 entity:<id> 归类）、别名、股票代码。 */
+export const ENTITIES: Record<string, EntityDefinition> = {
   openai: { name: "OpenAI", displayTag: "OpenAI", aliases: ["OpenAI", "ChatGPT", "Sora", "Codex", "GPT"] },
   anthropic: { name: "Anthropic", displayTag: "Anthropic", aliases: ["Anthropic", "Claude"] },
-  google: { name: "Google", displayTag: "Google", aliases: ["Google", "DeepMind", "Gemini", "谷歌"] },
+  google: {
+    name: "Google",
+    displayTag: "Google",
+    aliases: ["Google", "DeepMind", "Gemini", "谷歌", "Alphabet"],
+    ticker: { symbol: "GOOGL", exchange: "NASDAQ", shortName: "Alphabet" },
+  },
   deepseek: { name: "DeepSeek", displayTag: "DeepSeek", aliases: ["DeepSeek", "深度求索"] },
-  qwen: { name: "千问 Qwen", displayTag: null, aliases: ["Qwen", "通义", "阿里"] },
+  qwen: {
+    name: "千问 Qwen",
+    displayTag: null,
+    aliases: ["Qwen", "通义", "阿里", "阿里巴巴"],
+    ticker: { symbol: "9988.HK", exchange: "HKEX", shortName: "阿里巴巴" },
+  },
   kimi: { name: "Kimi / 月之暗面", displayTag: null, aliases: ["Kimi", "月之暗面", "Moonshot"] },
   minimax: { name: "MiniMax", displayTag: null, aliases: ["MiniMax", "海螺"] },
   zhipu: { name: "智谱 GLM", displayTag: null, aliases: ["智谱", "GLM", "Z.ai"] },
   xai: { name: "xAI", displayTag: "xAI", aliases: ["xAI", "Grok"] },
-  meta: { name: "Meta", displayTag: "Meta", aliases: ["Meta", "Llama"] },
-  microsoft: { name: "Microsoft", displayTag: "Microsoft", aliases: ["Microsoft", "微软", "Copilot"] },
-  nvidia: { name: "NVIDIA", displayTag: null, aliases: ["NVIDIA", "英伟达"] },
+  meta: {
+    name: "Meta",
+    displayTag: "Meta",
+    aliases: ["Meta", "Llama"],
+    ticker: { symbol: "META", exchange: "NASDAQ", shortName: "Meta" },
+  },
+  microsoft: {
+    name: "Microsoft",
+    displayTag: "Microsoft",
+    aliases: ["Microsoft", "微软", "Copilot"],
+    ticker: { symbol: "MSFT", exchange: "NASDAQ", shortName: "Microsoft" },
+  },
+  nvidia: {
+    name: "NVIDIA",
+    displayTag: null,
+    aliases: ["NVIDIA", "英伟达", "輝達"],
+    ticker: { symbol: "NVDA", exchange: "NASDAQ", shortName: "NVIDIA" },
+  },
+  apple: {
+    name: "Apple",
+    displayTag: "Apple",
+    aliases: ["Apple", "苹果", "蘋果", "Apple Intelligence"],
+    ticker: { symbol: "AAPL", exchange: "NASDAQ", shortName: "Apple" },
+  },
+  amazon: {
+    name: "Amazon",
+    displayTag: "Amazon",
+    aliases: ["Amazon", "亚马逊", "亞馬遜", "AWS"],
+    ticker: { symbol: "AMZN", exchange: "NASDAQ", shortName: "Amazon" },
+  },
+  tsmc: {
+    name: "台積電",
+    displayTag: "TSMC",
+    aliases: ["台積電", "TSMC", "2330", "Taiwan Semiconductor"],
+    ticker: { symbol: "2330.TW", exchange: "TWSE", shortName: "台積電" },
+  },
+  meituan: {
+    name: "美團",
+    displayTag: "美團",
+    aliases: ["美團", "美团", "美團到店"],
+    ticker: { symbol: "3690.HK", exchange: "HKEX", shortName: "美團" },
+  },
+  pdd: {
+    name: "拼多多",
+    displayTag: "PDD",
+    aliases: ["拼多多", "PDD", "Temu"],
+    ticker: { symbol: "PDD", exchange: "NASDAQ", shortName: "拼多多" },
+  },
   "hugging-face": { name: "Hugging Face", displayTag: "Hugging Face", aliases: ["Hugging Face"] },
   cursor: { name: "Cursor", displayTag: null, aliases: ["Cursor", "Anysphere"] },
   openrouter: { name: "OpenRouter", displayTag: null, aliases: ["OpenRouter"] },

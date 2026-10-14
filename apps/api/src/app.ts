@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { OAUTH_PROBE_PATHS, resolveRedirect } from "@aihot/contracts/http-policy";
 import { sql } from "@aihot/backend/db";
 import { registerSite } from "./routes/site.ts";
+import { registerPodcast } from "./routes/podcast.ts";
 import { registerLeaderboard } from "./routes/leaderboard.ts";
 import { registerOg } from "./routes/og.ts";
 import { registerAdminAuth } from "./routes/admin-auth.ts";
@@ -64,6 +65,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   registerSite(app);
+  registerPodcast(app);
   if (FEATURES.leaderboard) registerLeaderboard(app);
   registerOg(app);
   registerAdminAuth(app);

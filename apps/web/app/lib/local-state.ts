@@ -9,6 +9,8 @@ export const KEYS = {
   theme: "aihot-theme",
   changelogSeen: "aihot-changelog-seen-version",
   feedbackDraft: "aihot-feedback-draft-v1",
+  followedPodcasts: "aihot-followed-podcasts",
+  starredPodcasts: "aihot-starred-podcasts",
 } as const;
 
 export const STARRED_LIMIT = 500;
@@ -88,6 +90,8 @@ const subscribeStarred = subscribeKey(KEYS.starred);
 const subscribeRead = subscribeKey(KEYS.read);
 const subscribeTheme = subscribeKey(KEYS.theme);
 const subscribeChangelog = subscribeKey(KEYS.changelogSeen);
+const subscribeFollowedPodcasts = subscribeKey(KEYS.followedPodcasts);
+const subscribeStarredPodcasts = subscribeKey(KEYS.starredPodcasts);
 
 // Snapshot cache so useSyncExternalStore gets stable references between changes.
 const cache = new Map<string, unknown>();
@@ -346,3 +350,91 @@ export function useThemePreference(): ThemePreference {
 export function useChangelogSeen(): string | null {
   return useSyncExternalStore(subscribeChangelog, getChangelogSeen, () => null);
 }
+
+// --- Podcast Subscriptions & Stars ---
+const EMPTY_STRINGS: string[] = [];
+
+export function getFollowedPodcasts(): string[] {
+  return cached(KEYS.followedPodcasts, () => {
+    const v = readRaw(KEYS.followedPodcasts);
+    if (!v) return EMPTY_STRINGS;
+    try {
+      const parsed = JSON.parse(v);
+      return Array.isArray(parsed) ? parsed : EMPTY_STRINGS;
+    } catch {
+      return EMPTY_STRINGS;
+    }
+  });
+}
+
+export function isPodcastFollowed(id: string): boolean {
+  return getFollowedPodcasts().includes(id);
+}
+
+export function toggleFollowPodcast(id: string): boolean {
+  const current = getFollowedPodcasts();
+  const exists = current.includes(id);
+  const next = exists ? current.filter((x) => x !== id) : [...current, id];
+  writeRaw(KEYS.followedPodcasts, JSON.stringify(next));
+  invalidate(KEYS.followedPodcasts);
+  return !exists;
+}
+
+export function useFollowedPodcasts(): string[] {
+  return useSyncExternalStore(
+    subscribeFollowedPodcasts,
+    getFollowedPodcasts,
+    () => EMPTY_STRINGS
+  );
+}
+
+export function useIsPodcastFollowed(id: string): boolean {
+  return useSyncExternalStore(
+    subscribeFollowedPodcasts,
+    () => isPodcastFollowed(id),
+    () => false
+  );
+}
+
+export function getStarredPodcastEpisodes(): string[] {
+  return cached(KEYS.starredPodcasts, () => {
+    const v = readRaw(KEYS.starredPodcasts);
+    if (!v) return EMPTY_STRINGS;
+    try {
+      const parsed = JSON.parse(v);
+      return Array.isArray(parsed) ? parsed : EMPTY_STRINGS;
+    } catch {
+      return EMPTY_STRINGS;
+    }
+  });
+}
+
+export function isPodcastEpisodeStarred(id: string): boolean {
+  return getStarredPodcastEpisodes().includes(id);
+}
+
+export function toggleStarPodcastEpisode(id: string): boolean {
+  const current = getStarredPodcastEpisodes();
+  const exists = current.includes(id);
+  const next = exists ? current.filter((x) => x !== id) : [...current, id];
+  writeRaw(KEYS.starredPodcasts, JSON.stringify(next));
+  invalidate(KEYS.starredPodcasts);
+  return !exists;
+}
+
+export function useStarredPodcastEpisodes(): string[] {
+  return useSyncExternalStore(
+    subscribeStarredPodcasts,
+    getStarredPodcastEpisodes,
+    () => EMPTY_STRINGS
+  );
+}
+
+export function useIsPodcastEpisodeStarred(id: string): boolean {
+  return useSyncExternalStore(
+    subscribeStarredPodcasts,
+    () => isPodcastEpisodeStarred(id),
+    () => false
+  );
+}
+

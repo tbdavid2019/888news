@@ -9,7 +9,7 @@ import { ThemeSwitch } from "../components/shell/ThemeSwitch";
 import { LanguageSwitch } from "../components/shell/LanguageSwitch";
 import { useI18n } from "../lib/i18n";
 import {
-  IconBookmark, IconChart, IconChevronRight, IconFlame, IconGlobe, IconGrid, IconHeart, IconHistory, IconMessage, IconMoon, IconPlug, IconDownload,
+  IconBookmark, IconChart, IconChevronRight, IconFlame, IconGlobe, IconGrid, IconHeart, IconHistory, IconMessage, IconMic, IconMoon, IconPlug, IconDownload,
 } from "../components/icons";
 import { triggerPwaInstallModal, isStandalone } from "../components/shell/PwaInstall";
 
@@ -48,6 +48,7 @@ export default function MorePage() {
       title: t("nav.section.content"),
       rows: [
         { to: "/topics", label: t("nav.topics"), icon: <IconGrid size={18} /> },
+        { to: "/podcast/recommend", label: "Podcast 智庫", icon: <IconMic size={18} /> },
         ...(FEATURES.leaderboard ? [{ to: "/leaderboard", label: t("nav.leaderboard"), icon: <IconChart size={18} /> }] : []),
         ...(FEATURES.codexResetMonitor ? [{ to: "/codex-reset", label: t("nav.codex_reset"), icon: <IconHistory size={18} /> }] : []),
         { to: "/agent", label: t("nav.agent"), icon: <IconPlug size={18} /> },
