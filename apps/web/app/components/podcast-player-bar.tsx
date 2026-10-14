@@ -34,7 +34,7 @@ export const PodcastPlayerBar: FC<PodcastPlayerBarProps> = ({ episode, onClose }
       .catch(() => setIsPlaying(false));
   }, [episode?.id]);
 
-  if (!episode) return null;
+  if (!episode || !episode.audioUrl) return null;
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -76,7 +76,7 @@ export const PodcastPlayerBar: FC<PodcastPlayerBarProps> = ({ episode, onClose }
     >
       <audio
         ref={audioRef}
-        src={episode.audioUrl}
+        src={episode.audioUrl || undefined}
         preload="metadata"
         crossOrigin="anonymous"
         onTimeUpdate={() => {

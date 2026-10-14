@@ -26,7 +26,7 @@ export interface PodcastEpisodeItem {
   title: string;
   titleZh: string | null;
   publishedAt: string;
-  audioUrl: string;
+  audioUrl: string | null;
   audioDurationSec: number | null;
   audioDurationStr: string | null;
   hosts: string[];
@@ -108,7 +108,7 @@ export async function loadPodcastRecommend(params: {
     title: string;
     title_zh: string | null;
     published_at: Date;
-    audio_url: string;
+    audio_url: string | null;
     audio_duration_sec: number | null;
     audio_duration_str: string | null;
     hosts: string[];
@@ -179,7 +179,7 @@ export async function loadPodcastRecommend(params: {
       title: r.title,
       titleZh: r.title_zh,
       publishedAt: r.published_at.toISOString(),
-      audioUrl: r.audio_url,
+      audioUrl: r.audio_url || null,
       audioDurationSec: r.audio_duration_sec,
       audioDurationStr: r.audio_duration_str,
       hosts: r.hosts,
