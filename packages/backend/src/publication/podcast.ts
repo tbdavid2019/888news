@@ -20,6 +20,7 @@ export interface PodcastChannelItem {
 export interface PodcastEpisodeItem {
   id: string;
   podcastId: string;
+  url: string;
   podcastTitle: string;
   podcastCoverUrl: string | null;
   title: string;
@@ -101,6 +102,7 @@ export async function loadPodcastRecommend(params: {
   const rows = await sql<{
     id: string;
     podcast_id: string;
+    url: string;
     podcast_title: string;
     podcast_cover: string | null;
     title: string;
@@ -121,6 +123,7 @@ export async function loadPodcastRecommend(params: {
     SELECT
       e.id,
       e.podcast_id,
+      e.url,
       p.title AS podcast_title,
       p.cover_url AS podcast_cover,
       e.title,
@@ -170,6 +173,7 @@ export async function loadPodcastRecommend(params: {
     return {
       id: r.id,
       podcastId: r.podcast_id,
+      url: r.url,
       podcastTitle: r.podcast_title,
       podcastCoverUrl: r.podcast_cover,
       title: r.title,

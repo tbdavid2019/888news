@@ -78,10 +78,10 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
           </button>
 
           <a
-            href={episode.audioUrl || "#"}
+            href={episode.url || episode.audioUrl || "#"}
             target="_blank"
             rel="noopener noreferrer"
-            title="開啟原文或音訊連結"
+            title={episode.url?.includes("youtube") ? "在 YouTube 開啟原文" : "開啟原文連結"}
             className="p-1 rounded-md text-ink-4 transition-colors hover:text-ink-2"
           >
             <svg
@@ -105,7 +105,14 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
       {/* Main Body: Title, Speakers, TL;DR */}
       <div className="flex-1 space-y-2.5">
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-ink group-hover:text-accent">
-          {displayTitle}
+          <a
+            href={episode.url || episode.audioUrl || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
+            {displayTitle}
+          </a>
         </h3>
 
         {speakersText && (
@@ -138,7 +145,7 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
       {/* Footer: Meta & Stock Badges */}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-line-soft/60 pt-3 text-xs text-ink-3">
         <div className="flex items-center gap-2">
-          {onPlay && episode.audioUrl && (
+          {onPlay && episode.audioUrl ? (
             <button
               type="button"
               onClick={() => onPlay(episode)}
@@ -167,7 +174,25 @@ export const PodcastEpisodeCard: FC<PodcastEpisodeCardProps> = ({
                 </>
               )}
             </button>
-          )}
+          ) : episode.url ? (
+            <a
+              href={episode.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium bg-bg-sunk text-ink-3 hover:bg-accent hover:text-white transition-colors border border-line-soft"
+              title={episode.url.includes("youtube") ? "在 YouTube 開啟收看" : "開啟原文連結"}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="size-3"
+              >
+                <path d="M6.3 2.841A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.269l9.344-5.89a1.5 1.5 0 0 0 0-2.538L6.3 2.84z" />
+              </svg>
+              {episode.url.includes("youtube") ? "收看" : "收聽"}
+            </a>
+          ) : null}
 
           {episode.audioDurationStr && (
             <span className="font-mono text-[11px] text-ink-4">

@@ -33,8 +33,8 @@ async function main() {
     const s = durationSec % 60;
     const durationStr = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 
-    // Sample audio stream for interactive testing
-    const audioUrl = ep.audio_url || "https://traffic.libsyn.com/secure/founders/sample.mp3";
+    // Genuine audio stream if provided, otherwise null (canonical link preserved in ep.url)
+    const audioUrl = ep.audio_url || null;
 
     // Extract speaker names cleanly
     const speakers = (ep.speakers || []).map((s: any) => typeof s === "string" ? s : s?.name || s?.title).filter(Boolean);
@@ -52,6 +52,8 @@ async function main() {
         ${ep.source_image_url || null}, true, 85, now()
       )
       ON CONFLICT (podcast_id, guid) DO UPDATE SET
+        url = EXCLUDED.url,
+        audio_url = EXCLUDED.audio_url,
         title = EXCLUDED.title,
         title_zh = EXCLUDED.title_zh,
         hosts = EXCLUDED.hosts,
