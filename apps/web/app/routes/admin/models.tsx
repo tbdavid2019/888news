@@ -96,28 +96,28 @@ export default function ModelsAdmin({ loaderData: m }: Route.ComponentProps) {
                       align: "right",
                       render: (u) => {
                         const rate = u.calls ? u.ok / u.calls : 0;
-                        return <span className={rate < 0.95 ? "text-hot" : ""} title={`失败 ${u.failed} · 结果未知 ${u.unknown}`}>{`${Math.round(rate * 1000) / 10}%`}</span>;
+                        return <span className={rate < 0.95 ? "text-hot" : ""} title={`失敗 ${u.failed} · 結果未知 ${u.unknown}`}>{`${Math.round(rate * 1000) / 10}%`}</span>;
                       },
                     },
-                    { key: "l", label: "耗时 p50 / p95", align: "right", render: (u) => <span className="whitespace-nowrap">{`${secs(u.p50)} / ${secs(u.p95)}`}</span> },
-                    { key: "t", label: "输入 / 输出 token", align: "right", render: (u) => <span className="whitespace-nowrap">{`${num(u.tokensIn)} / ${num(u.tokensOut)}`}</span> },
+                    { key: "l", label: "耗時 p50 / p95", align: "right", render: (u) => <span className="whitespace-nowrap">{`${secs(u.p50)} / ${secs(u.p95)}`}</span> },
+                    { key: "t", label: "輸入 / 輸出 token", align: "right", render: (u) => <span className="whitespace-nowrap">{`${num(u.tokensIn)} / ${num(u.tokensOut)}`}</span> },
                     {
                       key: "$",
-                      label: "费用",
+                      label: "費用",
                       align: "right",
                       render: (u) =>
                         u.actualCost !== null ? (
                           `${money(u.actualCost)}${u.currency && u.currency !== "CNY" ? ` ${u.currency}` : ""}`
                         ) : u.estimate ? (
-                          <span title="按用量 × 单价推算">≈ {money(u.estimate.amount)}{u.estimate.currency !== "CNY" ? ` ${u.estimate.currency}` : ""}</span>
+                          <span title="按用量 × 單價推算">≈ {money(u.estimate.amount)}{u.estimate.currency !== "CNY" ? ` ${u.estimate.currency}` : ""}</span>
                         ) : (
-                          <span className="whitespace-nowrap text-ink-4" title="服务商没有返回费用，按 token 数和你的模型单价自己估算">未定价</span>
+                          <span className="whitespace-nowrap text-ink-4" title="服務商未回傳費用，依 token 數與您的模型單價自估">未定價</span>
                         ),
                     },
                   ]}
                 />
               ) : (
-                <Empty>{m.days} 天内没有调用{total === 0 && c.vision ? "（只在有图片时使用）" : ""}</Empty>
+                <Empty>{m.days} 天內無調用{total === 0 && c.vision ? "（僅在有圖片時使用）" : ""}</Empty>
               )}
             </Card>
           );

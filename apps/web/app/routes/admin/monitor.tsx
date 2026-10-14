@@ -113,16 +113,16 @@ function EventCard({ e, all }: { e: MonitorEvent; all: MonitorEvent[] }) {
               <div className="text-ink">{post.text}</div>
               <a className="text-[12px] text-ink-4 hover:text-accent" href={post.url} target="_blank" rel="noreferrer">{post.originalText}</a>
             </div>
-            <Button size="sm" tone="ghost" onClick={() => { setMove({ postId: post.postId, to: "" }); setDialog("move"); }}>移动</Button>
+            <Button size="sm" tone="ghost" onClick={() => { setMove({ postId: post.postId, to: "" }); setDialog("move"); }}>移動</Button>
           </li>
         ))}
       </ol>
 
       <ReasonDialog
         open={dialog === "edit"}
-        title="编辑事件"
-        description="时间按北京时间填写；改动立即反映在重置页、v1 接口和版本探针上。"
-        confirmLabel="保存"
+        title="編輯事件"
+        description="時間依台北時間填寫；變動立即反映於重設頁、v1 介面與版本探針。"
+        confirmLabel="儲存"
         busy={pending === "edit"}
         onClose={() => setDialog(null)}
         onSubmit={async (reason) => {
@@ -139,41 +139,41 @@ function EventCard({ e, all }: { e: MonitorEvent; all: MonitorEvent[] }) {
         }}
       >
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="类型">
+          <Field label="類型">
             <Select value={form.type} onChange={(ev) => setForm({ ...form, type: ev.target.value as MonitorEvent["type"] })}>
-              <option value="direct_reset">额度重置</option>
+              <option value="direct_reset">額度重置</option>
               <option value="reset_credit">重置卡</option>
             </Select>
           </Field>
-          <Field label="状态">
+          <Field label="狀態">
             <Select value={form.status} onChange={(ev) => setForm({ ...form, status: ev.target.value as MonitorEvent["status"] })}>
-              <option value="announced">已宣布</option>
-              <option value="confirmed">已确认</option>
+              <option value="announced">已宣佈</option>
+              <option value="confirmed">已確認</option>
             </Select>
           </Field>
-          <Field label="时间精度">
+          <Field label="時間精度">
             <Select value={form.precision} onChange={(ev) => setForm({ ...form, precision: ev.target.value })}>
-              <option value="">没有时间</option>
-              <option value="window">时间段</option>
-              <option value="deadline">截止时间（…前）</option>
-              <option value="approximate">大约</option>
+              <option value="">無時間</option>
+              <option value="window">時間區間</option>
+              <option value="deadline">截止時間（…前）</option>
+              <option value="approximate">大約</option>
               <option value="date">整天</option>
             </Select>
           </Field>
           {form.status === "confirmed" && (
-            <Field label="确认时间">
+            <Field label="確認時間">
               <Input type="datetime-local" value={form.confirmedAt} onChange={(ev) => setForm({ ...form, confirmedAt: ev.target.value })} />
             </Field>
           )}
           {form.precision && (
             <>
-              <Field label="从"><Input type="datetime-local" value={form.from} onChange={(ev) => setForm({ ...form, from: ev.target.value })} /></Field>
-              {(form.precision === "window" || form.precision === "date") && <Field label="到"><Input type="datetime-local" value={form.through} onChange={(ev) => setForm({ ...form, through: ev.target.value })} /></Field>}
+              <Field label="從"><Input type="datetime-local" value={form.from} onChange={(ev) => setForm({ ...form, from: ev.target.value })} /></Field>
+              {(form.precision === "window" || form.precision === "date") && <Field label="至"><Input type="datetime-local" value={form.through} onChange={(ev) => setForm({ ...form, through: ev.target.value })} /></Field>}
             </>
           )}
-          <Field label="适用对象（中文）"><Input value={form.audienceZh} onChange={(ev) => setForm({ ...form, audienceZh: ev.target.value })} /></Field>
-          <Field label="产品"><Input value={form.productsZh} onChange={(ev) => setForm({ ...form, productsZh: ev.target.value })} /></Field>
-          <Field label="范围标签（原文）"><Input value={form.scopeLabel} onChange={(ev) => setForm({ ...form, scopeLabel: ev.target.value })} /></Field>
+          <Field label="適用對象（中文）"><Input value={form.audienceZh} onChange={(ev) => setForm({ ...form, audienceZh: ev.target.value })} /></Field>
+          <Field label="產品"><Input value={form.productsZh} onChange={(ev) => setForm({ ...form, productsZh: ev.target.value })} /></Field>
+          <Field label="範圍標籤（原文）"><Input value={form.scopeLabel} onChange={(ev) => setForm({ ...form, scopeLabel: ev.target.value })} /></Field>
         </div>
       </ReasonDialog>
       <ReasonDialog
@@ -241,24 +241,24 @@ function PostRow({ post }: { post: Post }) {
   const { run, pending } = useAdminAction();
   const [dialog, setDialog] = useState<null | "skip" | "reviewed">(null);
   const resolve = async (action: "skip" | "reviewed", reason: string) =>
-    (await run("POST", `/api/admin/monitor/posts/${post.id}/resolve`, { action, reason }, { label: action, success: action === "skip" ? "已跳过" : "已标记为核实" })) !== null;
+    (await run("POST", `/api/admin/monitor/posts/${post.id}/resolve`, { action, reason }, { label: action, success: action === "skip" ? "已略過" : "已標記為核實" })) !== null;
   return (
     <article className="rounded-panel bg-surface p-4 ring-1 ring-line">
       <div className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-ink-3">
         <a href={post.url} target="_blank" rel="noreferrer" className="num hover:text-accent">{bj(post.published_at, true)}</a>
-        {post.skipped ? <Badge>已跳过</Badge> : post.relevant ? <Badge tone="accent">相关</Badge> : post.processed_at ? <Badge>无关</Badge> : <Badge tone="warn">待识别</Badge>}
-        {post.needs_review && !post.reviewed && <Badge tone="bad">需要复核</Badge>}
-        {post.reviewed && <Badge tone="ok">已核实</Badge>}
-        {post.failures && <Badge tone="bad" title={post.failures.error}>识别失败 {post.failures.count} 次</Badge>}
+        {post.skipped ? <Badge>已略過</Badge> : post.relevant ? <Badge tone="accent">相關</Badge> : post.processed_at ? <Badge>無關</Badge> : <Badge tone="warn">待識別</Badge>}
+        {post.needs_review && !post.reviewed && <Badge tone="bad">需要複核</Badge>}
+        {post.reviewed && <Badge tone="ok">已核實</Badge>}
+        {post.failures && <Badge tone="bad" title={post.failures.error}>識別失敗 {post.failures.count} 次</Badge>}
         {post.links.map((l) => <Badge key={l.eventId} tone="info" title={l.eventId}>{l.stage}</Badge>)}
         <span className="ml-auto flex gap-1.5">
-          {!post.processed_at && <Button size="sm" onClick={() => setDialog("skip")}>跳过</Button>}
-          {post.needs_review && !post.reviewed && post.processed_at && <Button size="sm" onClick={() => setDialog("reviewed")}>标记已核实</Button>}
+          {!post.processed_at && <Button size="sm" onClick={() => setDialog("skip")}>略過</Button>}
+          {post.needs_review && !post.reviewed && post.processed_at && <Button size="sm" onClick={() => setDialog("reviewed")}>標記已核實</Button>}
         </span>
       </div>
       {post.held && post.held.length > 0 && (
         <div className="mt-2 rounded-control bg-bg-sunk px-3 py-2 text-[12.5px] text-ink-3">
-          <div className="font-medium text-ink-2">没有自动生效的识别（引文不在原帖里，或对“已完成”没有把握）</div>
+          <div className="font-medium text-ink-2">未自動生效的識別（引文不在原貼文內，或對「已完成」無把握）</div>
           {post.held.map((h, i) => <div key={i}>{h.action} · “{h.excerpt}”</div>)}
         </div>
       )}
@@ -268,13 +268,13 @@ function PostRow({ post }: { post: Post }) {
         <div className="mt-2 space-y-1">
           {props.map((p, i) => (
             <div key={i} className="flex flex-wrap items-center gap-1.5 text-[12px]">
-              <Badge tone={p.real ? "ok" : "muted"}>{p.real ? "真实" : "非承诺"}</Badge>
+              <Badge tone={p.real ? "ok" : "muted"}>{p.real ? "真實" : "非承諾"}</Badge>
               <Badge>{KIND[p.kind] ?? p.kind} · {p.action}</Badge>
               {p.relatesTo && <span className="font-mono text-ink-4">→ {p.relatesTo}</span>}
               <span className="text-ink-3">{p.excerptZh ?? p.excerpt}</span>
             </div>
           ))}
-          <Json value={props} label="识别结果" />
+          <Json value={props} label="識別結果" />
         </div>
       )}
       <ReasonDialog

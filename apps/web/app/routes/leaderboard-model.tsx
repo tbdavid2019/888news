@@ -13,7 +13,7 @@ import { boardHref, formatPrice, getPriceValue, pctFixed, shortStamp, tokensWan,
 import { IconArrowLeft, IconArrowRight, IconArrowUpRight, IconChevronDown, IconExternal } from "../components/icons";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  return loadOr404<LbModelDetail>(`/api/site/leaderboard/models/${encodeURIComponent(params.slug)}`, { signal: request.signal });
+  return loadOr404<LbModelDetail>(`/api/site/leaderboard/models/${encodeURIComponent(params.slug)}`, { request, signal: request.signal });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {

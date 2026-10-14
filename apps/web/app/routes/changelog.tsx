@@ -22,7 +22,7 @@ interface Release {
 }
 
 export async function loader({ request }: { request: Request }) {
-  return apiGet<{ latestVersion: string; releases: Release[] }>("/api/site/changelog", { signal: request.signal });
+  return apiGet<{ latestVersion: string; releases: Release[] }>("/api/site/changelog", { request, signal: request.signal });
 }
 
 export function meta() {

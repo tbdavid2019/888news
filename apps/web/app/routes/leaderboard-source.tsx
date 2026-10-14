@@ -10,7 +10,7 @@ import { pct, shortStamp } from "../features/leaderboard/format";
 import { IconArrowLeft, IconArrowUpRight, IconChevronDown } from "../components/icons";
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  return loadOr404<LbSourceDetail>(`/api/site/leaderboard/sources/${encodeURIComponent(params.key)}`, { signal: request.signal });
+  return loadOr404<LbSourceDetail>(`/api/site/leaderboard/sources/${encodeURIComponent(params.key)}`, { request, signal: request.signal });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {

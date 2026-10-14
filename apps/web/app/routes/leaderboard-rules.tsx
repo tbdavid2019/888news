@@ -17,7 +17,7 @@ interface RulesData {
 }
 
 export async function loader({ request }: { request: Request }) {
-  return loadOr404<RulesData>("/api/site/leaderboard/rules", { signal: request.signal });
+  return loadOr404<RulesData>("/api/site/leaderboard/rules", { request, signal: request.signal });
 }
 
 export function meta() {

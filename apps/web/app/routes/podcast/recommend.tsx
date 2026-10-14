@@ -27,11 +27,11 @@ export async function loader({ request }: { request: Request }): Promise<LoaderD
   const [episodesData, tickersData] = await Promise.all([
     apiGet<{ total: number; episodes: PodcastEpisodeItem[] }>(
       `/api/site/podcast/recommend?${query.toString()}`,
-      { signal: request.signal }
+      { request, signal: request.signal }
     ).catch(() => ({ total: 0, episodes: [] })),
     apiGet<{ tickers: Array<{ entityId: string; name: string; ticker: string; price: number; changePercent: number }> }>(
       "/api/site/podcast/tickers",
-      { signal: request.signal }
+      { request, signal: request.signal }
     ).catch(() => ({ tickers: [] })),
   ]);
 

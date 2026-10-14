@@ -320,9 +320,9 @@ interface ScoreDetailRow {
 }
 
 function usageLabel(status: string | undefined) {
-  if (status === "ranked") return "已计入综合排名";
-  if (status === "cross_reference") return "交叉参考";
-  return "仅供参考";
+  if (status === "ranked") return "已計入綜合排名";
+  if (status === "cross_reference") return "交叉參考";
+  return "僅供參考";
 }
 
 export async function loadModel(slug: string): Promise<LbModelDetail | null> {
@@ -532,7 +532,7 @@ export async function loadSource(key: string): Promise<LbSourceDetail | null> {
       usage: s.usage,
       limits: s.limits,
       license: s.license,
-      attribution: s.attribution ?? `成绩由 ${s.operator} 发布，原始分数与 ${SITE.name} 共识分使用不同尺度，不能直接相加。`,
+      attribution: s.attribution ?? `成績由 ${s.operator} 發布，原始分數與 ${SITE.name} 共識分使用不同尺度，不能直接相加。`,
     },
     upstreamAt: showRows ? snapshot.published_at?.toISOString() ?? null : null,
     syncedAt: showRows ? lastSeen ?? snapshot.fetched_at.toISOString() : null,
@@ -541,8 +541,8 @@ export async function loadSource(key: string): Promise<LbSourceDetail | null> {
     systemRows: !!s.allRows,
     rowsNote: showRows
       ? s.allRows
-        ? "下列为模型搭配不同 Agent 的系统成绩，运行条件不同，仅供参考。每项最多展示 30 条配置，匿名测试型号不展示。"
-        : "按固定规则，每个公开模型采用一套代表配置。匿名测试型号不展示，保留原榜名次，每项最多 30 个。"
+        ? "下列為模型搭配不同 Agent 的系統成績，運行條件不同，僅供參考。每項最多展示 30 條配置，匿名測試型號不展示。"
+        : "按固定規則，每個公開模型採用一套代表配置。匿名測試型號不展示，保留原榜名次，每項最多 30 個。"
       : null,
   };
 }

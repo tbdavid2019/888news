@@ -25,7 +25,7 @@ export type ChannelKey = (typeof CHANNEL_KEYS)[number];
 
 export const CHANNEL_LABELS: Record<ChannelKey, string> = {
   all: "全部",
-  news: "资讯",
+  news: "資訊",
   x: "X",
   firstParty: "一手",
 };
@@ -38,11 +38,11 @@ export const LEADERBOARD_PUBLIC_BOARDS = ["overall", "coding", "reasoning", "kno
 export type LeaderboardBoardKey = (typeof LEADERBOARD_PUBLIC_BOARDS)[number];
 
 export const LEADERBOARD_BOARD_LABELS: Record<LeaderboardBoardKey, string> = {
-  overall: "综合",
-  coding: "编程",
+  overall: "綜合",
+  coding: "程式設計",
   reasoning: "推理",
-  knowledge: "知识",
-  professional: "专业办公",
+  knowledge: "知識",
+  professional: "專業辦公",
 };
 
 /** Article ids. Also the local-data import validation pattern. */

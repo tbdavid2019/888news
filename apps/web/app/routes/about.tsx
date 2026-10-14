@@ -24,8 +24,8 @@ interface ContactSettings {
 
 export async function loader({ request }: { request: Request }) {
   const [contact, stats] = await Promise.all([
-    apiGet<ContactSettings>("/api/site/contact", { signal: request.signal }).catch((): ContactSettings => ({ wechatQr: null, feishuQr: null, makerAvatar: null })),
-    apiGet<SiteStats>("/api/site/stats", { signal: request.signal }).catch(() => null),
+    apiGet<ContactSettings>("/api/site/contact", { request, signal: request.signal }).catch((): ContactSettings => ({ wechatQr: null, feishuQr: null, makerAvatar: null })),
+    apiGet<SiteStats>("/api/site/stats", { request, signal: request.signal }).catch(() => null),
   ]);
   return { contact, stats };
 }

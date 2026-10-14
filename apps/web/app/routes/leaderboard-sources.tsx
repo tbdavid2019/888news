@@ -9,7 +9,7 @@ import { pct } from "../features/leaderboard/format";
 import { IconArrowLeft, IconArrowUpRight } from "../components/icons";
 
 export async function loader({ request }: { request: Request }) {
-  return loadOr404<LbSourcesResponse>("/api/site/leaderboard/sources", { signal: request.signal });
+  return loadOr404<LbSourcesResponse>("/api/site/leaderboard/sources", { request, signal: request.signal });
 }
 
 export function meta() {

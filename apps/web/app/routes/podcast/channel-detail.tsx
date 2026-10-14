@@ -23,11 +23,11 @@ export async function loader({
   const [channelsData, episodesData] = await Promise.all([
     apiGet<{ total: number; channels: PodcastChannelItem[] }>(
       "/api/site/podcast/channels",
-      { signal: request.signal }
+      { request, signal: request.signal }
     ).catch(() => ({ total: 0, channels: [] })),
     apiGet<{ total: number; episodes: PodcastEpisodeItem[] }>(
       `/api/site/podcast/recommend?channelId=${encodeURIComponent(slug)}&limit=30`,
-      { signal: request.signal }
+      { request, signal: request.signal }
     ).catch(() => ({ total: 0, episodes: [] })),
   ]);
 

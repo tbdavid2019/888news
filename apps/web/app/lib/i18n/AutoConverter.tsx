@@ -63,10 +63,20 @@ export function AutoTraditionalConverter({ locale }: { locale: string }) {
       }
     };
 
-    // Initial DOM pass
+    const convertTitle = () => {
+      if (document.title && HAS_ZH.test(document.title)) {
+        const converted = cv(document.title);
+        if (converted !== document.title) {
+          document.title = converted;
+        }
+      }
+    };
+
+    // Initial DOM and Title pass
+    convertTitle();
     convertTree(document.body);
 
-    // Dynamic additions observer
+    // Dynamic additions observer for body
     const observer = new MutationObserver((mutations) => {
       for (const m of mutations) {
         if (m.type === "childList") {
@@ -89,6 +99,7 @@ export function AutoTraditionalConverter({ locale }: { locale: string }) {
           }
         }
       }
+      convertTitle();
     });
 
     observer.observe(document.body, {
@@ -97,7 +108,23 @@ export function AutoTraditionalConverter({ locale }: { locale: string }) {
       characterData: true,
     });
 
-    return () => observer.disconnect();
+    // Observer for head/title changes on client-side navigation
+    const headObserver = new MutationObserver(() => {
+      convertTitle();
+    });
+
+    if (document.head) {
+      headObserver.observe(document.head, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    }
+
+    return () => {
+      observer.disconnect();
+      headObserver.disconnect();
+    };
   }, [locale]);
 
   return null;

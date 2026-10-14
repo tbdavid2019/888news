@@ -12,8 +12,8 @@ import { useEntrance } from "../lib/hydration";
 
 export async function loader({ request, params }: { request: Request; params: { date?: string } }) {
   const [data, day] = await Promise.all([
-    loadOr404<CodexResetSitePage>("/api/site/codex-reset", { signal: request.signal }),
-    params.date ? loadOr404<CodexResetDay>(`/api/site/codex-reset/days/${encodeURIComponent(params.date)}`, { signal: request.signal }) : null,
+    loadOr404<CodexResetSitePage>("/api/site/codex-reset", { request, signal: request.signal }),
+    params.date ? loadOr404<CodexResetDay>(`/api/site/codex-reset/days/${encodeURIComponent(params.date)}`, { request, signal: request.signal }) : null,
   ]);
   return { ...data, ...(day ? { selectedDate: day.date, events: day.events } : {}), serverNow: Date.now() };
 }
@@ -21,7 +21,7 @@ export async function loader({ request, params }: { request: Request; params: { 
 export function meta() {
   return pageMeta({
     title: "Tibo重置監控",
-    description: "跟蹤 Tibo 公佈的 Codex 額度重置與重置卡發放：推算的北京時間生效視窗、適用範圍、中文原帖與歷史日曆。",
+    description: "跟蹤 Tibo 公佈的 Codex 額度重置與重置卡發放：推算的台北時間生效視窗、適用範圍、中文原帖與歷史日曆。",
     path: "/codex-reset",
     image: "/og/pages/codex-reset.png",
   });

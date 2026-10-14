@@ -15,7 +15,7 @@ const CATEGORY_KEYS = new Set(["coding", "reasoning", "knowledge", "professional
 export async function loader({ params, request }: Route.LoaderArgs) {
   const key = params.key ?? "overall";
   if (params.key !== undefined && !CATEGORY_KEYS.has(params.key)) throw data({ message: "not_found" }, { status: 404 });
-  return loadOr404<LbBoardResponse>(`/api/site/leaderboard/boards/${key}`, { signal: request.signal });
+  return loadOr404<LbBoardResponse>(`/api/site/leaderboard/boards/${key}`, { request, signal: request.signal });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -25,7 +25,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
   return pageMeta({
     title: board.title,
     rawTitle: true,
-    description: board.key === "overall" ? "彙總多家公開模型評測榜單，給出${SITE.name} 共識分、評測完整度、上線日期與 API 參考價格。" : board.description,
+    description: board.key === "overall" ? `彙總多家公開模型評測榜單，給出 ${SITE.name} 共識分、評測完整度、上線日期與 API 參考價格。` : board.description,
     path,
     image: "/og/pages/leaderboard.png",
     jsonLd: [

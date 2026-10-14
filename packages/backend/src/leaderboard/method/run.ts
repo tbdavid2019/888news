@@ -88,7 +88,7 @@ export async function runLeaderboardRound(opts: { at?: Date; force?: boolean } =
           score: e.score,
           coverage: e.coverage,
           metric_count: e.source_count,
-          summary: `${e.source_count} 项评测 · ${e.operator_count} 家机构`,
+          summary: `${e.source_count} 項評測 · ${e.operator_count} 家機構`,
           detail: { stability: e.stability, sourceCount: e.source_count, operatorCount: e.operator_count },
         }));
       for (let i = 0; i < rows.length; i += 500) await tx`INSERT INTO lb_rankings ${tx(rows.slice(i, i + 500) as never)}`;

@@ -14,11 +14,11 @@ interface TopicSummary {
 }
 
 export async function loader({ request }: { request: Request }) {
-  return apiGet<{ topics: TopicSummary[] }>("/api/site/topics", { signal: request.signal });
+  return apiGet<{ topics: TopicSummary[] }>("/api/site/topics", { request, signal: request.signal });
 }
 
 export function meta() {
-  return pageMeta({ title: "主題", description: "按公司與模型、技術方向、內容形態聚合的 AI 主題頁：OpenAI、Anthropic、Agent、多模態、論文與教程等 38 個方向。", path: "/topics", image: "/og/pages/topics.png" });
+  return pageMeta({ title: "主題", description: "按公司與模型、技術方向、內容形態聚合的 AI 主題頁：OpenAI、Anthropic、Agent、多模態、論文與教學等 38 個方向。", path: "/topics", image: "/og/pages/topics.png" });
 }
 
 export function headers() {

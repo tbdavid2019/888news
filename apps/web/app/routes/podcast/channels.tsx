@@ -14,7 +14,7 @@ interface LoaderData {
 export async function loader({ request }: { request: Request }): Promise<LoaderData> {
   const data = await apiGet<{ total: number; channels: PodcastChannelItem[] }>(
     "/api/site/podcast/channels",
-    { signal: request.signal }
+    { request, signal: request.signal }
   ).catch(() => ({ total: 0, channels: [] }));
 
   return data;

@@ -146,13 +146,13 @@ export default function SourceDetail({ loaderData }: Route.ComponentProps) {
               if (r) setPreview(r);
             }}
           >
-            预览抓取
+            預覽抓取
           </Button>
-          <Button busy={pending === "fetch"} onClick={() => run("POST", `${base}/fetch`, {}, { label: "fetch", success: "已加入采集队列" })}>
-            立即采集
+          <Button busy={pending === "fetch"} onClick={() => run("POST", `${base}/fetch`, {}, { label: "fetch", success: "已加入擷取佇列" })}>
+            立即擷取
           </Button>
           <Button tone={s.enabled ? "danger" : "primary"} onClick={() => setDialog("toggle")}>
-            {s.enabled ? "暂停" : "恢复"}
+            {s.enabled ? "暫停" : "恢復"}
           </Button>
         </>
       }
@@ -163,25 +163,25 @@ export default function SourceDetail({ loaderData }: Route.ComponentProps) {
           value={
             <span className="inline-flex items-center gap-2 text-[18px]">
               <Dot tone={s.enabled ? healthTone(s.health) : "muted"} />
-              {s.enabled ? HEALTH_LABEL[s.health] ?? s.health : "已暂停"}
+              {s.enabled ? HEALTH_LABEL[s.health] ?? s.health : "已暫停"}
             </span>
           }
-          hint={s.fail_count ? `连续失败 ${s.fail_count} 次` : `上次成功 ${s.last_ok_at ? bj(s.last_ok_at) : "—"}`}
+          hint={s.fail_count ? `連續失敗 ${s.fail_count} 次` : `上次成功 ${s.last_ok_at ? bj(s.last_ok_at) : "—"}`}
         />
-        <Stat label="累计条目" value={num(stats.total)} />
+        <Stat label="累計條目" value={num(stats.total)} />
         <Stat label="近 7 天" value={num(stats.last7d)} />
-        <Stat label="入选精选" value={num(stats.selected)} />
+        <Stat label="入選精選" value={num(stats.selected)} />
       </div>
       {s.last_error && s.health !== "ok" && <div className="mb-5 rounded-card bg-hot-soft px-4 py-3 text-[13px] text-hot ring-1 ring-hot/20">{s.last_error}</div>}
 
       {preview && (
-        <Card className="mb-5" title={`预览：${preview.count} 条（${preview.ms}ms，未入库）`} right={<button onClick={() => setPreview(null)}>收起</button>}>
+        <Card className="mb-5" title={`預覽：${preview.count} 條（${preview.ms}ms，未入庫）`} right={<button onClick={() => setPreview(null)}>收起</button>}>
           {preview.items.length ? (
             <ul className="space-y-2.5">
               {preview.items.map((i) => (
                 <li key={i.url} className="text-[13px]">
                   <a href={i.url} target="_blank" rel="noreferrer" className="font-medium text-ink hover:text-accent">{i.title}</a>
-                  <div className="text-[12px] text-ink-4">{i.publishedAt ? bj(i.publishedAt, true) : "无发布时间"} · {i.url}</div>
+                  <div className="text-[12px] text-ink-4">{i.publishedAt ? bj(i.publishedAt, true) : "無發布時間"} · {i.url}</div>
                   {i.excerpt && <div className="mt-0.5 line-clamp-2 text-[12.5px] text-ink-3">{i.excerpt}</div>}
                 </li>
               ))}
@@ -241,65 +241,65 @@ export default function SourceDetail({ loaderData }: Route.ComponentProps) {
               {configError && <div className="mt-1 text-[12.5px] text-hot">{configError}</div>}
             </div>
             <div className="mt-4 flex items-center justify-end gap-2">
-              {changes > 0 && <span className="text-[12.5px] text-ink-3">{changes} 项改动未保存</span>}
-              <Button tone="ghost" disabled={!changes} onClick={() => setDraft(draftOf(s))}>还原</Button>
-              <Button tone="primary" disabled={!changes} onClick={() => patch() && setDialog("save")}>保存</Button>
+              {changes > 0 && <span className="text-[12.5px] text-ink-3">{changes} 項改動未儲存</span>}
+              <Button tone="ghost" disabled={!changes} onClick={() => setDraft(draftOf(s))}>還原</Button>
+              <Button tone="primary" disabled={!changes} onClick={() => patch() && setDialog("save")}>儲存</Button>
             </div>
           </Card>
 
-          <Card title="最近条目" pad={false}>
+          <Card title="最近條目" pad={false}>
             <DataTable
               rows={items}
               rowKey={(r) => r.id}
-              empty="还没有采集到内容"
+              empty="尚未擷取到內容"
               columns={[
                 {
                   key: "t",
-                  label: "标题",
+                  label: "標題",
                   render: (r) => (
                     <Link to={`/admin/content/${r.id}`} className="line-clamp-2 min-w-[260px] text-ink hover:text-accent">{r.title_zh || r.title}</Link>
                   ),
                 },
-                { key: "s", label: "状态", render: (r) => <span className="flex gap-1">{r.selected && <Badge tone="accent">精选</Badge>}{r.visibility && r.visibility !== "public" && <Badge tone="warn">{VISIBILITY_LABEL[r.visibility]}</Badge>}<Badge>{r.processing_state}</Badge></span> },
-                { key: "d", label: "发现", render: (r) => <Time at={r.discovered_at} /> },
+                { key: "s", label: "狀態", render: (r) => <span className="flex gap-1">{r.selected && <Badge tone="accent">精選</Badge>}{r.visibility && r.visibility !== "public" && <Badge tone="warn">{VISIBILITY_LABEL[r.visibility]}</Badge>}<Badge>{r.processing_state}</Badge></span> },
+                { key: "d", label: "發現", render: (r) => <Time at={r.discovered_at} /> },
               ]}
             />
           </Card>
         </div>
 
         <div className="space-y-5">
-          <Card title="状态">
+          <Card title="狀態">
             <KV
               items={[
                 ["上次抓取", s.last_fetch_at ? bj(s.last_fetch_at, true) : null],
                 ["上次成功", s.last_ok_at ? bj(s.last_ok_at, true) : null],
                 ["下次抓取", s.next_fetch_at ? bj(s.next_fetch_at, true) : null],
-                ["创建", bj(s.created_at, true)],
+                ["建立", bj(s.created_at, true)],
               ]}
             />
-            {s.cursor && <div className="mt-3"><Json value={s.cursor} label="游标" /></div>}
+            {s.cursor && <div className="mt-3"><Json value={s.cursor} label="游標" /></div>}
           </Card>
-          <Card title="采集记录" pad={false}>
+          <Card title="擷取記錄" pad={false}>
             <DataTable
               dense
               rows={runs}
               rowKey={(r) => r.id}
-              empty="还没有采集记录"
+              empty="尚未有擷取記錄"
               columns={[
-                { key: "at", label: "时间", render: (r) => <span className="num whitespace-nowrap">{bj(r.started_at)}</span> },
+                { key: "at", label: "時間", render: (r) => <span className="num whitespace-nowrap">{bj(r.started_at)}</span> },
                 {
                   key: "st",
-                  label: "结果",
+                  label: "結果",
                   render: (r) => (
                     <span className="inline-flex gap-1">
                       <Badge tone={r.status === "ok" ? "ok" : r.status === "failed" ? "bad" : "muted"} title={r.error ?? undefined}>{r.status}</Badge>
-                      {!!r.detail?.dropped && <Badge tone="bad" title="有一段更早的帖子没能读完，其中的内容可能漏采">可能漏采</Badge>}
-                      {!r.detail?.dropped && !!r.detail?.backlog && <Badge tone="warn" title="帖子多于一轮能读的页数，余下的在后面几轮接着读">续读 {r.detail.backlog} 段</Badge>}
+                      {!!r.detail?.dropped && <Badge tone="bad" title="有一段更早的貼文未能讀完，其中的內容可能漏擷取">可能漏擷取</Badge>}
+                      {!r.detail?.dropped && !!r.detail?.backlog && <Badge tone="warn" title="貼文多於一輪能讀取的頁數，餘下的在後面幾輪接著讀取">續讀 {r.detail.backlog} 段</Badge>}
                     </span>
                   ),
                 },
-                { key: "n", label: "发现/新增", align: "right", render: (r) => `${r.found_count ?? "—"}/${r.new_count ?? "—"}` },
-                { key: "ms", label: "耗时", align: "right", render: (r) => duration(r.started_at, r.finished_at) },
+                { key: "n", label: "發現/新增", align: "right", render: (r) => `${r.found_count ?? "—"}/${r.new_count ?? "—"}` },
+                { key: "ms", label: "耗時", align: "right", render: (r) => duration(r.started_at, r.finished_at) },
               ]}
             />
           </Card>

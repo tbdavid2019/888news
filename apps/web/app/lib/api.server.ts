@@ -2,6 +2,7 @@ import { data, redirect } from "react-router";
 import { detectLocale } from "./i18n/detect.ts";
 import { localizeData } from "./i18n/converter.server.ts";
 import type { Locale } from "./i18n/types.ts";
+import { SITE } from "@aihot/industry/site";
 
 
 const API_BASE = process.env.API_BASE_URL || "http://127.0.0.1:3001";
@@ -38,7 +39,7 @@ export async function apiGet<T>(
   }
   res.headers.forEach((value, name) => init?.responseHeaders?.set(name, value));
   const raw = (await res.json()) as T;
-  const loc = init?.locale ?? (init?.request ? detectLocale(init.request) : null);
+  const loc = init?.locale ?? (init?.request ? detectLocale(init.request) : (typeof window !== "undefined" ? detectLocale() : ((SITE.locale as Locale) || "zh-TW")));
   if (loc === "zh-TW") {
     return localizeData(raw, "zh-TW");
   }

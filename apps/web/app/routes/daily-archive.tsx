@@ -10,7 +10,7 @@ import { Rows, SectionPage } from "../features/report/ReportPaper";
 import { Nameplate } from "../features/report/Nameplate";
 
 export async function loader({ request }: { request: Request }) {
-  const { items: index } = await apiGet<{ items: ReportIndexEntry[] }>("/api/site/reports/daily", { signal: request.signal });
+  const { items: index } = await apiGet<{ items: ReportIndexEntry[] }>("/api/site/reports/daily", { request, signal: request.signal });
   return { index, today: beijingDate(Date.now()) };
 }
 

@@ -54,43 +54,43 @@ export interface BoardCopy {
   howToRead: string;
 }
 
-const GENERAL_READING = "综合多家公开评测，不同模型的参评覆盖不同。";
+const GENERAL_READING = "綜合多家公開評測，不同模型的參評覆蓋不同。";
 
 export const BOARD_COPY: Record<LeaderboardBoardKey, BoardCopy> = {
   overall: {
     key: "overall",
-    name: "综合",
+    name: "綜合",
     title: `${SITE.name} 大模型排行榜`,
-    description: "汇集多种能力的真实评测，找到综合表现更强的模型。",
+    description: "匯集多種能力的真實評測，找到綜合表現更強的模型。",
     howToRead: GENERAL_READING,
   },
   coding: {
     key: "coding",
-    name: "编程",
-    title: `编程模型排行榜 · ${SITE.name}`,
-    description: "从写代码到改仓库，看模型能不能把软件做出来。",
+    name: "程式設計",
+    title: `程式設計模型排行榜 · ${SITE.name}`,
+    description: "從寫程式到改倉庫，看模型能不能把軟體做出來。",
     howToRead: GENERAL_READING,
   },
   reasoning: {
     key: "reasoning",
     name: "推理",
     title: `推理模型排行榜 · ${SITE.name}`,
-    description: "数学、逻辑与陌生规则，看模型能不能想明白新问题。",
+    description: "數學、邏輯與陌生規則，看模型能不能想明白新問題。",
     howToRead: GENERAL_READING,
   },
   knowledge: {
     key: "knowledge",
-    name: "知识",
-    title: `知识模型排行榜 · ${SITE.name}`,
-    description: "事实问答与研究生级科学知识，看知识掌握与回答准确性。",
-    howToRead: "当前知识榜采用 Epoch 的两项评测，来自同一家机构。",
+    name: "知識",
+    title: `知識模型排行榜 · ${SITE.name}`,
+    description: "事實問答與研究生級科學知識，看知識掌握與回答準確性。",
+    howToRead: "當前知識榜採用 Epoch 的兩項評測，來自同一家機構。",
   },
   professional: {
     key: "professional",
-    name: "专业办公",
-    title: `专业办公模型排行榜 · ${SITE.name}`,
-    description: "金融分析、法律咨询与银行业务，看专业任务能否完成。",
-    howToRead: "当前覆盖金融分析、专业咨询与银行业务，尚不能代表所有文档、表格和演示文稿任务。",
+    name: "專業辦公",
+    title: `專業辦公模型排行榜 · ${SITE.name}`,
+    description: "金融分析、法律諮詢與銀行業務，看專業任務能否完成。",
+    howToRead: "當前覆蓋金融分析、專業諮詢與銀行業務，尚不能代表所有文件、試算表和簡報任務。",
   },
 };
 
