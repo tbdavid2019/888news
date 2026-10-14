@@ -3,7 +3,7 @@ import type { ItemDetail, SiteItemDetail, OutlineEntry, StoryRef } from "@aihot/
 import TurndownService from "turndown";
 import { sql } from "../db.ts";
 import { proxyBodyImages } from "../media/imgproxy.ts";
-import { textToHtml } from "../content/sanitize.ts";
+import { cleanTweetText, textToHtml, tweetTextToHtml } from "../content/sanitize.ts";
 import { ITEM_COLUMNS, ITEM_FROM, selectedCondition, toItemSummary, xView, type ItemRow } from "./items.ts";
 import { itemUrl } from "./links.ts";
 import { hasItemPage } from "./rules.ts";
@@ -81,11 +81,13 @@ export async function loadItemDetail(id: string, now = new Date()): Promise<Deta
   let body: ItemDetail["body"] = null;
   let outline: OutlineEntry[] = [];
   if (row.channel === "x") {
-    const text = String(row.x_post?.text ?? row.body_text ?? "");
+    const rawText = String(row.x_post?.text ?? row.body_text ?? "");
+    const cleanedText = cleanTweetText(rawText);
+    const zhText = summary.x?.translation ? cleanTweetText(summary.x.translation) : null;
     body = {
-      zh: summary.x?.translation ? textToHtml(summary.x.translation) : null,
-      original: text ? textToHtml(text) : null,
-      zhKind: summary.x?.translation ? "translation" : null,
+      zh: zhText ? tweetTextToHtml(zhText) : null,
+      original: cleanedText ? tweetTextToHtml(cleanedText) : null,
+      zhKind: zhText ? "translation" : null,
       complete: true,
     };
   } else if (row.body_mode === "full" && row.body_html) {

@@ -5,6 +5,7 @@ import type { FeedItemSummary, ItemSummary, MediaView, SourceKind, XPostView } f
 import { sql, type Db } from "../db.ts";
 import { proxiedImage, proxiedImageSet } from "../media/imgproxy.ts";
 import { displayTags } from "./rules.ts";
+import { cleanTweetText } from "../content/sanitize.ts";
 
 export interface ItemRow {
   id: string;
@@ -127,10 +128,12 @@ function mediaView(m: Record<string, any>, mode: "card" | "thumb" | "full" = "th
 export function xView(row: Pick<ItemRow, "x_post" | "zh_text"> & Partial<Pick<ItemRow, "quoted_zh">>, compact = false, responsive = compact): XPostView | null {
   const x = row.x_post;
   if (!x) return null;
+  const rawText = String(x.text ?? "");
+  const cleanedText = cleanTweetText(rawText);
   const quoted = x.quoted && typeof x.quoted === "object"
     ? {
-      authorName: String(x.quoted.authorName ?? ""), handle: String(x.quoted.handle ?? ""), text: String(x.quoted.text ?? ""), url: String(x.quoted.url ?? ""),
-      translation: row.quoted_zh && row.quoted_zh.trim() !== String(x.quoted.text ?? "").trim() ? row.quoted_zh : null,
+      authorName: String(x.quoted.authorName ?? ""), handle: String(x.quoted.handle ?? ""), text: cleanTweetText(String(x.quoted.text ?? "")), url: String(x.quoted.url ?? ""),
+      translation: row.quoted_zh && row.quoted_zh.trim() !== String(x.quoted.text ?? "").trim() ? cleanTweetText(row.quoted_zh) : null,
     }
     : null;
   const media = ((x.media ?? []) as Array<Record<string, any>>)
@@ -141,8 +144,8 @@ export function xView(row: Pick<ItemRow, "x_post" | "zh_text"> & Partial<Pick<It
     handle: String(x.handle ?? ""),
     avatarUrl: proxiedImage(x.avatarUrl, "avatar"),
     ...(responsive && proxiedImageSet(x.avatarUrl, "avatar") ? { avatarSrcSet: proxiedImageSet(x.avatarUrl, "avatar")! } : {}),
-    text: String(x.text ?? ""),
-    translation: row.zh_text && row.zh_text.trim() !== String(x.text ?? "").trim() ? row.zh_text : null,
+    text: cleanedText,
+    translation: row.zh_text && row.zh_text.trim() !== rawText.trim() ? cleanTweetText(row.zh_text) : null,
     quoted,
     // A multi-image list grid is 112 CSS px wide; one image can be 240 px. Keep 3x pixels for both.
     // Detail retains full media for the lightbox; srcSet bounds the displayed image.

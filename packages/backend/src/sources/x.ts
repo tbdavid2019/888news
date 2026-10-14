@@ -7,6 +7,7 @@ import { sha256 } from "../lib/ids.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
 import { readPageAsMarkdown } from "../providers/reader.ts";
 import { credential } from "../config.ts";
+import { cleanTweetText } from "../content/sanitize.ts";
 
 function avatar(url: string | undefined): string | null {
   // Larger avatar than the default 48px thumbnail.
@@ -237,7 +238,7 @@ export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
       .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/hashtag/.*?\\)`, "gi"), "")
       .trim();
 
-    text = text.replace(/^[^\n]*?@[A-Za-z0-9_]+\s*(?:\[\w+\])?\s*/i, "").trim();
+    text = cleanTweetText(text.replace(/^[^\n]*?@[A-Za-z0-9_]+\s*(?:\[\w+\])?\s*/i, "").trim());
 
     const mediaUrls = Array.from(block.matchAll(/https:\/\/pbs\.twimg\.com\/(?:media|amplify_video_thumb)\/[A-Za-z0-9_-]+\.(?:jpg|png|webp)/g), (m) => m[0]);
     const media = Array.from(new Set(mediaUrls)).map((url) => ({

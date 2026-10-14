@@ -19,6 +19,7 @@ import { GroupSources } from "../features/feed/ReadingGroup";
 import { StoryFollowups } from "../features/item/StoryFollowups";
 import { MediaGallery } from "../features/item/MediaGallery";
 import { QuotedPost } from "../features/item/QuotedPost";
+import { TweetCard } from "../features/item/TweetCard";
 import { IconArrowLeft, IconCopy, IconDownload, IconExternal, IconImage, IconMenu, IconShare } from "../components/icons";
 
 const PosterSheet = lazy(() => import("../features/item/PosterSheet"));
@@ -197,10 +198,23 @@ export default function ItemPage() {
   // under the facts (or under the notes when only the right rail shows).
   const facts = (
     <RailSection title={t("item.source")}>
-      <div className="text-[14px] font-semibold leading-snug text-ink">{isX ? item.x!.authorName : item.source.name}</div>
-      <div className="mt-1 text-[12.5px] leading-relaxed text-ink-3">
-        {isX ? `@${item.x!.handle} · X` : item.author ?? hostOf(item.links.original)}
-      </div>
+      <a
+        href={item.links.original}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group inline-flex items-center gap-1.5 text-[15px] font-bold leading-snug text-ink hover:text-accent transition-colors"
+      >
+        <span>{isX ? item.x!.authorName : item.source.name}</span>
+        <IconExternal size={13} className="text-ink-4 group-hover:text-accent shrink-0" />
+      </a>
+      <a
+        href={item.links.original}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-1 block text-[13px] leading-relaxed text-ink-3 hover:text-accent hover:underline break-all"
+      >
+        {isX ? `@${item.x!.handle} · 在 X 檢視` : item.author ? `${item.author} · ${hostOf(item.links.original)}` : hostOf(item.links.original)}
+      </a>
       <div className="mt-3 text-[12px] text-ink-4">{t("item.published_at")}</div>
       <time dateTime={publishedIso} className="mono mt-0.5 block text-[12.5px] text-ink-2">
         {fullDateTime(publishedIso)}
@@ -289,13 +303,25 @@ export default function ItemPage() {
       >
         <div className="hidden lg:block 2xl:hidden">{backButton}</div>
         <article className="pb-6 pt-6 lg:pt-2 2xl:pt-1">
-          <div className={`flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-ink-3 2xl:hidden ${isX ? "" : "mb-3"}`}>
-            <span className="font-semibold text-ink-2">{isX ? item.x!.authorName : item.source.name}</span>
-            {isX && <span>· @{item.x!.handle} · X</span>}
-            {item.author && !isX && <span>· {item.author}</span>}
-            <span>·</span>
-            <time dateTime={publishedIso} className="mono">{fullDateTime(publishedIso)}</time>
-            <span suppressHydrationWarning>· {relativeTime(publishedIso, locale)}</span>
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <a
+              href={item.links.original}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-raised px-3 py-1 text-[13px] font-medium text-ink-2 shadow-2xs hover:border-accent hover:text-accent transition-colors"
+              title={isX ? "在 X (Twitter) 檢視原始推文" : `前往 ${item.source.name} 閱讀原文`}
+            >
+              {item.source.iconUrl && !isX && (
+                <img src={item.source.iconUrl} alt="" className="size-3.5 rounded-full object-cover shrink-0" />
+              )}
+              <span>{isX ? `𝕏 ${item.x!.authorName}` : item.source.name}</span>
+              <span className="font-mono text-[12px] text-ink-4">({hostOf(item.links.original)})</span>
+              <IconExternal size={11} className="shrink-0 text-ink-4 group-hover:text-accent" />
+            </a>
+            {item.author && !isX && <span className="text-[13px] text-ink-3">· {item.author}</span>}
+            <span className="text-ink-4">·</span>
+            <time dateTime={publishedIso} className="mono text-[12.5px] text-ink-3">{fullDateTime(publishedIso)}</time>
+            <span className="text-[12px] text-ink-4" suppressHydrationWarning>· {relativeTime(publishedIso, locale)}</span>
             {item.selected && (
               <span className="ml-1 lg:hidden">
                 <SelectedBadge />
@@ -360,9 +386,44 @@ export default function ItemPage() {
             </div>
           )}
 
-          {summaryOnly && <p className="mt-7 rounded-control bg-bg-sunk px-4 py-3 text-[13.5px] leading-relaxed text-ink-3">{t("item.summary_only_note")}</p>}
+          {/* Non-X article without embedded fulltext: prominent "Read Original" card */}
+          {!item.body && !isX && (
+            <div className="mt-8 rounded-2xl border border-line bg-surface-raised p-5 sm:p-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-md bg-accent/10 px-2.5 py-0.5 text-[12px] font-semibold text-accent">
+                      信源出處
+                    </span>
+                    <span className="text-[13px] text-ink-4 font-mono">{hostOf(item.links.original)}</span>
+                  </div>
+                  <h4 className="text-[17px] sm:text-[18px] font-bold text-ink leading-snug">
+                    {item.originalTitle || item.title}
+                  </h4>
+                  <p className="text-[14.5px] text-ink-3 leading-relaxed">
+                    本文為 888news AI 精選之重點導讀。若需閱讀作者完整原文、技術細節與官方討論，請前往原始網站。
+                  </p>
+                </div>
+                <a
+                  href={item.links.original}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-[14.5px] font-semibold text-white shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+                >
+                  <span>{originalLabel}</span>
+                  <IconExternal size={15} />
+                </a>
+              </div>
+            </div>
+          )}
 
-          {item.body && bodyHtml && (
+          {/* Dedicated Tweet presentation for X posts */}
+          {isX && (
+            <TweetCard item={item} bodyHtml={bodyHtml} lang={lang} />
+          )}
+
+          {/* Standard Article Body for non-X long-form articles */}
+          {!isX && item.body && bodyHtml && (
             <section className="mt-9 border-t border-line pt-4 xl:mt-10">
               <div className="mb-6 flex items-center justify-between gap-3">
                 <span className="text-[12px] text-ink-4">{bodyLabel}</span>
@@ -386,16 +447,25 @@ export default function ItemPage() {
             </section>
           )}
 
-          {isX && item.x!.media.length > 0 && <MediaGallery media={item.x!.media} postUrl={item.links.original} />}
-          {isX && item.x!.quoted?.text && <QuotedPost quoted={item.x!.quoted} original={lang === "original"} />}
-
-          <p className="mt-8 text-[13px] text-ink-4">
-            {t("item.source_attribution")}
-            <a href={item.links.original} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-accent">
-              {isX ? item.x!.authorName : item.source.name}
+          {/* Prominent Footer Source Attribution */}
+          <div className="mt-10 pt-5 border-t border-line flex flex-wrap items-center justify-between gap-4">
+            <div className="text-[14px] text-ink-3">
+              {t("item.source_attribution")}{" "}
+              <a href={item.links.original} target="_blank" rel="noopener noreferrer" className="font-semibold text-ink hover:text-accent underline underline-offset-4 decoration-line">
+                {isX ? item.x!.authorName : item.source.name}
+              </a>
+              <span className="text-ink-4"> ({hostOf(item.links.original)})</span>
+            </div>
+            <a
+              href={item.links.original}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-4 py-2 text-[13.5px] font-medium text-ink-2 hover:border-accent hover:text-accent shadow-2xs transition-colors"
+            >
+              <span>{originalLabel}</span>
+              <IconExternal size={14} />
             </a>
-            <span> · {hostOf(item.links.original)}</span>
-          </p>
+          </div>
 
           {item.tags.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-1.5 lg:hidden">

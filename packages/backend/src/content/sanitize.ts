@@ -183,6 +183,68 @@ function resolveUrl(href: string, base?: string): string {
   }
 }
 
+/** Strips 2md / web-scraper artifacts, X signup modals, and engagement footers from tweet text. */
+export function cleanTweetText(rawText: string): string {
+  if (!rawText) return "";
+  let text = rawText;
+
+  // 1. Truncate trailing X login/signup footers and legal garbage
+  const cutOffPatterns = [
+    /\n+##\s+Log in or sign up[\s\S]*/i,
+    /\n+See what[’']s happening and join the conversation[\s\S]*/i,
+    /\n+\[Log in with username or email\][\s\S]*/i,
+    /\n+\[Terms\]\(https:\/\/x\.com\/tos\)[\s\S]*/i,
+    /\n+Don['’]t miss what['’]s happening[\s\S]*/i,
+    /\n+New to X\?[\s\S]*/i,
+  ];
+  for (const pat of cutOffPatterns) {
+    text = text.replace(pat, "");
+  }
+
+  // 2. Strip trailing tweet action bars / reply engagement counts
+  text = text.replace(/\n*\[\d+\]\(https:\/\/x\.com\/compose\/post\?[^\)]+\)[\s\d\.KkMmBb]*$/gi, "");
+  text = text.replace(/\s+\[\d+\]\(https:\/\/x\.com\/compose\/post\?[^\)]+\)[\s\d\.KkMmBb]*$/gi, "");
+  text = text.replace(/\n*\b\d+\s+\d+[KkMm]?\s+\d+[KkMm]?\s*$/g, "");
+
+  // 3. Fix broken markdown links or orphan brackets from initial regex replacements
+  text = text.replace(/^\]\([^\)]+\)\s*/g, "");
+  text = text.replace(/^\[!\[Image.*?\]\(.*?\)\]\s*/g, "");
+
+  // 4. Remove leading reply mention leftovers if any
+  text = text.replace(/^[^\n]*?detects scam emails \[@\w+\]\(.*?\) \[\w+\]\(https:\/\/x\.com\/.*?\/status\/\d+\)\s*/i, "");
+  text = text.replace(/^.*?\[@\w+\]\(https:\/\/x\.com\/\w+\)\s+\[\w+\]\(https:\/\/x\.com\/\w+\/status\/\d+\)\s*/i, "");
+
+  return text.trim();
+}
+
+/** Converts tweet text into clean, readable HTML with clickable links, @mentions, and #hashtags. */
+export function tweetTextToHtml(text: string): string {
+  const cleaned = cleanTweetText(text);
+  if (!cleaned) return "";
+
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  let html = esc(cleaned);
+
+  // Replace markdown links: [text](url)
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-accent underline underline-offset-2 font-medium">$1</a>');
+
+  // Replace bare URLs (not already part of an href)
+  html = html.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="text-accent underline underline-offset-2 break-all">$2</a>');
+
+  // Replace @mentions: @handle -> link to X profile
+  html = html.replace(/(^|[\s(])@([A-Za-z0-9_]{1,20})\b/g, '$1<a href="https://x.com/$2" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline font-medium">@$2</a>');
+
+  // Replace #hashtags
+  html = html.replace(/(^|[\s(])#([A-Za-z0-9_\u4e00-\u9fa5]+)\b/g, '$1<a href="https://x.com/hashtag/$2" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">#$2</a>');
+
+  return html
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p class="leading-[1.75] mb-3">${p.replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
 /** Plain paragraphs to HTML, for sources that only give text (X posts, translations). */
 export function textToHtml(text: string): string {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -193,3 +255,4 @@ export function textToHtml(text: string): string {
     .map((para) => `<p>${esc(para).replace(/\n/g, "<br>")}</p>`)
     .join("");
 }
+
