@@ -99,7 +99,7 @@ export default function Sources({ loaderData }: Route.ComponentProps) {
                 </div>
               ),
             },
-            { key: "kind", label: "類型", render: (r) => <Badge>{KIND_LABEL[r.kind] ?? r.kind}</Badge> },
+            { key: "kind", label: "類型", render: (r) => <Badge tone={r.id.startsWith("pod_") ? "accent" : undefined}>{r.id.startsWith("pod_") ? "Podcast" : (KIND_LABEL[r.kind] ?? r.kind)}</Badge> },
             {
               key: "mode",
               label: "參與",

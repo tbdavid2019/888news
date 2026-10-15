@@ -132,31 +132,40 @@ export default function SourceDetail({ loaderData }: Route.ComponentProps) {
       title={
         <span className="flex flex-wrap items-center gap-2">
           {s.name}
-          <Badge>{KIND_LABEL[s.kind] ?? s.kind}</Badge>
+          <Badge tone={s.id.startsWith("pod_") ? "accent" : undefined}>{s.id.startsWith("pod_") ? "Podcast 智庫" : (KIND_LABEL[s.kind] ?? s.kind)}</Badge>
           <Badge tone={s.participation_mode === "editorial" ? "accent" : "muted"}>{MODE_LABEL[s.participation_mode]}</Badge>
         </span>
       }
       subtitle={<span className="font-mono text-[12px]">{s.id}</span>}
       actions={
         <>
-          <Button
-            busy={pending === "preview"}
-            onClick={async () => {
-              const r = await run<Preview>("POST", `${base}/preview`, {}, { label: "preview", revalidate: false });
-              if (r) setPreview(r);
-            }}
-          >
-            預覽抓取
-          </Button>
-          <Button busy={pending === "fetch"} onClick={() => run("POST", `${base}/fetch`, {}, { label: "fetch", success: "已加入擷取佇列" })}>
-            立即擷取
-          </Button>
+          {(s.kind !== "external" || s.id.startsWith("pod_")) && (
+            <>
+              <Button
+                busy={pending === "preview"}
+                onClick={async () => {
+                  const r = await run<Preview>("POST", `${base}/preview`, {}, { label: "preview", revalidate: false });
+                  if (r) setPreview(r);
+                }}
+              >
+                預覽抓取
+              </Button>
+              <Button busy={pending === "fetch"} onClick={() => run("POST", `${base}/fetch`, {}, { label: "fetch", success: s.id.startsWith("pod_") ? "已同步最新 Podcast 單集" : "已加入擷取佇列" })}>
+                立即擷取
+              </Button>
+            </>
+          )}
           <Button tone={s.enabled ? "danger" : "primary"} onClick={() => setDialog("toggle")}>
             {s.enabled ? "暫停" : "恢復"}
           </Button>
         </>
       }
     >
+      {s.id.startsWith("pod_") && (
+        <div className="mb-5 rounded-card bg-accent-soft/40 px-4 py-3 text-[13px] text-ink-2 ring-1 ring-accent/20">
+          此信源為 Podcast 頻道映射，單集由 Podcast 智庫自動同步。點擊上方「立即擷取」可手動觸發即時同步並更新精選文章池。
+        </div>
+      )}
       <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat
           label="健康"

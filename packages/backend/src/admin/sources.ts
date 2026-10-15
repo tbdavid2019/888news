@@ -75,7 +75,23 @@ export async function previewSource(draft: Pick<SourceRow, "id" | "kind" | "conf
   assertSupportedConfig(source.kind, source.config);
   const started = Date.now();
   let candidates;
-  if (source.kind === "rss") candidates = (await fetchRss(source, { force: true })).candidates;
+  if (source.id?.startsWith("pod_")) {
+    const podcastId = source.id.replace(/^pod_/, "");
+    const eps = await sql<{ title: string; url: string; published_at: Date; summary_zh: string | null }[]>`
+      SELECT title, url, published_at, summary_zh
+      FROM podcast_episodes
+      WHERE podcast_id = ${podcastId}
+      ORDER BY published_at DESC
+      LIMIT 20
+    `;
+    candidates = eps.map((e) => ({
+      title: e.title,
+      url: e.url,
+      publishedAt: e.published_at,
+      excerpt: e.summary_zh ?? "",
+      bodyText: e.summary_zh ?? "",
+    }));
+  } else if (source.kind === "rss") candidates = (await fetchRss(source, { force: true })).candidates;
   else if (source.kind === "web_list") candidates = await fetchWebList(source);
   else if (source.kind === "json_list") candidates = await fetchJsonList(source);
   else if (source.kind === "x_search") candidates = (await fetchXSearch(source)).candidates;
@@ -197,6 +213,17 @@ export async function createSource(input: unknown, actor: string) {
 export async function fetchNow(id: string, actor: string) {
   const [s] = await sql<{ id: string; kind: string }[]>`SELECT id, kind FROM sources WHERE id = ${id}`;
   if (!s) return null;
+  if (id.startsWith("pod_")) {
+    const { syncBigGoPodcastEpisodes } = await import("../sources/podcast-sync.ts");
+    await syncBigGoPodcastEpisodes({ limit: 50 });
+    await sql`
+      UPDATE sources
+      SET health = 'ok', last_fetch_at = now(), last_ok_at = now(), updated_at = now()
+      WHERE id = ${id}
+    `;
+    await audit(actor, "source.fetch", `source:${id}`, null, null, { type: "podcast_sync" });
+    return { jobId: `pod_sync_${Date.now()}` };
+  }
   const jobId =
     s.kind === "mp_account"
       ? await enqueue(QUEUES.mpCheck, { sourceId: id, reason: "manual" }, { singletonKey: `mp:${id}` })
