@@ -2,6 +2,38 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-15] — 🛡️ Cloudflare Edge 反向代理突破機房限速、Podcast 自動排程更新與後台管理升級
+
+### 🛡️ Cloudflare Edge 反向代理與 BigGo 雙重容錯架構 (Edge Proxy & Datacenter Anti-Rate Limiting)
+- **突破 AWS 機房 IP 限制 (HTTP 429 Rate Limit Exceeded)**：
+  - **根本原因**：遠端伺服器（AWS EC2 IP `35.163.156.107`）直接向 BigGo API 請求時，會被 BigGo 端的 Envoy 閘道判定為資料中心 IP 而強制攔截並回傳 HTTP 429。
+  - **邊緣代理架構**：於 Cloudflare 部署專屬 Edge 反向代理服務（`biggo-podcast-proxy.oobwei.workers.dev`），藉由 Cloudflare 全球 Anycast 邊緣網路節點轉發請求，徹底規避機房 IP 限制。
+  - **多層級聯輪循容錯**：在 [`packages/backend/src/sources/podcast-sync.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/sources/podcast-sync.ts) 實作雙重降級保護，優先走 Cloudflare Edge 代理端點，若遇網路抖動或異常則透明回退至直接連線，並內建指數退避重試與詳細偵錯日誌。
+
+### 🔄 Podcast 定時自動抓取與線上單集成功刷新 (Automated Ingestion & Sync Verification)
+- **Worker Cron 排程常駐自動同步**：
+  - 在背景工作排程（[`apps/worker/src/schedules.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/worker/src/schedules.ts)）中將 BigGo Podcast 單集同步正式納入每 30 分鐘執行一次的 `syncPodcastFeeds`。
+  - 伺服器端實測批次同步成功寫入 200 檔全新熱門單集（`{ total: 200, inserted: 200 }`），完全消除資料無更新的問題。
+- **線上即時資料驗證**：
+  - 線上端點 `/podcast/recommend` 與 `/api/site/podcast/recommend` 資料即時刷新至當日（2026-10-15），涵蓋：
+    - *All-In with Chamath, Jason, Sacks & Friedberg* (2026-10-15 02:41:18Z)
+    - *张小珺Jùn｜商业访谈录* (2026-10-15 00:49:30Z)
+    - *Bloomberg Businessweek* (2026-10-14 22:49:12Z)
+    - *晚点聊 LateTalk* (2026-10-14 22:30:00Z)
+    - *Latent Space* (2026-10-14 20:34:51Z)
+
+### 📊 後台「需要核對的付費收據」新增「發生時間」 (Admin Receipts Timeline)
+- **精確時間戳欄位**：
+  - 在後台「需要核對的付費收據」列表（[`apps/web/app/routes/admin/runs.tsx`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/web/app/routes/admin/runs.tsx)）中，於「狀態」與「服務」之間正式新增「發生時間」欄位。
+  - 支援相對時間友善展示（如「15分鐘前」），滑鼠懸停（tooltip）即顯示完整精確 ISO 時間戳，利於管理員即時核對異常調用與計費事件。
+
+### 🎙️ 後台信源管理：Podcast 頻道標識與即時抓取/預覽修復 (Admin Source Diagnostics)
+- **Podcast 智庫專屬識別標籤**：
+  - 在後台信源管理（[`apps/web/app/routes/admin/sources.tsx`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/web/app/routes/admin/sources.tsx) 及 [`source.tsx`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/web/app/routes/admin/source.tsx)）中，針對 `pod_*` 信源標記專屬「Podcast 智庫」徽章，並提供清楚的排程同步說明。
+- **支援手動即時擷取與單集預覽**：
+  - 修復點擊「預覽抓取」與「立即擷取」時拋出 `preview is not available for external sources` 的錯誤。
+  - 後端 [`packages/backend/src/admin/sources.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/admin/sources.ts) 自動識別 Podcast 來源代碼，從資料庫最新抓取的單集中提取真實資料進行預覽與手動重新觸發同步，方便即時維護與診斷。
+
 ---
 
 ## [2026-10-14] — 🎙️ 全球 Podcast 智庫頻道、即時美股/台股行情聯動、雙向打通與 12pt Zen Kaku 字型升級

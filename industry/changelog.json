@@ -1,6 +1,30 @@
 {
-  "latestVersion": "2026-10-09 19:55",
+  "latestVersion": "2026-10-15 12:45",
   "releases": [
+    {
+      "date": "2026-10-15",
+      "time": "12:45",
+      "kind": "架構升級",
+      "title": "Cloudflare Edge 反向代理突破機房限速、Podcast 自動排程更新與後台管理升級",
+      "body": [
+        "Cloudflare Edge 反向代理：部署專屬邊緣代理 biggo-podcast-proxy，徹底突破 AWS 機房 IP 遭遇之 HTTP 429 限制，建立多層級聯容錯機制。",
+        "Podcast 排程自動抓取：Worker 定時巡檢同步 BigGo 熱門單集，最新資料即時刷新至 2026-10-15。",
+        "付費收據時間戳：後台「需要核對的付費收據」新增「發生時間」欄位，支援相對時間與精確時間戳懸停。",
+        "信源管理診斷修復：Podcast 頻道清楚標記為「Podcast 智庫」，支援手動即時擷取與單集預覽。"
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "time": "18:00",
+      "kind": "功能發布",
+      "title": "全球 Podcast 智庫頻道、即時美股/台股行情聯動、雙向打通與 12pt Zen Kaku 字型升級",
+      "body": [
+        "100+ 頂尖 Podcast 智庫目錄與零磁碟 HTML5 音訊串流播放器，支援跨頁面記憶與離線收藏。",
+        "Yahoo Finance 即時上市公司行情聯動，真實漲跌百分比與即時股價動態快取。",
+        "雙向打通：Podcast 全面匯流進主站內容生態，支援標籤聚合與觀點精選。",
+        "視覺與排版標準升級：全站引入 Zen Kaku Gothic New 與 JetBrains Mono 字型，全面落實 12pt (16px) 正體中文排版。"
+      ]
+    },
     {
       "date": "2026-10-09",
       "time": "19:55",
