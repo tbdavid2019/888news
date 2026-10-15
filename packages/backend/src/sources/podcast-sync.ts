@@ -28,15 +28,25 @@ export async function syncBigGoPodcastEpisodes(
     }
   } else {
     try {
-      const apiUrl =
-        process.env.BIGGO_PODCAST_API_URL ||
-        `https://api.biggo.com/api/v1/finance/podcast/list?limit=${limit}`;
-      const res = await guardedFetch(apiUrl, { timeoutMs: 15_000 });
-      if (res.status === 200) {
-        const json = JSON.parse(res.text());
-        episodes = json.data?.episodes ?? [];
-      } else {
-        console.warn(`BigGo podcast API returned HTTP ${res.status}`);
+      const defaultUrl = `https://api.biggo.com/api/v1/finance/podcast/list?limit=${limit}`;
+      const proxyUrl = `https://biggo-podcast-proxy.oobwei.workers.dev/api/v1/finance/podcast/list?limit=${limit}`;
+      const targetUrls = process.env.BIGGO_PODCAST_API_URL
+        ? [process.env.BIGGO_PODCAST_API_URL]
+        : [proxyUrl, defaultUrl];
+
+      for (const u of targetUrls) {
+        try {
+          const res = await guardedFetch(u, { timeoutMs: 15_000 });
+          if (res.status === 200) {
+            const json = JSON.parse(res.text());
+            episodes = json.data?.episodes ?? [];
+            if (episodes.length > 0) break;
+          } else {
+            console.warn(`BigGo podcast API (${u}) returned HTTP ${res.status}`);
+          }
+        } catch (e) {
+          console.warn(`BigGo podcast API fetch failed for ${u}:`, e);
+        }
       }
     } catch (err) {
       console.warn("Failed to fetch live BigGo podcast API, falling back to local snapshot if present:", err);
