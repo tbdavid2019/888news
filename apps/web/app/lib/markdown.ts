@@ -126,9 +126,14 @@ export function formatArticleSummary(summary: string): string {
     // Check if the rest has semicolons separating points
     if (rest.includes("；")) {
       const parts = rest.split(/；\s*/).map((p) => p.trim()).filter(Boolean);
-      if (parts.length >= 2) {
-        const bullets = parts.map((p) => `- ${/[。！？]$/.test(p) ? p : p + "。"}`).join("\n");
+      // Filter out trailing incomplete fragments (e.g. truncated mid-sentence ending with comma or colon)
+      const validParts = parts.filter((p) => p.length >= 8 && !/[,，、：:\s]$/.test(p));
+      if (validParts.length >= 2) {
+        const bullets = validParts.map((p) => `- ${/[。！？]$/.test(p) ? p : p + "。"}`).join("\n");
         return `${lead}\n\n${bullets}`;
+      } else if (validParts.length === 1) {
+        const single = validParts[0]!;
+        return `${lead}\n\n- ${/[。！？]$/.test(single) ? single : single + "。"}`;
       }
     }
     // If the rest contains 2 or more complete sentences, format as bullet points for readability

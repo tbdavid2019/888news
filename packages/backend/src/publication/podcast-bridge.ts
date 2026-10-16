@@ -54,6 +54,8 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
     title: string;
     title_zh: string | null;
     summary_zh: string | null;
+    body_text: string | null;
+    body_html: string | null;
     published_at: Date;
     created_at: Date;
     audio_url: string | null;
@@ -76,6 +78,8 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
       e.title,
       e.title_zh,
       e.summary_zh,
+      e.body_text,
+      e.body_html,
       e.published_at,
       e.created_at,
       e.audio_url,
@@ -105,6 +109,9 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
     const displayTitle = ep.title_zh || ep.title;
     const originalTitle = ep.title;
     const summary = ep.summary_zh || "";
+    const bodyText = ep.body_text || summary;
+    const bodyHtml = ep.body_html || null;
+    const bodyMode = bodyHtml ? "full" : "summary";
     const numScore = ep.score !== null ? Number(ep.score) : 85;
     const isSelected = ep.selected || numScore >= 80;
 
@@ -130,20 +137,21 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
       INSERT INTO articles (
         id, source_id, identity_key, url, title, author, language,
         published_at, published_at_claim, discovered_at, timeline_at,
-        excerpt, body_text, body_status, raw, updated_at
+        excerpt, body_text, body_html, body_status, raw, updated_at
       ) VALUES (
         ${articleId}, ${sourceId}, ${identityKey},
         ${ep.url || ep.audio_url || "https://888news.david888.com/podcast/recommend"},
         ${displayTitle},
         ${ep.hosts?.[0] || ep.podcast_title},
-        ${ep.language || "en"},
+        ${ep.language || "zh-TW"},
         ${ep.published_at},
         ${ep.published_at},
         ${ep.created_at || new Date()},
         ${ep.published_at},
         ${(summary || displayTitle).slice(0, 500)},
-        ${summary},
-        'ok',
+        ${bodyText},
+        ${bodyHtml},
+        ${bodyHtml ? 'ok' : 'none'},
         ${JSON.stringify(rawMeta)},
         now()
       )
@@ -151,6 +159,8 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
         title = EXCLUDED.title,
         excerpt = EXCLUDED.excerpt,
         body_text = EXCLUDED.body_text,
+        body_html = COALESCE(EXCLUDED.body_html, articles.body_html),
+        body_status = COALESCE(EXCLUDED.body_status, articles.body_status),
         raw = EXCLUDED.raw,
         updated_at = now()
     `;
@@ -201,7 +211,7 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
         ${ep.published_at},
         ${ep.published_at},
         now(),
-        'summary',
+        ${bodyMode},
         false,
         true,
         ${searchText},
@@ -211,6 +221,7 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
         title = EXCLUDED.title,
         original_title = EXCLUDED.original_title,
         summary = EXCLUDED.summary,
+        body_mode = EXCLUDED.body_mode,
         category = EXCLUDED.category,
         tags = EXCLUDED.tags,
         score = EXCLUDED.score,

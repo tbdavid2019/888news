@@ -37,8 +37,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
   const q = f?.q;
   const page = loaderData?.data.page ?? 1;
   return pageMeta({
-    title: q ? `搜尋：${q}` : `全部${withSubject("動態")}`,
-    description: `${SITE.name} 收錄的全部${withSubject("動態")}，可按類別與標籤篩選，支援中英文搜尋。`,
+    title: q ? `搜尋：${q}` : "全部動態",
+    description: `${SITE.name} 收錄的全部動態，可按類別與標籤篩選，支援中英文搜尋。`,
     path: listPath("/all", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, q, tab: f?.tab === "relevance" ? "relevance" : null, page: page > 1 ? page : null }),
     noindex: !!q,
   });
@@ -81,7 +81,7 @@ export default function AllPage() {
       {/* Desktop, as on 精選: the title, then one filter row with the search field aligned on the right. */}
       <div className="hidden lg:block">
         <div className="flex items-center justify-between">
-          <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">{title ?? `全部${withSubject("動態")}`}</h1>
+          <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">{title ?? "全部動態"}</h1>
           <a
             href="/feed/all.xml"
             target="_blank"
