@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-176b75?style=flat-square" alt="MIT License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-176b75?style=flat-square" alt="AGPL-3.0 License"></a>
   <img src="https://img.shields.io/badge/Node.js-24-176b75?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 24">
   <img src="https://img.shields.io/badge/PostgreSQL-17-176b75?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL 17">
   <img src="https://img.shields.io/badge/Docker-Compose-176b75?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose">
@@ -239,5 +239,5 @@ industry/
 
 ## 授權協議
 
-本專案基於 [MIT 授權條款](LICENSE) 開源。  
+本專案基於 [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE) 開源。  
 字體、部分展示商標與信源標誌各有其版權所屬，詳見 [NOTICE](NOTICE)。
