@@ -1,6 +1,7 @@
 // Scheduled synchronization of podcast feeds.
 // Respects Zero-Disk policy: text and metadata only.
 import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { sql } from "../db.ts";
 import { REPO_ROOT } from "../config.ts";
@@ -258,6 +259,34 @@ export async function syncBigGoPodcastEpisodes(
   return { total: episodes.length, inserted };
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsChinese(s: string): boolean {
+  return /[\u4e00-\u9fa5]/.test(s);
+}
+
+export function matchAliasInText(alias: string, text: string, lowerText: string): boolean {
+  const lowerAlias = alias.toLowerCase().trim();
+  if (!lowerAlias) return false;
+
+  // CJK characters: \b (ASCII word boundary) fails on Chinese; use substring check
+  if (containsChinese(lowerAlias)) {
+    return lowerText.includes(lowerAlias);
+  }
+
+  // Pure ASCII words: require word boundary to avoid false positives inside other words (e.g. AWS vs straws)
+  if (/^[a-z0-9_-]+$/i.test(lowerAlias)) {
+    const regex = new RegExp(`\\b${escapeRegExp(lowerAlias)}\\b`, "i");
+    return regex.test(text);
+  }
+
+  // Terms with symbols (e.g. "Z.ai"): match bounded by non-alphanumeric or start/end
+  const regex = new RegExp(`(^|[^a-zA-Z0-9])${escapeRegExp(lowerAlias)}($|[^a-zA-Z0-9])`, "i");
+  return regex.test(text);
+}
+
 export async function associateEntitiesAndTickers(
   epId: string,
   textToScan: string,
@@ -270,20 +299,25 @@ export async function associateEntitiesAndTickers(
     for (const comp of explicitCompanies) {
       if (comp.symbol) {
         const sym = comp.symbol.toUpperCase();
-        let entityId = comp.name || sym;
-        const lowerName = (comp.name || "").toLowerCase();
+        let entityId: string | null = null;
+        const lowerName = (comp.name || "").toLowerCase().trim();
+
         for (const [taxId, taxDef] of Object.entries(ENTITIES)) {
           if (
             taxId === lowerName ||
             taxDef.name.toLowerCase() === lowerName ||
             taxDef.ticker?.symbol.toUpperCase() === sym ||
-            taxDef.aliases.some((a) => a.toLowerCase() === lowerName)
+            taxDef.aliases.some((a) => a.toLowerCase() === lowerName || lowerName.includes(a.toLowerCase()))
           ) {
             entityId = taxId;
             break;
           }
         }
-        matchedTickers.set(sym, entityId);
+
+        // Only persist if entityId maps to a validated taxonomy entity
+        if (entityId) {
+          matchedTickers.set(sym, entityId);
+        }
       }
     }
   }
@@ -297,14 +331,7 @@ export async function associateEntitiesAndTickers(
 
     const matches =
       lowerText.includes(taxDef.name.toLowerCase()) ||
-      taxDef.aliases.some((alias) => {
-        const a = alias.toLowerCase();
-        if (a.length <= 3) {
-          const regex = new RegExp(`\\b${a}\\b`, "i");
-          return regex.test(textToScan);
-        }
-        return lowerText.includes(a);
-      });
+      taxDef.aliases.some((alias) => matchAliasInText(alias, textToScan, lowerText));
 
     if (matches) {
       matchedTickers.set(sym, taxId);
@@ -313,11 +340,15 @@ export async function associateEntitiesAndTickers(
 
   // 3. Persist to podcast_episode_tickers
   for (const [sym, entityId] of matchedTickers.entries()) {
-    await sql`
-      INSERT INTO podcast_episode_tickers (episode_id, ticker, entity_id)
-      VALUES (${epId}, ${sym}, ${entityId})
-      ON CONFLICT (episode_id, ticker) DO UPDATE SET entity_id = EXCLUDED.entity_id
-    `.catch(() => {});
+    try {
+      await sql`
+        INSERT INTO podcast_episode_tickers (episode_id, ticker, entity_id)
+        VALUES (${epId}, ${sym}, ${entityId})
+        ON CONFLICT (episode_id, ticker) DO UPDATE SET entity_id = EXCLUDED.entity_id
+      `;
+    } catch (err) {
+      console.warn(`Failed to link ticker ${sym} to episode ${epId}:`, err);
+    }
   }
 }
 
@@ -325,6 +356,7 @@ export interface SyncPodcastFeedsOptions {
   skipBigGo?: boolean;
   limitChannels?: number;
   batchSize?: number;
+  maxEpisodesPerFeed?: number;
 }
 
 export async function syncPodcastFeeds(
@@ -354,6 +386,7 @@ export async function syncPodcastFeeds(
 
   const channels = options.limitChannels ? allChannels.slice(0, options.limitChannels) : allChannels;
   let synced = 0;
+  const maxEpisodes = options.maxEpisodesPerFeed ?? 30;
 
   // Process channels concurrently in batches to balance speed and zero-disk / memory efficiency
   const batchSize = options.batchSize ?? 5;
@@ -367,9 +400,13 @@ export async function syncPodcastFeeds(
           if (res.status < 200 || res.status >= 300) return;
           const xml = res.text();
           const parsed = parsePodcastFeedXml(xml);
+          const episodesToProcess = parsed.episodes.slice(0, maxEpisodes);
 
-          for (const ep of parsed.episodes) {
-            const epId = `${c.id}-${ep.guid}`.toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 80);
+          for (const ep of episodesToProcess) {
+            if (!ep.title) continue;
+            const guidHash = createHash("sha1").update(ep.guid || ep.link || ep.title).digest("hex").slice(0, 16);
+            const epId = `${c.id}-${guidHash}`;
+            const validAudioUrl = ep.audioUrl && ep.audioUrl.trim().length > 0 ? ep.audioUrl.trim() : null;
 
             // Check if this episode already exists in database (e.g. from BigGo or previous RSS fetch)
             const existing = await sql<{ id: string; audio_url: string | null; body_html: string | null }[]>`
@@ -390,22 +427,26 @@ export async function syncPodcastFeeds(
             `.catch(() => []);
 
             if (existing.length > 0 && existing[0]) {
-              // Enrich existing episode with direct audio stream & notes if missing, without destroying BigGo intelligence
-              const matchedId = existing[0].id;
-              await sql`
-                UPDATE podcast_episodes
-                SET
-                  audio_url = COALESCE(audio_url, ${ep.audioUrl}),
-                  audio_duration_sec = COALESCE(audio_duration_sec, ${ep.audioDurationSec ?? null}),
-                  audio_duration_str = COALESCE(audio_duration_str, ${ep.audioDurationStr ?? null}),
-                  body_text = COALESCE(body_text, ${ep.showNotes}),
-                  body_html = COALESCE(body_html, ${ep.showNotes ? convertMarkdownToHtml(ep.showNotes) : null}),
-                  cover_url = COALESCE(cover_url, ${ep.coverUrl ?? null}),
-                  updated_at = now()
-                WHERE id = ${matchedId}
-              `.catch(() => {});
-              await associateEntitiesAndTickers(matchedId, `${ep.title} ${ep.showNotes}`);
-              episodesEnriched++;
+              const matched = existing[0];
+              const shouldUpdateAudio = validAudioUrl && !matched.audio_url;
+              const shouldUpdateBody = ep.showNotes && !matched.body_html;
+
+              if (shouldUpdateAudio || shouldUpdateBody) {
+                await sql`
+                  UPDATE podcast_episodes
+                  SET
+                    audio_url = COALESCE(audio_url, ${validAudioUrl}),
+                    audio_duration_sec = COALESCE(audio_duration_sec, ${ep.audioDurationSec ?? null}),
+                    audio_duration_str = COALESCE(audio_duration_str, ${ep.audioDurationStr ?? null}),
+                    body_text = COALESCE(body_text, ${ep.showNotes}),
+                    body_html = COALESCE(body_html, ${ep.showNotes ? convertMarkdownToHtml(ep.showNotes) : null}),
+                    cover_url = COALESCE(cover_url, ${ep.coverUrl ?? null}),
+                    updated_at = now()
+                  WHERE id = ${matched.id}
+                `.catch((err) => console.warn(`Failed to enrich episode ${matched.id}:`, err));
+                episodesEnriched++;
+              }
+              await associateEntitiesAndTickers(matched.id, `${ep.title} ${ep.showNotes}`);
               continue;
             }
 
@@ -414,19 +455,21 @@ export async function syncPodcastFeeds(
             const bodyText = ep.showNotes;
             const bodyHtml = ep.showNotes ? convertMarkdownToHtml(ep.showNotes) : null;
             const searchText = `${ep.title} ${ep.showNotes}`.slice(0, 2000).toLowerCase();
+            const detectedLang = containsChinese(`${ep.title} ${ep.showNotes}`) ? "zh-TW" : "en";
+            const episodeAudioUrl = validAudioUrl || ep.link || "https://888news.david888.com/podcast";
 
-            const ins = await sql`
+            const ins = await sql<{ inserted: boolean }[]>`
               INSERT INTO podcast_episodes (
                 id, podcast_id, guid, url, title, title_zh, published_at, audio_url,
                 audio_duration_sec, audio_duration_str, hosts, guests, language,
                 summary_zh, body_text, body_html, key_points, cover_url, search_text,
                 selected, score, updated_at
               ) VALUES (
-                ${epId}, ${c.id}, ${ep.guid}, ${ep.link || ep.audioUrl}, ${ep.title}, ${ep.title},
-                ${ep.publishedAt}, ${ep.audioUrl}, ${ep.audioDurationSec ?? null}, ${ep.audioDurationStr ?? null},
-                ${ep.author ? [ep.author] : []}, ${[]}, 'zh-TW',
+                ${epId}, ${c.id}, ${ep.guid}, ${ep.link || episodeAudioUrl}, ${ep.title}, ${ep.title},
+                ${ep.publishedAt}, ${episodeAudioUrl}, ${ep.audioDurationSec ?? null}, ${ep.audioDurationStr ?? null},
+                ${ep.author ? [ep.author] : []}, ${[]}, ${detectedLang},
                 ${summaryText}, ${bodyText}, ${bodyHtml}, ${[]},
-                ${ep.coverUrl ?? null}, ${searchText}, true, 80, now()
+                ${ep.coverUrl ?? null}, ${searchText}, false, 75, now()
               )
               ON CONFLICT (podcast_id, guid) DO UPDATE SET
                 audio_url = COALESCE(podcast_episodes.audio_url, EXCLUDED.audio_url),
@@ -435,11 +478,18 @@ export async function syncPodcastFeeds(
                 body_text = COALESCE(podcast_episodes.body_text, EXCLUDED.body_text),
                 body_html = COALESCE(podcast_episodes.body_html, EXCLUDED.body_html),
                 updated_at = now()
-              RETURNING id;
-            `.catch(() => []);
+              RETURNING (xmax = 0) AS inserted;
+            `.catch((err) => {
+              console.warn(`Failed to insert episode ${epId}:`, err);
+              return [];
+            });
 
             if (ins.length > 0) {
-              episodesAdded++;
+              if (ins[0]?.inserted) {
+                episodesAdded++;
+              } else {
+                episodesEnriched++;
+              }
               await associateEntitiesAndTickers(epId, `${ep.title} ${ep.showNotes}`);
             }
           }

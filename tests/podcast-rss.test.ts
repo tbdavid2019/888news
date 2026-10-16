@@ -45,3 +45,21 @@ test("parsePodcastFeedXml parses channel and episode metadata accurately without
   assert.equal(ep.transcriptUrl, "https://example.com/e175.vtt");
   assert.match(ep.showNotes, /Full breakdown of Computex/);
 });
+
+test("matchAliasInText correctly handles CJK characters, ASCII boundaries, and symbols", async () => {
+  const { matchAliasInText } = await import("@aihot/backend/sources/podcast-sync");
+
+  // CJK characters without word boundaries
+  assert.equal(matchAliasInText("阿里", "談阿里最新財報與雲計算", "談阿里最新財報與雲計算"), true);
+  assert.equal(matchAliasInText("輝達", "輝達發布全新 Blackwell 架構", "輝達發布全新 blackwell 架構"), true);
+  assert.equal(matchAliasInText("台積電", "台積電 2330 先進製程法說會", "台積電 2330 先進製程法說會"), true);
+
+  // Pure ASCII words: boundary check avoids substring false positives
+  assert.equal(matchAliasInText("AWS", "AWS announces new chip", "aws announces new chip"), true);
+  assert.equal(matchAliasInText("AWS", "paper straws are recyclable", "paper straws are recyclable"), false);
+  assert.equal(matchAliasInText("GPT", "GPT-5 architecture rumors", "gpt-5 architecture rumors"), true);
+
+  // Symbols and dotted aliases
+  assert.equal(matchAliasInText("Z.ai", "benchmarks for Z.ai model", "benchmarks for z.ai model"), true);
+  assert.equal(matchAliasInText("9988.HK", "discussing 9988.HK valuation", "discussing 9988.hk valuation"), true);
+});

@@ -52,7 +52,7 @@ export async function seedPodcastCatalog(): Promise<{ added: number; updated: nu
         title = EXCLUDED.title,
         description = EXCLUDED.description,
         cover_url = COALESCE(EXCLUDED.cover_url, podcasts.cover_url),
-        episode_count = EXCLUDED.episode_count,
+        episode_count = GREATEST(podcasts.episode_count, EXCLUDED.episode_count),
         follower_count_claim = EXCLUDED.follower_count_claim,
         tier = EXCLUDED.tier,
         feed_url = COALESCE(EXCLUDED.feed_url, podcasts.feed_url),

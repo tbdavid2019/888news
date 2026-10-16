@@ -6,15 +6,15 @@
 
 ### 📡 官方 Podcast 原生 RSS 雙向備援與斷炊容錯架構 (Official RSS Fallback & Decoupling)
 - **97 檔官方 RSS Feed 補齊**：
-  - 透過 Apple Podcast Search API 檢索並全量驗證 97 檔核心頻道的官方原生 XML RSS Feed，填入 [`industry/podcasts.json`](file:///Users/david/Documents/git/tbdavid2019/888news/industry/podcasts.json)。其餘 3 檔為 YouTube 原創視頻頻道，保持獨立標記。
+  - 透過 Apple Podcast Search API 檢索並全量驗證 97 檔核心頻道的官方原生 XML RSS Feed，填入 [`industry/podcasts.json`](industry/podcasts.json)。其餘 3 檔為 YouTube 原創視頻頻道，保持獨立標記。
   - 徹底解除對單一上游 BigGo API 的強相依性，建立去中心化的官方信源底層。
 - **雙向備援與平滑合流 (`syncPodcastFeeds`)**：
-  - 在 [`packages/backend/src/sources/podcast-sync.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/sources/podcast-sync.ts) 升級雙向備援邏輯：若 BigGo 服務離線、逾時或被限速，官方 RSS 抓取管線自動獨立運行，即時入庫新單集並排版正文，絕不斷炊。
+  - 在 [`packages/backend/src/sources/podcast-sync.ts`](packages/backend/src/sources/podcast-sync.ts) 升級雙向備援邏輯：若 BigGo 服務離線、逾時或被限速，官方 RSS 抓取管線自動獨立運行，即時入庫新單集並排版正文，絕不斷炊。
   - **音訊串流與時長無損增強**：對於已由 BigGo 入庫的單集，官方 RSS 掃描時自動匹配並注入真實 MP3 enclosure 串流網址與精確秒數，兼得高品質中文長文與原汁原味音訊播放。
 - **智慧實體與上市公司代碼關聯 (`associateEntitiesAndTickers`)**：
-  - 針對原生 RSS 提取的單集內容，自動掃描 [`industry/taxonomy.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/industry/taxonomy.ts) 實體詞庫與別名，自動綁定美股與台股代碼至 `podcast_episode_tickers`，無縫融入即時股市行情卡片。
+  - 針對原生 RSS 提取的單集內容，自動掃描 [`industry/taxonomy.ts`](industry/taxonomy.ts) 實體詞庫與別名，自動綁定美股與台股代碼至 `podcast_episode_tickers`，無縫融入即時股市行情卡片。
 - **資料庫種子指令升級**：
-  - 更新 [`scripts/seed-podcasts.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/scripts/seed-podcasts.ts)，於寫入與衝突更新時全面持久化 `feed_url`、`site_url` 與 `youtube_channel_id`。
+  - 更新 [`scripts/seed-podcasts.ts`](scripts/seed-podcasts.ts)，於寫入與衝突更新時全面持久化 `feed_url`、`site_url` 與 `youtube_channel_id`。
 
 ### 📚 Podcast 智庫 5,000 字深度長文全量入庫與摘要截斷修復 (Deep Intel Ingestion & Truncation Guard)
 - **直連單集詳情端點**：
@@ -33,11 +33,11 @@
 - **突破 AWS 機房 IP 限制 (HTTP 429 Rate Limit Exceeded)**：
   - **根本原因**：遠端伺服器（AWS EC2 IP `35.163.156.107`）直接向 BigGo API 請求時，會被 BigGo 端的 Envoy 閘道判定為資料中心 IP 而強制攔截並回傳 HTTP 429。
   - **邊緣代理架構**：於 Cloudflare 部署專屬 Edge 反向代理服務（`biggo-podcast-proxy.oobwei.workers.dev`），藉由 Cloudflare 全球 Anycast 邊緣網路節點轉發請求，徹底規避機房 IP 限制。
-  - **多層級聯輪循容錯**：在 [`packages/backend/src/sources/podcast-sync.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/sources/podcast-sync.ts) 實作雙重降級保護，優先走 Cloudflare Edge 代理端點，若遇網路抖動或異常則透明回退至直接連線，並內建指數退避重試與詳細偵錯日誌。
+  - **多層級聯輪循容錯**：在 [`packages/backend/src/sources/podcast-sync.ts`](packages/backend/src/sources/podcast-sync.ts) 實作雙重降級保護，優先走 Cloudflare Edge 代理端點，若遇網路抖動或異常則透明回退至直接連線，並內建指數退避重試與詳細偵錯日誌。
 
 ### 🔄 Podcast 定時自動抓取與線上單集成功刷新 (Automated Ingestion & Sync Verification)
 - **Worker Cron 排程常駐自動同步**：
-  - 在背景工作排程（[`apps/worker/src/schedules.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/worker/src/schedules.ts)）中將 BigGo Podcast 單集同步正式納入每 30 分鐘執行一次的 `syncPodcastFeeds`。
+  - 在背景工作排程（[`apps/worker/src/schedules.ts`](apps/worker/src/schedules.ts)）中將 BigGo Podcast 單集同步正式納入每 30 分鐘執行一次的 `syncPodcastFeeds`。
   - 伺服器端實測批次同步成功寫入 200 檔全新熱門單集（`{ total: 200, inserted: 200 }`），完全消除資料無更新的問題。
 - **線上即時資料驗證**：
   - 線上端點 `/podcast/recommend` 與 `/api/site/podcast/recommend` 資料即時刷新至當日（2026-10-15），涵蓋：
@@ -49,15 +49,15 @@
 
 ### 📊 後台「需要核對的付費收據」新增「發生時間」 (Admin Receipts Timeline)
 - **精確時間戳欄位**：
-  - 在後台「需要核對的付費收據」列表（[`apps/web/app/routes/admin/runs.tsx`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/web/app/routes/admin/runs.tsx)）中，於「狀態」與「服務」之間正式新增「發生時間」欄位。
+  - 在後台「需要核對的付費收據」列表（[`apps/web/app/routes/admin/runs.tsx`](apps/web/app/routes/admin/runs.tsx)）中，於「狀態」與「服務」之間正式新增「發生時間」欄位。
   - 支援相對時間友善展示（如「15分鐘前」），滑鼠懸停（tooltip）即顯示完整精確 ISO 時間戳，利於管理員即時核對異常調用與計費事件。
 
 ### 🎙️ 後台信源管理：Podcast 頻道標識與即時抓取/預覽修復 (Admin Source Diagnostics)
 - **Podcast 智庫專屬識別標籤**：
-  - 在後台信源管理（[`apps/web/app/routes/admin/sources.tsx`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/web/app/routes/admin/sources.tsx) 及 [`source.tsx`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/web/app/routes/admin/source.tsx)）中，針對 `pod_*` 信源標記專屬「Podcast 智庫」徽章，並提供清楚的排程同步說明。
+  - 在後台信源管理（[`apps/web/app/routes/admin/sources.tsx`](apps/web/app/routes/admin/sources.tsx) 及 [`source.tsx`](apps/web/app/routes/admin/source.tsx)）中，針對 `pod_*` 信源標記專屬「Podcast 智庫」徽章，並提供清楚的排程同步說明。
 - **支援手動即時擷取與單集預覽**：
   - 修復點擊「預覽抓取」與「立即擷取」時拋出 `preview is not available for external sources` 的錯誤。
-  - 後端 [`packages/backend/src/admin/sources.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/admin/sources.ts) 自動識別 Podcast 來源代碼，從資料庫最新抓取的單集中提取真實資料進行預覽與手動重新觸發同步，方便即時維護與診斷。
+  - 後端 [`packages/backend/src/admin/sources.ts`](packages/backend/src/admin/sources.ts) 自動識別 Podcast 來源代碼，從資料庫最新抓取的單集中提取真實資料進行預覽與手動重新觸發同步，方便即時維護與診斷。
 
 ---
 
@@ -65,7 +65,7 @@
 
 ### 🎙️ 全球頂級 Podcast 智庫與 100+ 頻道目錄 (Podcast Intelligence & Directory)
 - **100+ 頂尖 Podcast 頻道收錄與動態同步**：
-  - 新增 [`industry/podcasts.json`](file:///Users/david/Documents/git/tbdavid2019/888news/industry/podcasts.json) 目錄與資料庫 Migration (`0040_podcasts.sql`、`0041_podcast_audio_url_nullable.sql`)，收錄全球 100+ 頂級 AI、科技創業、半導體與財經 Podcast 頻道。
+  - 新增 [`industry/podcasts.json`](industry/podcasts.json) 目錄與資料庫 Migration (`0040_podcasts.sql`、`0041_podcast_audio_url_nullable.sql`)，收錄全球 100+ 頂級 AI、科技創業、半導體與財經 Podcast 頻道。
   - 定時同步 RSS Feed 節目元數據、發布時間、節目音訊/影音直連網址與 BigGo 真實主題實體標籤。
 - **零磁碟 HTML5 音訊串流播放器 (Zero-Disk Audio Streaming)**：
   - 嚴格落實「零磁碟政策」：所有音訊以 HTML5 `<audio>` 直連第三方 CDN/伺服器串流播放，完全不下載、不佔用本機伺服器磁碟與頻寬。
@@ -74,17 +74,17 @@
 
 ### 📈 Yahoo Finance 即時上市公司行情聯動 (Live Market Quotes — 100% Real Data)
 - **杜絕假資料與 0.00% 佔位**：
-  - 徹底清除任何靜態假數據，全面串接 Yahoo Finance 即時 API ([`packages/backend/src/providers/market.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/providers/market.ts))。
+  - 徹底清除任何靜態假數據，全面串接 Yahoo Finance 即時 API ([`packages/backend/src/providers/market.ts`](packages/backend/src/providers/market.ts))。
   - 自動於 PostgreSQL `market_quotes` 快取 118+ 檔美股/台股標的即時數據（如 NVDA、TSMC 2330.TW、UMC、META、AMZN、MSFT、GOOGL、GS、JPM 等），畫面精準渲染漲跌百分比與即時股價。
   - 具備未命中快取時的非同步自動補全與後台容錯機制。
 
 ### 🔄 雙向打通：Podcast 全面匯流進主站內容生態 (Bi-directional Feed Federation)
 - **資料庫層級自動同步與打分橋接**：
-  - 實作 [`packages/backend/src/publication/podcast-bridge.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/publication/podcast-bridge.ts)，將 Podcast 頻道登記為新聞來源（`sources`，kind: `external`），並將精選節目無縫映射入 `articles`、`analyses` 及 `publications`。
+  - 實作 [`packages/backend/src/publication/podcast-bridge.ts`](packages/backend/src/publication/podcast-bridge.ts)，將 Podcast 頻道登記為新聞來源（`sources`，kind: `external`），並將精選節目無縫映射入 `articles`、`analyses` 及 `publications`。
   - 支援 CLEF / JEV 決策標註與規則評分（精選評分 85 分，分類為 `opinion` 專家觀點）。
 - **全站動態與標籤整合**：
   - 「全部 AI 動態」(`/all`) 與「精選」(`/`) 同步收錄 Podcast 單集，卡片標記 `🎙️ Podcast` 專屬音訊徽章。
-  - 詳情頁（[`/items/pod_*`](file:///Users/david/Documents/git/tbdavid2019/888news/apps/web/app/routes/item.tsx)）內嵌「Podcast 專家音訊節目」導流卡片，支援點擊一鍵返回 Podcast 推薦智庫。
+  - 詳情頁（[`/items/pod_*`](apps/web/app/routes/item.tsx)）內嵌「Podcast 專家音訊節目」導流卡片，支援點擊一鍵返回 Podcast 推薦智庫。
   - 支援 `#Podcast` 專屬話題聚合頁面，方便讀者快速檢索音訊新聞。
 
 ### 🎨 視覺與排版標準升級 (Typography & Accessibility)

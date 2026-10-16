@@ -1,6 +1,6 @@
 {
   "$comment": "全量囊括 BigGo 財經推薦之 100 個精選 Podcast 頻道信源目錄",
-  "total": 100,
+  "total": 99,
   "channels": [
     {
       "id": "c2c3e3fcee7e",
@@ -494,7 +494,7 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T1",
-      "feed_url": "http://feeds.feedburner.com/twivmp3"
+      "feed_url": "https://feeds.feedburner.com/twivmp3"
     },
     {
       "id": "7ec96f5b3b89",
@@ -728,7 +728,7 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T1",
-      "feed_url": "https://feeds.fireside.fm/sv101/rss"
+      "feed_url": null
     },
     {
       "id": "8af742bcd061",
@@ -1053,7 +1053,7 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T2",
-      "feed_url": "http://www.pusware.com/podcast.xml"
+      "feed_url": "https://www.pusware.com/podcast.xml"
     },
     {
       "id": "b0302217358d",
@@ -1197,19 +1197,6 @@
       "rss_subscribers": null,
       "tier": "T2",
       "feed_url": "https://feeds.captivate.fm/gradient-dissent/"
-    },
-    {
-      "id": "65aa84568a3d",
-      "name": "SemiAnalysis Weekly",
-      "description": "",
-      "cover_url": "https://img.biggo.com/AjYnra3_vju85O4cMPddFyPSjicf0P2M14xfkFt7p94/fit/160/0/sm/0/aHR0cHM6Ly95dDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL3l2V0lOOEdNS2E1MFMyOHBXTzRYSFVvdVN2ZjBEX2gyVHM4RDhDUUhZR1pBdzB2Q1Nfbk52XzdLNGpacUoyX1Fwd0NCaF83ZFF3PXMw.webp",
-      "episode_count": 11,
-      "follower_count": 5,
-      "youtube_subscribers": 6380,
-      "bilibili_subscribers": null,
-      "rss_subscribers": null,
-      "tier": "T2",
-      "feed_url": "https://anchor.fm/s/10fbee758/podcast/rss"
     },
     {
       "id": "4452cbaa558e",
