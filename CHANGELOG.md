@@ -2,7 +2,16 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
-## [2026-10-16] — 🎙️ 官方 Podcast RSS 雙向備援、斷炊容錯、音訊串流增強與導航標題去 AI 精簡
+## [2026-10-16] — 🎙️ PigeonPod 伺服器整合、YouTube 轉 Podcast 原生 RSS 雙向備援與 100% 信源全覆蓋
+
+### 🕊️ PigeonPod 自建音訊串流服務整合 (PigeonPod YouTube-to-Podcast RSS Bridge)
+- **連線與整合內網伺服器 (`10.9.0.99`) PigeonPod 服務**：
+  - 成功連線並檢視本機內網伺服器運行的 PigeonPod 實體（`iipod.david888.com`），透過 API 自動納管與同步清單中的中文 YouTube 影音頻道。
+  - 將 12 檔中文頻道（含《硅谷101》、《WhynotTV Podcast》、《M亿财富MEmoney》、《小Lin说》、《张小珺Jùn｜商业访谈录》、《罗永浩的十字路口》、《Koji杨远骋》、《疯投圈》、《CLS同学》、《42章经》、《晚点LatePost》等）與《Stripe Sessions》全數登錄至 PigeonPod。
+  - PigeonPod 自動使用 `yt-dlp` 下載音訊（AAC/M4A）並即時生成符合 iTunes 標準的播客 XML RSS Feed 與音訊串流位址（`https://ipod.david888.com/media/...`）。
+- **實現 100% 全量 99 檔頻道 RSS 雙向備援**：
+  - 補齊原先無官方傳統音訊 RSS 的純 YouTube 影音頻道（《硅谷101》、《WhynotTV Podcast》、《M亿财富MEmoney》、《Stripe Sessions》），將其 `feed_url` 直接對接 PigeonPod 專屬 RSS 端點。
+  - 全站 99 檔關注頻道達到 100% 原生 RSS 覆蓋，徹底消弭任何單一上游斷炊風險。
 
 ### 📡 官方 Podcast 原生 RSS 雙向備援與斷炊容錯架構 (Official RSS Fallback & Decoupling)
 - **97 檔官方 RSS Feed 補齊**：

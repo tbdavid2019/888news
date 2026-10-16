@@ -728,7 +728,7 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T1",
-      "feed_url": null
+      "feed_url": "https://iipod.david888.com/api/rss/UCKV2yWPB3wn0RTZh3cTD8YA.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304"
     },
     {
       "id": "8af742bcd061",
@@ -1260,7 +1260,8 @@
       "youtube_subscribers": 24700,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://iipod.david888.com/api/rss/UC5xLV_gJAP9psKcyrJ3ZIcw.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304"
     },
     {
       "id": "3fd239769036",
@@ -1272,7 +1273,8 @@
       "youtube_subscribers": 115000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://iipod.david888.com/api/rss/UCM1guA1E-RHLO2OyfQPOkEQ.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304"
     },
     {
       "id": "5fe644590389",
@@ -1284,7 +1286,8 @@
       "youtube_subscribers": 48200,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://iipod.david888.com/api/rss/UCdQ0Gy4i5eAL5soVKJGmU7A.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304"
     }
   ]
 }
