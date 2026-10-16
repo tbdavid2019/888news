@@ -41,10 +41,12 @@ export async function seedPodcastCatalog(): Promise<{ added: number; updated: nu
 
     const res = await sql`
       INSERT INTO podcasts (
-        id, slug, title, description, cover_url, episode_count, follower_count_claim, tier, category, enabled, updated_at
+        id, slug, title, description, cover_url, episode_count, follower_count_claim,
+        tier, category, feed_url, site_url, youtube_channel_id, enabled, updated_at
       ) VALUES (
         ${c.id}, ${slug}, ${c.name}, ${c.description ?? ""}, ${c.cover_url ?? null},
-        ${c.episode_count ?? 0}, ${followerClaim}, ${c.tier ?? "T1"}, ${c.category ?? "ai-tech"}, true, now()
+        ${c.episode_count ?? 0}, ${followerClaim}, ${c.tier ?? "T1"}, ${c.category ?? "ai-tech"},
+        ${c.feed_url ?? null}, ${c.site_url ?? null}, ${c.youtube_channel_id ?? null}, true, now()
       )
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
@@ -53,6 +55,9 @@ export async function seedPodcastCatalog(): Promise<{ added: number; updated: nu
         episode_count = EXCLUDED.episode_count,
         follower_count_claim = EXCLUDED.follower_count_claim,
         tier = EXCLUDED.tier,
+        feed_url = COALESCE(EXCLUDED.feed_url, podcasts.feed_url),
+        site_url = COALESCE(EXCLUDED.site_url, podcasts.site_url),
+        youtube_channel_id = COALESCE(EXCLUDED.youtube_channel_id, podcasts.youtube_channel_id),
         updated_at = now()
       RETURNING (xmax = 0) AS inserted;
     `;

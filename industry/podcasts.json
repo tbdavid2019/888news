@@ -12,7 +12,8 @@
       "youtube_subscribers": 304000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/DSLLC6297708582"
     },
     {
       "id": "5335385a96ca",
@@ -24,7 +25,8 @@
       "youtube_subscribers": 5060000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://lexfridman.com/feed/podcast/"
     },
     {
       "id": "697bc59e0afa",
@@ -36,7 +38,8 @@
       "youtube_subscribers": 592000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/3b082bbf-691d-443b-bc59-ae2b0012ff93/9222076a-d22a-4a9f-9d26-ae2b0012ffb4/podcast.rss"
     },
     {
       "id": "6889e0da6fb5",
@@ -48,7 +51,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/111a4f378/podcast/rss"
     },
     {
       "id": "ce098ba1b41a",
@@ -60,7 +64,8 @@
       "youtube_subscribers": 307000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://api.substack.com/feed/podcast/1084089.rss"
     },
     {
       "id": "483657631daf",
@@ -72,7 +77,8 @@
       "youtube_subscribers": 21100000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/GLT1412515089"
     },
     {
       "id": "b45fc274b43e",
@@ -84,7 +90,8 @@
       "youtube_subscribers": 694000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.redcircle.com/892c18da-c496-4c52-bdfb-45a19fb07f8f"
     },
     {
       "id": "a7e7cbab8d81",
@@ -96,7 +103,8 @@
       "youtube_subscribers": 49800,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://api.substack.com/feed/podcast/1089201.rss"
     },
     {
       "id": "d80422ee8031",
@@ -108,7 +116,8 @@
       "youtube_subscribers": 3520000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/vergecast"
     },
     {
       "id": "02f032e82cc5",
@@ -120,7 +129,8 @@
       "youtube_subscribers": 3370,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://rss.art19.com/the-road-to-autonomy"
     },
     {
       "id": "924c9a8d7b3f",
@@ -132,7 +142,8 @@
       "youtube_subscribers": 323000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/GLD9218176758"
     },
     {
       "id": "b9e99f4d1025",
@@ -144,7 +155,8 @@
       "youtube_subscribers": 255000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/VMP5587961509"
     },
     {
       "id": "cf35cbd0132d",
@@ -156,7 +168,8 @@
       "youtube_subscribers": 111000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://www.spreaker.com/show/7309953/episodes/feed"
     },
     {
       "id": "90728ee0ac5b",
@@ -168,7 +181,8 @@
       "youtube_subscribers": 571000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://anchor.fm/s/e52003c4/podcast/rss"
     },
     {
       "id": "ef48c2654f69",
@@ -180,7 +194,8 @@
       "youtube_subscribers": 456000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/FSMI7575968096"
     },
     {
       "id": "de34f76beb9c",
@@ -192,7 +207,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/trainingdata"
     },
     {
       "id": "0da8ef6bed3a",
@@ -204,7 +220,8 @@
       "youtube_subscribers": 374,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://crazy.capital/feed"
     },
     {
       "id": "8c029bafbd12",
@@ -216,7 +233,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/RSUSA4020802658"
     },
     {
       "id": "d748c9cb262e",
@@ -228,7 +246,8 @@
       "youtube_subscribers": 39500,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.captivate.fm/top-traders-unplugged/"
     },
     {
       "id": "1a3dde5624b6",
@@ -240,7 +259,8 @@
       "youtube_subscribers": 1430,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://rss.buzzsprout.com/1035190.rss"
     },
     {
       "id": "32507673fba0",
@@ -252,7 +272,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feed.xyzfm.space/evgg6xle9rdc"
     },
     {
       "id": "6d0136631384",
@@ -264,7 +285,8 @@
       "youtube_subscribers": 7590,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.transistor.fm/cheeky-pint-with-john-collison"
     },
     {
       "id": "ad5ca4cb9cf2",
@@ -276,7 +298,8 @@
       "youtube_subscribers": 45200,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/RINTP3108857801"
     },
     {
       "id": "73f1ccf31ff3",
@@ -288,7 +311,8 @@
       "youtube_subscribers": 1150000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://allin.libsyn.com/rss"
     },
     {
       "id": "1cf863b47408",
@@ -300,7 +324,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://www.omnycontent.com/d/playlist/c5fb9fcf-d173-4e07-91a3-ae8500ecef8f/7db3dcc6-0968-4b9d-9c06-ae850115978b/219fb63e-f0f1-486a-999f-ae8601445caf/podcast.rss"
     },
     {
       "id": "08db7cde13a8",
@@ -312,7 +337,8 @@
       "youtube_subscribers": 301000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.simplecast.com/JGE3yC0V"
     },
     {
       "id": "49c0de9503fb",
@@ -324,7 +350,8 @@
       "youtube_subscribers": 223000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://rss.libsyn.com/shows/61840/destinations/240976.xml"
     },
     {
       "id": "b85b0f1b0e08",
@@ -336,7 +363,8 @@
       "youtube_subscribers": 75500,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://api.substack.com/feed/podcast/1199321.rss"
     },
     {
       "id": "a1a94cede874",
@@ -348,7 +376,8 @@
       "youtube_subscribers": 963000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/HS2300184645"
     },
     {
       "id": "ff04fc839388",
@@ -360,7 +389,8 @@
       "youtube_subscribers": 7480,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feed.xyzfm.space/9ebedr6d77lt"
     },
     {
       "id": "59a5d9375123",
@@ -372,7 +402,8 @@
       "youtube_subscribers": 281000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.flightcast.com/p83fuj0y0u58o82l41xei7zo.xml"
     },
     {
       "id": "f4479bef6e6e",
@@ -384,7 +415,8 @@
       "youtube_subscribers": 20500000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://rss2.flightcast.com/xmsftuzjjykcmqwolaqn6mdn"
     },
     {
       "id": "47fb40d8d15e",
@@ -396,7 +428,8 @@
       "youtube_subscribers": 3920,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://rss.buzzsprout.com/1011661.rss"
     },
     {
       "id": "5109fc9dc6e9",
@@ -408,7 +441,8 @@
       "youtube_subscribers": 887000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://rss2.flightcast.com/lxa7w57rz7gkz3huwi6pr6et.xml"
     },
     {
       "id": "c731756e9ae3",
@@ -420,7 +454,8 @@
       "youtube_subscribers": 75000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/83d264f4/podcast/rss"
     },
     {
       "id": "0a1d035724d8",
@@ -432,7 +467,8 @@
       "youtube_subscribers": 645000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://api.substack.com/feed/podcast/10845.rss"
     },
     {
       "id": "a01c807a762a",
@@ -444,7 +480,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/TIVP"
     },
     {
       "id": "eea4c981f7f2",
@@ -456,7 +493,8 @@
       "youtube_subscribers": 145000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "http://feeds.feedburner.com/twivmp3"
     },
     {
       "id": "7ec96f5b3b89",
@@ -468,7 +506,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/TFM8861680914"
     },
     {
       "id": "82ba102b5008",
@@ -480,7 +519,8 @@
       "youtube_subscribers": 823000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/WWO6655869236"
     },
     {
       "id": "65aa84568a3d",
@@ -492,7 +532,8 @@
       "youtube_subscribers": 6380,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/10fbee758/podcast/rss"
     },
     {
       "id": "dadd8b32fdd8",
@@ -504,7 +545,8 @@
       "youtube_subscribers": 98600,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/nopriors"
     },
     {
       "id": "4b24c343992f",
@@ -516,7 +558,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feed.podbean.com/thebmjpodcast/feed.xml"
     },
     {
       "id": "85552f49b37f",
@@ -528,7 +571,8 @@
       "youtube_subscribers": 1220000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/the-plain-bagel"
     },
     {
       "id": "289a177bf726",
@@ -540,7 +584,8 @@
       "youtube_subscribers": 2830000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feed.xyzfm.space/mkkxu98dm89e"
     },
     {
       "id": "1b487155fdee",
@@ -552,7 +597,8 @@
       "youtube_subscribers": 4530,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.buzzsprout.com/1971775.rss"
     },
     {
       "id": "2217e17307ed",
@@ -564,7 +610,8 @@
       "youtube_subscribers": 79000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.fireside.fm/sv101/rss"
     },
     {
       "id": "f32ff91687db",
@@ -576,7 +623,8 @@
       "youtube_subscribers": 11900,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://api.substack.com/feed/podcast/10995552.rss"
     },
     {
       "id": "3f54a3e15942",
@@ -588,7 +636,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/stat-readout-loud"
     },
     {
       "id": "4c16f734d05d",
@@ -600,7 +649,8 @@
       "youtube_subscribers": 5250000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://anchor.fm/s/1126e7b4/podcast/rss"
     },
     {
       "id": "89ae4c0d23a1",
@@ -612,7 +662,8 @@
       "youtube_subscribers": 2410000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://rss.art19.com/y-combinator"
     },
     {
       "id": "bd2478ea0413",
@@ -624,7 +675,8 @@
       "youtube_subscribers": 25700000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://rss.buzzsprout.com/2601372.rss"
     },
     {
       "id": "8e40320d994a",
@@ -636,7 +688,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.bloomberg.fm/BLM2201997427"
     },
     {
       "id": "e07044a5df9e",
@@ -648,7 +701,8 @@
       "youtube_subscribers": 527000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://rss.libsyn.com/shows/307310/destinations/2461367.xml"
     },
     {
       "id": "7b4365f26f13",
@@ -660,7 +714,8 @@
       "youtube_subscribers": 255000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/CPUAI1584649469"
     },
     {
       "id": "4a1d36698bd9",
@@ -672,7 +727,8 @@
       "youtube_subscribers": 472000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.fireside.fm/sv101/rss"
     },
     {
       "id": "8af742bcd061",
@@ -684,7 +740,8 @@
       "youtube_subscribers": 592000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/84f3c095-964f-4994-9d24-ae2b00130029/c9553948-bc39-4871-8989-ae2b00130032/podcast.rss"
     },
     {
       "id": "065e9227d808",
@@ -696,7 +753,8 @@
       "youtube_subscribers": 539000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/DVVTS2890392624"
     },
     {
       "id": "d410ab71efcd",
@@ -708,7 +766,8 @@
       "youtube_subscribers": 541000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://api.substack.com/feed/podcast/458709.rss"
     },
     {
       "id": "f2591194a029",
@@ -720,7 +779,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://anchor.fm/s/101538d68/podcast/rss"
     },
     {
       "id": "7e0d92c0b9fb",
@@ -732,7 +792,8 @@
       "youtube_subscribers": 231,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/thelongrun"
     },
     {
       "id": "2c30b8b3f18b",
@@ -744,7 +805,8 @@
       "youtube_subscribers": 15700,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://rss.buzzsprout.com/2526662.rss"
     },
     {
       "id": "2710eb12b0d5",
@@ -756,7 +818,8 @@
       "youtube_subscribers": 23300,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://rss.libsyn.com/shows/94820/destinations/482814.xml"
     },
     {
       "id": "c1f49fceff68",
@@ -768,7 +831,8 @@
       "youtube_subscribers": 189,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.soundcloud.com/users/soundcloud:users:20625405/sounds.rss"
     },
     {
       "id": "95df011df4c9",
@@ -780,7 +844,8 @@
       "youtube_subscribers": 133000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/ingoodcompany"
     },
     {
       "id": "daf55e50d7cc",
@@ -792,7 +857,8 @@
       "youtube_subscribers": 2090,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/111f0a5fc/podcast/rss"
     },
     {
       "id": "8fcc6b5841ce",
@@ -804,7 +870,8 @@
       "youtube_subscribers": 2880,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.rebuild.fm/rebuildfm"
     },
     {
       "id": "67b68f516953",
@@ -816,7 +883,8 @@
       "youtube_subscribers": 323000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/great-investors"
     },
     {
       "id": "7011b13d102d",
@@ -828,7 +896,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.transistor.fm/talking-biotech"
     },
     {
       "id": "a9f91f59fcc7",
@@ -840,7 +909,8 @@
       "youtube_subscribers": 29500,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.bloomberg.fm/BLM2234057635"
     },
     {
       "id": "FPTXg5wBvbjfYyet42mD",
@@ -852,7 +922,8 @@
       "youtube_subscribers": 592000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/8a94442e-5a74-4fa2-8b8d-ae27003a8d6b/982f5071-765c-403d-969d-ae27003a8d83/podcast.rss"
     },
     {
       "id": "292d0a867a33",
@@ -864,7 +935,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/101514508/podcast/rss"
     },
     {
       "id": "f9be3a456081",
@@ -876,7 +948,8 @@
       "youtube_subscribers": 79600,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/thememo"
     },
     {
       "id": "12674211cdcb",
@@ -888,7 +961,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.buzzsprout.com/1770631.rss"
     },
     {
       "id": "c4a0a3cfa5a1",
@@ -900,7 +974,8 @@
       "youtube_subscribers": 4190000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://access.acast.com/rss/ec380acc-fe13-46a0-991f-a1e508d126f8"
     },
     {
       "id": "faa38c29e6e1",
@@ -912,7 +987,8 @@
       "youtube_subscribers": 3900,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feed.podbean.com/dnatodaypodcast/feed.xml"
     },
     {
       "id": "598234422d50",
@@ -924,7 +1000,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.fireside.fm/latetalk/rss"
     },
     {
       "id": "70955e977aeb",
@@ -936,7 +1013,8 @@
       "youtube_subscribers": 1440000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://api.substack.com/feed/podcast/69792.rss"
     },
     {
       "id": "93b72fa1ec89",
@@ -948,7 +1026,8 @@
       "youtube_subscribers": 28700,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/uncapped"
     },
     {
       "id": "26df9a54ccd4",
@@ -960,7 +1039,8 @@
       "youtube_subscribers": 6800,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/105c99cfc/podcast/rss"
     },
     {
       "id": "329a6f599aca",
@@ -972,7 +1052,8 @@
       "youtube_subscribers": 145000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "http://www.pusware.com/podcast.xml"
     },
     {
       "id": "b0302217358d",
@@ -984,7 +1065,8 @@
       "youtube_subscribers": 145000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://rss.libsyn.com/shows/224759/destinations/1647701.xml"
     },
     {
       "id": "c65d4cbedb99",
@@ -996,7 +1078,8 @@
       "youtube_subscribers": 33600,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.transistor.fm/techsurge-deep-tech-podcast"
     },
     {
       "id": "4562f7bdfb92",
@@ -1008,7 +1091,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": 1130567,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/f8688974/podcast/rss"
     },
     {
       "id": "7705a1847b3b",
@@ -1020,7 +1104,8 @@
       "youtube_subscribers": 323000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/GLD9322922848"
     },
     {
       "id": "2fe3399ad84a",
@@ -1032,7 +1117,8 @@
       "youtube_subscribers": null,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.soundcloud.com/users/soundcloud:users:703839116/sounds.rss"
     },
     {
       "id": "88f58c0908ee",
@@ -1044,7 +1130,8 @@
       "youtube_subscribers": 13200,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/5f616d54/podcast/rss"
     },
     {
       "id": "256aa48e8d11",
@@ -1056,7 +1143,8 @@
       "youtube_subscribers": 1860,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/105b020c4/podcast/rss"
     },
     {
       "id": "a2018e6d0594",
@@ -1068,7 +1156,8 @@
       "youtube_subscribers": 335000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.transistor.fm/acquired"
     },
     {
       "id": "803e53c8000d",
@@ -1080,7 +1169,8 @@
       "youtube_subscribers": 43200,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feed.xyzfm.space/dk4yh3pkpjp3"
     },
     {
       "id": "d98898bd96e2",
@@ -1092,7 +1182,8 @@
       "youtube_subscribers": 45200,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feed.xyzfm.space/wmnkvmrpwuww"
     },
     {
       "id": "a11abdd39e02",
@@ -1104,7 +1195,8 @@
       "youtube_subscribers": 70200,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.captivate.fm/gradient-dissent/"
     },
     {
       "id": "65aa84568a3d",
@@ -1116,7 +1208,8 @@
       "youtube_subscribers": 6380,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://anchor.fm/s/10fbee758/podcast/rss"
     },
     {
       "id": "4452cbaa558e",
@@ -1128,7 +1221,8 @@
       "youtube_subscribers": 145000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://access.acast.com/rss/6273a9ddaa17b70013dfc46c/default"
     },
     {
       "id": "6f18728bae38",
@@ -1140,7 +1234,8 @@
       "youtube_subscribers": 145000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://rss.libsyn.com/shows/28248/destinations/53322.xml"
     },
     {
       "id": "a694c3515faa",
@@ -1152,7 +1247,8 @@
       "youtube_subscribers": 103000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T2"
+      "tier": "T2",
+      "feed_url": "https://feeds.megaphone.fm/GLT6858223963"
     },
     {
       "id": "33ddb4011d0c",
@@ -1164,7 +1260,8 @@
       "youtube_subscribers": 323000,
       "bilibili_subscribers": null,
       "rss_subscribers": null,
-      "tier": "T1"
+      "tier": "T1",
+      "feed_url": "https://feeds.megaphone.fm/talks-at-gs"
     },
     {
       "id": "0e87d065108d",

@@ -2,7 +2,32 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
-## [2026-10-15] — 🛡️ Cloudflare Edge 反向代理突破機房限速、Podcast 自動排程更新與後台管理升級
+## [2026-10-16] — 🎙️ 官方 Podcast RSS 雙向備援、斷炊容錯、音訊串流增強與導航標題去 AI 精簡
+
+### 📡 官方 Podcast 原生 RSS 雙向備援與斷炊容錯架構 (Official RSS Fallback & Decoupling)
+- **97 檔官方 RSS Feed 補齊**：
+  - 透過 Apple Podcast Search API 檢索並全量驗證 97 檔核心頻道的官方原生 XML RSS Feed，填入 [`industry/podcasts.json`](file:///Users/david/Documents/git/tbdavid2019/888news/industry/podcasts.json)。其餘 3 檔為 YouTube 原創視頻頻道，保持獨立標記。
+  - 徹底解除對單一上游 BigGo API 的強相依性，建立去中心化的官方信源底層。
+- **雙向備援與平滑合流 (`syncPodcastFeeds`)**：
+  - 在 [`packages/backend/src/sources/podcast-sync.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/packages/backend/src/sources/podcast-sync.ts) 升級雙向備援邏輯：若 BigGo 服務離線、逾時或被限速，官方 RSS 抓取管線自動獨立運行，即時入庫新單集並排版正文，絕不斷炊。
+  - **音訊串流與時長無損增強**：對於已由 BigGo 入庫的單集，官方 RSS 掃描時自動匹配並注入真實 MP3 enclosure 串流網址與精確秒數，兼得高品質中文長文與原汁原味音訊播放。
+- **智慧實體與上市公司代碼關聯 (`associateEntitiesAndTickers`)**：
+  - 針對原生 RSS 提取的單集內容，自動掃描 [`industry/taxonomy.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/industry/taxonomy.ts) 實體詞庫與別名，自動綁定美股與台股代碼至 `podcast_episode_tickers`，無縫融入即時股市行情卡片。
+- **資料庫種子指令升級**：
+  - 更新 [`scripts/seed-podcasts.ts`](file:///Users/david/Documents/git/tbdavid2019/888news/scripts/seed-podcasts.ts)，於寫入與衝突更新時全面持久化 `feed_url`、`site_url` 與 `youtube_channel_id`。
+
+### 📚 Podcast 智庫 5,000 字深度長文全量入庫與摘要截斷修復 (Deep Intel Ingestion & Truncation Guard)
+- **直連單集詳情端點**：
+  - 單集同步時向 BigGo `/detail` 端點拉取 5,000+ 字結構化深度特刊，完整入庫 Markdown 章節、導讀與脈絡分析，並於文章內頁直接以 `fulltext` 模式排版呈現。
+- **摘要語意完整性與截斷防禦**：
+  - 針對上游 300 字硬切殘句，自動採用完整首段或 `quick_take` 替代；前端摘要排版函數新增子句語意檢驗，過濾逗號與懸掛片語結尾之殘句，並自動規範補上句號。
+
+### 🎨 介面視覺與導航標題去 AI 精簡化 (Clean Navigation & Tab Titles)
+- **去除冗餘「AI」字眼**：
+  - 側邊導航選單中，「全部AI 動態」精簡為「全部動態」，「AI 日報」精簡為「日報」。
+  - 日報頁面網頁標籤（Browser Tab Title）由「AI 日報 888news」精簡修正為純粹簡潔的「888news」。
+
+---
 
 ### 🛡️ Cloudflare Edge 反向代理與 BigGo 雙重容錯架構 (Edge Proxy & Datacenter Anti-Rate Limiting)
 - **突破 AWS 機房 IP 限制 (HTTP 429 Rate Limit Exceeded)**：

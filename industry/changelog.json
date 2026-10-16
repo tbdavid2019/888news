@@ -1,6 +1,19 @@
 {
-  "latestVersion": "2026-10-16 09:30",
+  "latestVersion": "2026-10-16 10:00",
   "releases": [
+    {
+      "date": "2026-10-16",
+      "time": "10:00",
+      "kind": "架構升級",
+      "title": "官方 Podcast RSS 雙向備援與音訊串流增強（97 檔官方 Feed 補齊、斷炊容錯與實體關聯）",
+      "body": [
+        "官方原生 RSS 全量補齊：透過 Apple Podcast 檢索驗證 97 檔全球與華語頂尖頻道之官方 RSS Feed，徹底解除對單一上游 BigGo API 的強依賴。",
+        "斷炊容錯與自動接管：syncPodcastFeeds 升級雙向備援架構；若第三方 API 異常或斷線，系統自動以官方原生 RSS 即時更新單集與正文，保證不留天窗。",
+        "音訊串流無損增強：對於已入庫之深度長篇單集，自動自官方 RSS 匹配注入真實 MP3 音訊串流網址與精確播放長度，兼得中文智庫特刊與原音播放體驗。",
+        "實體與上市公司代碼關聯：新增 associateEntitiesAndTickers，原生 RSS 單集入庫即自動掃描 taxonomy 詞庫並綁定美股/台股代碼與行情。",
+        "資料庫種子指令升級：scripts/seed-podcasts.ts 全面持久化 feed_url、site_url 與 youtube_channel_id 至 podcasts 頻道庫。"
+      ]
+    },
     {
       "date": "2026-10-16",
       "time": "09:30",

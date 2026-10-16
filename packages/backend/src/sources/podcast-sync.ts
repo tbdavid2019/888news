@@ -233,33 +233,8 @@ export async function syncBigGoPodcastEpisodes(
     `;
     if (ins.length > 0) inserted++;
 
-    // Associate company tickers
-    if (Array.isArray(ep.companies)) {
-      for (const comp of ep.companies) {
-        if (comp.symbol) {
-          const sym = comp.symbol.toUpperCase();
-          let entityId = comp.name || sym;
-          const lowerName = (comp.name || "").toLowerCase();
-          for (const [taxId, taxDef] of Object.entries(ENTITIES)) {
-            if (
-              taxId === lowerName ||
-              taxDef.name.toLowerCase() === lowerName ||
-              taxDef.ticker?.symbol.toUpperCase() === sym ||
-              taxDef.aliases.some((a) => a.toLowerCase() === lowerName)
-            ) {
-              entityId = taxId;
-              break;
-            }
-          }
-
-          await sql`
-            INSERT INTO podcast_episode_tickers (episode_id, ticker, entity_id)
-            VALUES (${epId}, ${sym}, ${entityId})
-            ON CONFLICT (episode_id, ticker) DO UPDATE SET entity_id = EXCLUDED.entity_id
-          `.catch(() => {});
-        }
-      }
-    }
+    // Associate company tickers and detected entities
+    await associateEntitiesAndTickers(epId, searchText, ep.companies);
   }
 
   // Refresh counts on touched podcast channels
@@ -283,9 +258,93 @@ export async function syncBigGoPodcastEpisodes(
   return { total: episodes.length, inserted };
 }
 
-export async function syncPodcastFeeds(): Promise<{ synced: number; episodesAdded: number }> {
-  // Query enabled podcasts with a feed URL
-  const channels = await sql<{
+export async function associateEntitiesAndTickers(
+  epId: string,
+  textToScan: string,
+  explicitCompanies?: Array<{ name?: string; symbol?: string }>
+): Promise<void> {
+  const matchedTickers = new Map<string, string>(); // ticker -> entityId
+
+  // 1. Process explicit companies if present (e.g. from BigGo)
+  if (Array.isArray(explicitCompanies)) {
+    for (const comp of explicitCompanies) {
+      if (comp.symbol) {
+        const sym = comp.symbol.toUpperCase();
+        let entityId = comp.name || sym;
+        const lowerName = (comp.name || "").toLowerCase();
+        for (const [taxId, taxDef] of Object.entries(ENTITIES)) {
+          if (
+            taxId === lowerName ||
+            taxDef.name.toLowerCase() === lowerName ||
+            taxDef.ticker?.symbol.toUpperCase() === sym ||
+            taxDef.aliases.some((a) => a.toLowerCase() === lowerName)
+          ) {
+            entityId = taxId;
+            break;
+          }
+        }
+        matchedTickers.set(sym, entityId);
+      }
+    }
+  }
+
+  // 2. Scan text for known entities with tickers
+  const lowerText = textToScan.toLowerCase();
+  for (const [taxId, taxDef] of Object.entries(ENTITIES)) {
+    if (!taxDef.ticker?.symbol) continue;
+    const sym = taxDef.ticker.symbol.toUpperCase();
+    if (matchedTickers.has(sym)) continue;
+
+    const matches =
+      lowerText.includes(taxDef.name.toLowerCase()) ||
+      taxDef.aliases.some((alias) => {
+        const a = alias.toLowerCase();
+        if (a.length <= 3) {
+          const regex = new RegExp(`\\b${a}\\b`, "i");
+          return regex.test(textToScan);
+        }
+        return lowerText.includes(a);
+      });
+
+    if (matches) {
+      matchedTickers.set(sym, taxId);
+    }
+  }
+
+  // 3. Persist to podcast_episode_tickers
+  for (const [sym, entityId] of matchedTickers.entries()) {
+    await sql`
+      INSERT INTO podcast_episode_tickers (episode_id, ticker, entity_id)
+      VALUES (${epId}, ${sym}, ${entityId})
+      ON CONFLICT (episode_id, ticker) DO UPDATE SET entity_id = EXCLUDED.entity_id
+    `.catch(() => {});
+  }
+}
+
+export interface SyncPodcastFeedsOptions {
+  skipBigGo?: boolean;
+  limitChannels?: number;
+  batchSize?: number;
+}
+
+export async function syncPodcastFeeds(
+  options: SyncPodcastFeedsOptions = {}
+): Promise<{ synced: number; episodesAdded: number; episodesEnriched: number }> {
+  let episodesAdded = 0;
+  let episodesEnriched = 0;
+
+  // 1. If BigGo is not skipped, attempt BigGo sync first (captures curated summaries & Chinese translations)
+  if (!options.skipBigGo) {
+    try {
+      const biggoResult = await syncBigGoPodcastEpisodes();
+      episodesAdded += biggoResult.inserted;
+    } catch (err) {
+      console.warn("BigGo podcast catalog sync failed or was unreachable; proceeding with official RSS feeds:", err);
+    }
+  }
+
+  // 2. Query enabled podcasts with an official RSS feed URL
+  const allChannels = await sql<{
     id: string;
     feed_url: string | null;
     title: string;
@@ -293,67 +352,120 @@ export async function syncPodcastFeeds(): Promise<{ synced: number; episodesAdde
     SELECT id, feed_url, title FROM podcasts WHERE enabled = true AND feed_url IS NOT NULL
   `;
 
+  const channels = options.limitChannels ? allChannels.slice(0, options.limitChannels) : allChannels;
   let synced = 0;
-  let episodesAdded = 0;
 
-  for (const c of channels) {
-    if (!c.feed_url) continue;
-    try {
-      const res = await guardedFetch(c.feed_url, { timeoutMs: 15_000 });
-      if (res.status < 200 || res.status >= 300) continue;
-      const xml = res.text();
-      const parsed = parsePodcastFeedXml(xml);
+  // Process channels concurrently in batches to balance speed and zero-disk / memory efficiency
+  const batchSize = options.batchSize ?? 5;
+  for (let i = 0; i < channels.length; i += batchSize) {
+    const chunk = channels.slice(i, i + batchSize);
+    await Promise.all(
+      chunk.map(async (c) => {
+        if (!c.feed_url) return;
+        try {
+          const res = await guardedFetch(c.feed_url, { timeoutMs: 15_000 });
+          if (res.status < 200 || res.status >= 300) return;
+          const xml = res.text();
+          const parsed = parsePodcastFeedXml(xml);
 
-      for (const ep of parsed.episodes) {
-        const epId = `${c.id}-${ep.guid}`.toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 80);
-        const ins = await sql`
-          INSERT INTO podcast_episodes (
-            id, podcast_id, guid, url, title, published_at, audio_url,
-            audio_duration_sec, audio_duration_str, hosts, summary_zh,
-            cover_url, search_text, updated_at
-          ) VALUES (
-            ${epId}, ${c.id}, ${ep.guid}, ${ep.link}, ${ep.title}, ${ep.publishedAt},
-            ${ep.audioUrl}, ${ep.audioDurationSec ?? null}, ${ep.audioDurationStr ?? null},
-            ${ep.author ? [ep.author] : []}, ${ep.showNotes.slice(0, 500)},
-            ${ep.coverUrl ?? null}, ${`${ep.title} ${ep.showNotes}`.slice(0, 2000)}, now()
-          )
-          ON CONFLICT (podcast_id, guid) DO UPDATE SET
-            title = EXCLUDED.title,
-            audio_url = EXCLUDED.audio_url,
-            audio_duration_sec = COALESCE(EXCLUDED.audio_duration_sec, podcast_episodes.audio_duration_sec),
-            audio_duration_str = COALESCE(EXCLUDED.audio_duration_str, podcast_episodes.audio_duration_str),
-            updated_at = now()
-          RETURNING id;
-        `;
-        if (ins.length > 0) episodesAdded++;
-      }
+          for (const ep of parsed.episodes) {
+            const epId = `${c.id}-${ep.guid}`.toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 80);
 
-      await sql`
-        UPDATE podcasts
-        SET episode_count = (SELECT count(*)::int FROM podcast_episodes WHERE podcast_id = ${c.id}),
-            last_fetch_at = now(),
-            last_ok_at = now(),
-            updated_at = now()
-        WHERE id = ${c.id}
-      `;
-      synced++;
-    } catch {
-      await sql`UPDATE podcasts SET last_fetch_at = now() WHERE id = ${c.id}`.catch(() => {});
-    }
+            // Check if this episode already exists in database (e.g. from BigGo or previous RSS fetch)
+            const existing = await sql<{ id: string; audio_url: string | null; body_html: string | null }[]>`
+              SELECT id, audio_url, body_html FROM podcast_episodes
+              WHERE podcast_id = ${c.id}
+                AND (
+                  guid = ${ep.guid}
+                  OR (
+                    published_at >= ${new Date(ep.publishedAt.getTime() - 48 * 3600 * 1000)}
+                    AND published_at <= ${new Date(ep.publishedAt.getTime() + 48 * 3600 * 1000)}
+                    AND (
+                      (${ep.audioDurationSec ?? null}::int IS NOT NULL AND ABS(audio_duration_sec - ${ep.audioDurationSec ?? 0}) <= 90)
+                      OR LOWER(title) = LOWER(${ep.title})
+                    )
+                  )
+                )
+              LIMIT 1;
+            `.catch(() => []);
+
+            if (existing.length > 0 && existing[0]) {
+              // Enrich existing episode with direct audio stream & notes if missing, without destroying BigGo intelligence
+              const matchedId = existing[0].id;
+              await sql`
+                UPDATE podcast_episodes
+                SET
+                  audio_url = COALESCE(audio_url, ${ep.audioUrl}),
+                  audio_duration_sec = COALESCE(audio_duration_sec, ${ep.audioDurationSec ?? null}),
+                  audio_duration_str = COALESCE(audio_duration_str, ${ep.audioDurationStr ?? null}),
+                  body_text = COALESCE(body_text, ${ep.showNotes}),
+                  body_html = COALESCE(body_html, ${ep.showNotes ? convertMarkdownToHtml(ep.showNotes) : null}),
+                  cover_url = COALESCE(cover_url, ${ep.coverUrl ?? null}),
+                  updated_at = now()
+                WHERE id = ${matchedId}
+              `.catch(() => {});
+              await associateEntitiesAndTickers(matchedId, `${ep.title} ${ep.showNotes}`);
+              episodesEnriched++;
+              continue;
+            }
+
+            // Fresh episode ingested directly from official RSS feed
+            const summaryText = ep.showNotes.slice(0, 500);
+            const bodyText = ep.showNotes;
+            const bodyHtml = ep.showNotes ? convertMarkdownToHtml(ep.showNotes) : null;
+            const searchText = `${ep.title} ${ep.showNotes}`.slice(0, 2000).toLowerCase();
+
+            const ins = await sql`
+              INSERT INTO podcast_episodes (
+                id, podcast_id, guid, url, title, title_zh, published_at, audio_url,
+                audio_duration_sec, audio_duration_str, hosts, guests, language,
+                summary_zh, body_text, body_html, key_points, cover_url, search_text,
+                selected, score, updated_at
+              ) VALUES (
+                ${epId}, ${c.id}, ${ep.guid}, ${ep.link || ep.audioUrl}, ${ep.title}, ${ep.title},
+                ${ep.publishedAt}, ${ep.audioUrl}, ${ep.audioDurationSec ?? null}, ${ep.audioDurationStr ?? null},
+                ${ep.author ? [ep.author] : []}, ${[]}, 'zh-TW',
+                ${summaryText}, ${bodyText}, ${bodyHtml}, ${[]},
+                ${ep.coverUrl ?? null}, ${searchText}, true, 80, now()
+              )
+              ON CONFLICT (podcast_id, guid) DO UPDATE SET
+                audio_url = COALESCE(podcast_episodes.audio_url, EXCLUDED.audio_url),
+                audio_duration_sec = COALESCE(podcast_episodes.audio_duration_sec, EXCLUDED.audio_duration_sec),
+                audio_duration_str = COALESCE(podcast_episodes.audio_duration_str, EXCLUDED.audio_duration_str),
+                body_text = COALESCE(podcast_episodes.body_text, EXCLUDED.body_text),
+                body_html = COALESCE(podcast_episodes.body_html, EXCLUDED.body_html),
+                updated_at = now()
+              RETURNING id;
+            `.catch(() => []);
+
+            if (ins.length > 0) {
+              episodesAdded++;
+              await associateEntitiesAndTickers(epId, `${ep.title} ${ep.showNotes}`);
+            }
+          }
+
+          await sql`
+            UPDATE podcasts
+            SET episode_count = (SELECT count(*)::int FROM podcast_episodes WHERE podcast_id = ${c.id}),
+                last_fetch_at = now(),
+                last_ok_at = now(),
+                updated_at = now()
+            WHERE id = ${c.id}
+          `.catch(() => {});
+          synced++;
+        } catch (err) {
+          console.warn(`Failed to sync RSS feed for podcast ${c.id} (${c.title}):`, err);
+          await sql`UPDATE podcasts SET last_fetch_at = now() WHERE id = ${c.id}`.catch(() => {});
+        }
+      })
+    );
   }
 
-  // Also sync BigGo podcast catalog episodes
-  const biggoResult = await syncBigGoPodcastEpisodes().catch((err) => {
-    console.error("Failed to sync BigGo podcast episodes:", err);
-    return { total: 0, inserted: 0 };
-  });
-  episodesAdded += biggoResult.inserted;
-
-  if (episodesAdded > 0) {
+  if (episodesAdded > 0 || episodesEnriched > 0) {
     await bridgePodcastsToPublications().catch((err) => {
       console.error("Failed to bridge podcast episodes to publications:", err);
     });
   }
 
-  return { synced, episodesAdded };
+  return { synced, episodesAdded, episodesEnriched };
 }
