@@ -9,8 +9,8 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --font-sans: "Zen Kaku Gothic New", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --font-sans: "JetBrains Mono", "Gen Jyuu Gothic", "GenJyuuGothic", "源柔黑體", "源柔黑体", "源柔ゴシック", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", "Gen Jyuu Gothic Monospace", "GenJyuuGothicMonospace", "源柔ゴシック等幅", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
   /* Brand (VI), fixed across themes. */
   --color-brand-teal: #176b75;
@@ -187,6 +187,35 @@
   --code-bg: #10151c;
   --selection: rgba(18, 204, 216, 0.22);
 }
+/* Gen Jyuu Gothic (源柔黑體 / 源柔ゴシック) local font mappings */
+@font-face {
+  font-family: "Gen Jyuu Gothic";
+  src:
+    local("Gen Jyuu Gothic"),
+    local("GenJyuuGothic"),
+    local("源柔黑體"),
+    local("源柔黑体"),
+    local("源柔ゴシック"),
+    local("Gen Jyuu Gothic Regular"),
+    local("GenJyuuGothic-Regular");
+  font-weight: 100 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gen Jyuu Gothic";
+  src:
+    local("Gen Jyuu Gothic Medium"),
+    local("GenJyuuGothic-Medium"),
+    local("Gen Jyuu Gothic Bold"),
+    local("GenJyuuGothic-Bold"),
+    local("源柔黑體 Bold"),
+    local("源柔ゴシック Bold");
+  font-weight: 500 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   html {
@@ -195,6 +224,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
+    font-optical-sizing: auto;
   }
   body {
     background: var(--bg);
@@ -202,6 +232,7 @@
     font-family: var(--font-sans);
     font-size: 16px; /* 12pt standard: 16px in CSS = 12pt at 96 DPI */
     line-height: 1.6;
+    font-optical-sizing: auto;
   }
   ::selection {
     background: var(--selection);
@@ -233,6 +264,12 @@
   .mono {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+    font-optical-sizing: auto;
+  }
+  .jetbrains-mono {
+    font-family: "JetBrains Mono", monospace;
+    font-optical-sizing: auto;
+    font-style: normal;
   }
   .chip {
     display: inline-flex;

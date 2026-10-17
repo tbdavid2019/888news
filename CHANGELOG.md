@@ -2,6 +2,25 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-17] — 🌐 Git 遠端存儲庫綁定與 JetBrains Mono + Gen Jyuu Gothic（源柔黑體）字體升級
+
+### 🌐 Git 遠端倉庫綁定與遠端優先同步 (Git Remote Synchronization)
+- **遠端關聯**：配置並綁定官方 GitHub 倉庫 `https://github.com/tbdavid2019/888news.git`，設定 `main` 分支追蹤 `origin/main`。
+- **一致性同步**：以遠端倉庫作為唯一事實來源（Single Source of Truth），維持乾淨工作樹並建立平滑追蹤。
+
+### 🎨 排版系統升級：JetBrains Mono + Gen Jyuu Gothic（源柔黑體）(Typography Redesign)
+- **Google Fonts JetBrains Mono 可變字型整合**：
+  - 更新全站 Google Fonts 載入規格為 `JetBrains Mono:ital,wght@0,100..800;1,100..800`，完整支援全區間字重與斜體樣式。
+  - 於全站基礎樣式與文字元素啟用 `font-optical-sizing: auto`，根據字型尺寸自動微調筆畫粗細與間距，提升小字號與大標題的光學可讀性。
+  - 提供 `.jetbrains-mono` 工具類別（包含 `font-family: "JetBrains Mono", monospace; font-optical-sizing: auto; font-style: normal;`）。
+- **Gen Jyuu Gothic（源柔黑體 / 源柔ゴシック）中文字型支援**：
+  - 將無襯線正文字體堆疊升級為 `"JetBrains Mono", "Gen Jyuu Gothic", "GenJyuuGothic", "源柔黑體", "源柔黑体", "源柔ゴシック", ...`，由 JetBrains Mono 精準呈現英文、數字與符號，中文字元自然銜接至源柔黑體圓潤筆觸。
+  - 配置本地字型映射 (`@font-face` local mappings)，完整支援本機安裝之源柔黑體各變體與字重（Regular、Medium、Bold）。
+- **等寬字型棧強化**：
+  - `--font-mono` 升級為包含 `"JetBrains Mono", "Gen Jyuu Gothic Monospace", "GenJyuuGothicMonospace", "源柔ゴシック等幅"`，兼顧程式碼排版與中英混排等寬對齊。
+
+---
+
 ## [2026-10-16] — 🎙️ PigeonPod 伺服器整合、YouTube 轉 Podcast 原生 RSS 雙向備援與 100% 信源全覆蓋
 
 ### 🕊️ PigeonPod 自建音訊串流服務整合 (PigeonPod YouTube-to-Podcast RSS Bridge)
