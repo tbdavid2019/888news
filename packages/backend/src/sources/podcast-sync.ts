@@ -418,7 +418,7 @@ export async function syncPodcastFeeds(
 
         for (const url of candidateUrls) {
           try {
-            const res = await guardedFetch(url, { timeoutMs: 15_000 });
+            const res = await guardedFetch(url, { timeoutMs: 25_000, maxBytes: 32 * 1024 * 1024 });
             if (res.status >= 200 && res.status < 300) {
               xml = res.text();
               successfulUrl = url;

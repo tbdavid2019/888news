@@ -26,10 +26,12 @@
 - **徹底解耦 BigGo 單點故障（斷炊零影響）**：
   - 升級 [`packages/backend/src/sources/podcast-sync.ts`](packages/backend/src/sources/podcast-sync.ts)，建立多路候選來源容錯機制（Candidate Feed Failover）：優先檢索官方 Audio RSS，遇逾時或連線失敗自動平滑切換至官方 YouTube Atom RSS。
   - 修正原生 RSS 入庫權重與評分：由 RSS / YouTube 原生抓取的單集一律賦予精選權重（`selected = true, score = 85`），確保即便 BigGo 斷炊或限速，原生單集亦能 100% 自動進駐首頁、全部動態與 Podcast 推薦清單。
+- **超大容量 Feed 緩衝與連線容錯 (Large RSS Payload Tolerance)**：
+  - 將 Feed 抓取之 `maxBytes` 上限由預設 8MB 擴增至 32MB，並將連線逾時提升至 25 秒，完美支援如 Substack（長達數年全文內嵌、大小達 14.6MB）等超大單一 RSS Feed。
 - **頻道庫 YouTube 關聯補齊**：
-  - 更新 [`industry/podcasts.json`](industry/podcasts.json) 中多個頂級頻道的 `youtube_channel_id`（如 The Road to Autonomy、Lex Fridman、硅谷101、WhynotTV 等）。
-- **新增 CLI 同步工具**：
-  - 新增 [`scripts/sync-podcast-feeds.ts`](scripts/sync-podcast-feeds.ts)，支援手動觸發全量雙軌同步與 `--skip-biggo` 獨立原生驗證模式。
+  - 更新 [`industry/podcasts.json`](industry/podcasts.json) 中多個頂級頻道的 `youtube_channel_id`（如 Latent Space、The Road to Autonomy、Lex Fridman、硅谷101、WhynotTV 等）。
+- **新增 CLI 同步工具與獨立離線驗證**：
+  - 新增 [`scripts/sync-podcast-feeds.ts`](scripts/sync-podcast-feeds.ts)，支援手動觸發全量雙軌同步與 `--skip-biggo` 獨立原生驗證模式，並於 EC2 正式環境完成 `--skip-biggo` 實機獨立抓取驗證。
 
 ---
 

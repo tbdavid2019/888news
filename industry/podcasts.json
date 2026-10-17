@@ -66,7 +66,8 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T1",
-      "feed_url": "https://api.substack.com/feed/podcast/1084089.rss"
+      "feed_url": "https://api.substack.com/feed/podcast/1084089.rss",
+      "youtube_channel_id": "UCxBcwypKK-W3GHd_RZ9FZrQ"
     },
     {
       "id": "483657631daf",
