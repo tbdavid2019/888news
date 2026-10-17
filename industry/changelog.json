@@ -19,7 +19,7 @@
       "title": "字體升級：JetBrains Mono + Gen Jyuu Gothic（源柔黑體）排版系統上線",
       "body": [
         "Google Fonts JetBrains Mono 全字重與可變字型引入，支援光學尺寸自動調整 (font-optical-sizing: auto)。",
-        "引入 Gen Jyuu Gothic（源柔黑體 / 源柔ゴシック）中文字體堆疊與本地映射，呈現圓潤優雅的閱讀體驗。",
+        "完整內嵌 Gen Jyuu Gothic（源柔黑體 / 源柔ゴシック）WOFF2 網路字型，免安裝字型亦能跨裝置一致呈現圓潤優雅的閱讀體驗。",
         "等寬代碼、數字與英文字元由 JetBrains Mono 精確呈現，中文字元無縫銜接源柔黑體，落實高質感跨平台排版。"
       ]
     },

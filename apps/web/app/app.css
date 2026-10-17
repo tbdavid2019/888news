@@ -187,17 +187,19 @@
   --code-bg: #10151c;
   --selection: rgba(18, 204, 216, 0.22);
 }
-/* Gen Jyuu Gothic (源柔黑體 / 源柔ゴシック) local font mappings */
+/* Gen Jyuu Gothic (源柔黑體 / 源柔ゴシック) font mappings & webfont fallback */
 @font-face {
   font-family: "Gen Jyuu Gothic";
   src:
     local("Gen Jyuu Gothic"),
+    local("Genjyuu Gothic"),
     local("GenJyuuGothic"),
     local("源柔黑體"),
     local("源柔黑体"),
     local("源柔ゴシック"),
     local("Gen Jyuu Gothic Regular"),
-    local("GenJyuuGothic-Regular");
+    local("GenJyuuGothic-Regular"),
+    url("@fontsource/genjyuu-gothic/files/genjyuu-gothic-latin-400-normal.woff2") format("woff2");
   font-weight: 100 400;
   font-style: normal;
   font-display: swap;
@@ -207,12 +209,24 @@
   font-family: "Gen Jyuu Gothic";
   src:
     local("Gen Jyuu Gothic Medium"),
+    local("Genjyuu Gothic Medium"),
     local("GenJyuuGothic-Medium"),
+    url("@fontsource/genjyuu-gothic/files/genjyuu-gothic-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gen Jyuu Gothic";
+  src:
     local("Gen Jyuu Gothic Bold"),
+    local("Genjyuu Gothic Bold"),
     local("GenJyuuGothic-Bold"),
     local("源柔黑體 Bold"),
-    local("源柔ゴシック Bold");
-  font-weight: 500 900;
+    local("源柔ゴシック Bold"),
+    url("@fontsource/genjyuu-gothic/files/genjyuu-gothic-latin-700-normal.woff2") format("woff2");
+  font-weight: 600 900;
   font-style: normal;
   font-display: swap;
 }

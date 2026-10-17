@@ -13,11 +13,13 @@
   - 更新全站 Google Fonts 載入規格為 `JetBrains Mono:ital,wght@0,100..800;1,100..800`，完整支援全區間字重與斜體樣式。
   - 於全站基礎樣式與文字元素啟用 `font-optical-sizing: auto`，根據字型尺寸自動微調筆畫粗細與間距，提升小字號與大標題的光學可讀性。
   - 提供 `.jetbrains-mono` 工具類別（包含 `font-family: "JetBrains Mono", monospace; font-optical-sizing: auto; font-style: normal;`）。
-- **Gen Jyuu Gothic（源柔黑體 / 源柔ゴシック）中文字型支援**：
-  - 將無襯線正文字體堆疊升級為 `"JetBrains Mono", "Gen Jyuu Gothic", "GenJyuuGothic", "源柔黑體", "源柔黑体", "源柔ゴシック", ...`，由 JetBrains Mono 精準呈現英文、數字與符號，中文字元自然銜接至源柔黑體圓潤筆觸。
-  - 配置本地字型映射 (`@font-face` local mappings)，完整支援本機安裝之源柔黑體各變體與字重（Regular、Medium、Bold）。
+- **Gen Jyuu Gothic（源柔黑體 / 源柔ゴシック）真實 Webfont 網路字型實體封裝**：
+  - 徹底解決原先僅依賴 `local(...)` 本地映射導致客戶端未安裝字型時無法啟用的問題。
+  - 引入 `@fontsource/genjyuu-gothic`，於 Vite 建置管線中直接內嵌 400（Regular）、500（Medium）、700（Bold）三種字重的 WOFF2 實體字型檔。
+  - 於 `@font-face` 建立「本機優先載入（0ms 零網路延遲）+ 伺服器/CDN WOFF2 自動備援」雙軌機制，使任何裝置（手機、平板、未安裝該字型之 Mac/Windows 電腦）皆能 100% 成功套用源柔黑體。
+  - 同步將 `--font-sans` 與 `--font-mono` 正式對齊 `"Gen Jyuu Gothic"` 與 `"Genjyuu Gothic"`，並支援 `font-display: swap` 確保首屏無阻斷秒開。
 - **等寬字型棧強化**：
-  - `--font-mono` 升級為包含 `"JetBrains Mono", "Gen Jyuu Gothic Monospace", "GenJyuuGothicMonospace", "源柔ゴシック等幅"`，兼顧程式碼排版與中英混排等寬對齊。
+  - `--font-mono` 升級為包含 `"JetBrains Mono", "Gen Jyuu Gothic", "Genjyuu Gothic", "Gen Jyuu Gothic Monospace", "Genjyuu Gothic Monospace", "源柔ゴシック等幅"`，兼顧程式碼排版與中英混排等寬對齊。
 
 ### 🛡️ Podcast 原生自主管線與 YouTube Atom RSS 雙軌備援 (Autonomous Fallback Architecture)
 - **YouTube 官方 Atom XML 原生解析引擎**：

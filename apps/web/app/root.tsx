@@ -7,6 +7,9 @@ import {
 import type { ReactNode } from "react";
 import type { Route } from "./+types/root";
 import "./app.css";
+import "@fontsource/genjyuu-gothic/400.css";
+import "@fontsource/genjyuu-gothic/500.css";
+import "@fontsource/genjyuu-gothic/700.css";
 import { Sidebar } from "./components/shell/Sidebar";
 import { MobileTabBar } from "./components/shell/MobileTabBar";
 import { BackToTop, NavigationProgress } from "./components/shell/Chrome";

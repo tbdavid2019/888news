@@ -11,6 +11,7 @@
   "dependencies": {
     "@aihot/contracts": "*",
     "@aihot/industry": "*",
+    "@fontsource/genjyuu-gothic": "^5.3.0",
     "@react-router/node": "8.4.0",
     "isbot": "5.2.2",
     "motion": "13.4.4",
