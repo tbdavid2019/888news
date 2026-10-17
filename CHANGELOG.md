@@ -19,6 +19,18 @@
 - **等寬字型棧強化**：
   - `--font-mono` 升級為包含 `"JetBrains Mono", "Gen Jyuu Gothic Monospace", "GenJyuuGothicMonospace", "源柔ゴシック等幅"`，兼顧程式碼排版與中英混排等寬對齊。
 
+### 🛡️ Podcast 原生自主管線與 YouTube Atom RSS 雙軌備援 (Autonomous Fallback Architecture)
+- **YouTube 官方 Atom XML 原生解析引擎**：
+  - 升級 [`packages/backend/src/sources/podcast-rss.ts`](packages/backend/src/sources/podcast-rss.ts)，完整支援 YouTube 官方 Atom RSS 結構（`<feed>` / `<entry>` / `yt:videoId` / `media:group` / `media:description` / `media:thumbnail`）。
+  - 無需任何第三方 API Key 或中繼服務，直連 YouTube 官方公開 RSS 端點（`https://www.youtube.com/feeds/videos.xml?channel_id=...`）。
+- **徹底解耦 BigGo 單點故障（斷炊零影響）**：
+  - 升級 [`packages/backend/src/sources/podcast-sync.ts`](packages/backend/src/sources/podcast-sync.ts)，建立多路候選來源容錯機制（Candidate Feed Failover）：優先檢索官方 Audio RSS，遇逾時或連線失敗自動平滑切換至官方 YouTube Atom RSS。
+  - 修正原生 RSS 入庫權重與評分：由 RSS / YouTube 原生抓取的單集一律賦予精選權重（`selected = true, score = 85`），確保即便 BigGo 斷炊或限速，原生單集亦能 100% 自動進駐首頁、全部動態與 Podcast 推薦清單。
+- **頻道庫 YouTube 關聯補齊**：
+  - 更新 [`industry/podcasts.json`](industry/podcasts.json) 中多個頂級頻道的 `youtube_channel_id`（如 The Road to Autonomy、Lex Fridman、硅谷101、WhynotTV 等）。
+- **新增 CLI 同步工具**：
+  - 新增 [`scripts/sync-podcast-feeds.ts`](scripts/sync-podcast-feeds.ts)，支援手動觸發全量雙軌同步與 `--skip-biggo` 獨立原生驗證模式。
+
 ---
 
 ## [2026-10-16] — 🎙️ PigeonPod 伺服器整合、YouTube 轉 Podcast 原生 RSS 雙向備援與 100% 信源全覆蓋

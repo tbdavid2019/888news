@@ -375,13 +375,14 @@ export async function syncPodcastFeeds(
     }
   }
 
-  // 2. Query enabled podcasts with an official RSS feed URL
+  // 2. Query enabled podcasts with an official RSS feed URL or YouTube channel
   const allChannels = await sql<{
     id: string;
     feed_url: string | null;
+    youtube_channel_id: string | null;
     title: string;
   }[]>`
-    SELECT id, feed_url, title FROM podcasts WHERE enabled = true AND feed_url IS NOT NULL
+    SELECT id, feed_url, youtube_channel_id, title FROM podcasts WHERE enabled = true AND (feed_url IS NOT NULL OR youtube_channel_id IS NOT NULL)
   `;
 
   const channels = options.limitChannels ? allChannels.slice(0, options.limitChannels) : allChannels;
@@ -394,11 +395,47 @@ export async function syncPodcastFeeds(
     const chunk = channels.slice(i, i + batchSize);
     await Promise.all(
       chunk.map(async (c) => {
-        if (!c.feed_url) return;
+        const candidateUrls: string[] = [];
+        if (c.feed_url) candidateUrls.push(c.feed_url);
+
+        // If c.feed_url contains a UC... channel ID or is a YouTube/iipod URL, add native YouTube RSS as fallback
+        const ucMatch = c.feed_url?.match(/UC[a-zA-Z0-9_-]{20,}/);
+        if (ucMatch) {
+          const ytUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${ucMatch[0]}`;
+          if (!candidateUrls.includes(ytUrl)) candidateUrls.push(ytUrl);
+        }
+
+        // If youtube_channel_id is set, also add native YouTube RSS as fallback
+        if (c.youtube_channel_id) {
+          const ytUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${c.youtube_channel_id}`;
+          if (!candidateUrls.includes(ytUrl)) candidateUrls.push(ytUrl);
+        }
+
+        if (candidateUrls.length === 0) return;
+
+        let xml: string | null = null;
+        let successfulUrl: string | null = null;
+
+        for (const url of candidateUrls) {
+          try {
+            const res = await guardedFetch(url, { timeoutMs: 15_000 });
+            if (res.status >= 200 && res.status < 300) {
+              xml = res.text();
+              successfulUrl = url;
+              break;
+            }
+          } catch {
+            // try next candidate feed URL
+          }
+        }
+
+        if (!xml) {
+          console.warn(`Failed to sync RSS/YouTube feeds for podcast ${c.id} (${c.title}); all candidate URLs failed:`, candidateUrls);
+          await sql`UPDATE podcasts SET last_fetch_at = now() WHERE id = ${c.id}`.catch(() => {});
+          return;
+        }
+
         try {
-          const res = await guardedFetch(c.feed_url, { timeoutMs: 15_000 });
-          if (res.status < 200 || res.status >= 300) return;
-          const xml = res.text();
           const parsed = parsePodcastFeedXml(xml);
           const episodesToProcess = parsed.episodes.slice(0, maxEpisodes);
 
@@ -407,6 +444,8 @@ export async function syncPodcastFeeds(
             const guidHash = createHash("sha1").update(ep.guid || ep.link || ep.title).digest("hex").slice(0, 16);
             const epId = `${c.id}-${guidHash}`;
             const validAudioUrl = ep.audioUrl && ep.audioUrl.trim().length > 0 ? ep.audioUrl.trim() : null;
+            const isVideo = ep.link?.includes("youtube.com") || successfulUrl?.includes("youtube.com");
+            const youtubeUrl = isVideo ? ep.link : null;
 
             // Check if this episode already exists in database (e.g. from BigGo or previous RSS fetch)
             const existing = await sql<{ id: string; audio_url: string | null; body_html: string | null }[]>`
@@ -441,6 +480,7 @@ export async function syncPodcastFeeds(
                     body_text = COALESCE(body_text, ${ep.showNotes}),
                     body_html = COALESCE(body_html, ${ep.showNotes ? convertMarkdownToHtml(ep.showNotes) : null}),
                     cover_url = COALESCE(cover_url, ${ep.coverUrl ?? null}),
+                    youtube_url = COALESCE(youtube_url, ${youtubeUrl}),
                     updated_at = now()
                   WHERE id = ${matched.id}
                 `.catch((err) => console.warn(`Failed to enrich episode ${matched.id}:`, err));
@@ -450,7 +490,7 @@ export async function syncPodcastFeeds(
               continue;
             }
 
-            // Fresh episode ingested directly from official RSS feed
+            // Fresh episode ingested directly from official RSS or YouTube RSS feed
             const summaryText = ep.showNotes.slice(0, 500);
             const bodyText = ep.showNotes;
             const bodyHtml = ep.showNotes ? convertMarkdownToHtml(ep.showNotes) : null;
@@ -463,13 +503,14 @@ export async function syncPodcastFeeds(
                 id, podcast_id, guid, url, title, title_zh, published_at, audio_url,
                 audio_duration_sec, audio_duration_str, hosts, guests, language,
                 summary_zh, body_text, body_html, key_points, cover_url, search_text,
-                selected, score, updated_at
+                youtube_url, selected, score, updated_at
               ) VALUES (
                 ${epId}, ${c.id}, ${ep.guid}, ${ep.link || episodeAudioUrl}, ${ep.title}, ${ep.title},
                 ${ep.publishedAt}, ${episodeAudioUrl}, ${ep.audioDurationSec ?? null}, ${ep.audioDurationStr ?? null},
                 ${ep.author ? [ep.author] : []}, ${[]}, ${detectedLang},
                 ${summaryText}, ${bodyText}, ${bodyHtml}, ${[]},
-                ${ep.coverUrl ?? null}, ${searchText}, false, 75, now()
+                ${ep.coverUrl ?? null}, ${searchText},
+                ${youtubeUrl}, true, 85, now()
               )
               ON CONFLICT (podcast_id, guid) DO UPDATE SET
                 audio_url = COALESCE(podcast_episodes.audio_url, EXCLUDED.audio_url),
@@ -477,6 +518,9 @@ export async function syncPodcastFeeds(
                 audio_duration_str = COALESCE(podcast_episodes.audio_duration_str, EXCLUDED.audio_duration_str),
                 body_text = COALESCE(podcast_episodes.body_text, EXCLUDED.body_text),
                 body_html = COALESCE(podcast_episodes.body_html, EXCLUDED.body_html),
+                youtube_url = COALESCE(podcast_episodes.youtube_url, EXCLUDED.youtube_url),
+                selected = true,
+                score = COALESCE(podcast_episodes.score, 85),
                 updated_at = now()
               RETURNING (xmax = 0) AS inserted;
             `.catch((err) => {

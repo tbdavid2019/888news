@@ -1,6 +1,17 @@
 {
-  "latestVersion": "2026-10-17 19:15",
+  "latestVersion": "2026-10-17 19:35",
   "releases": [
+    {
+      "date": "2026-10-17",
+      "time": "19:35",
+      "kind": "架構升級",
+      "title": "Podcast 原生自主管線與 YouTube Atom RSS 雙軌備援上線（徹底解耦第三方依賴）",
+      "body": [
+        "YouTube 官方 Atom XML 原生解析引擎：完整支援 YouTube 官方免金鑰公開 RSS（feeds/videos.xml?channel_id=...）。",
+        "多路候選來源自動容錯：優先檢索官方 Audio RSS，遇逾時或連線失敗自動平滑切換至官方 YouTube Atom RSS。",
+        "解耦 BigGo 單點依賴：原生 RSS 入庫單集全面賦予精選權重（selected=true），即便第三方斷炊亦能獨立自給自足。"
+      ]
+    },
     {
       "date": "2026-10-17",
       "time": "19:15",

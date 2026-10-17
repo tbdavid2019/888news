@@ -46,6 +46,56 @@ test("parsePodcastFeedXml parses channel and episode metadata accurately without
   assert.match(ep.showNotes, /Full breakdown of Computex/);
 });
 
+const MOCK_YOUTUBE_ATOM_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+  <link rel="self" href="http://www.youtube.com/feeds/videos.xml?channel_id=UC5xLV_gJAP9psKcyrJ3ZIcw"/>
+  <id>yt:channel:5xLV_gJAP9psKcyrJ3ZIcw</id>
+  <yt:channelId>5xLV_gJAP9psKcyrJ3ZIcw</yt:channelId>
+  <title>WhynotTV</title>
+  <link rel="alternate" href="https://www.youtube.com/channel/UC5xLV_gJAP9psKcyrJ3ZIcw"/>
+  <author>
+    <name>WhynotTV</name>
+    <uri>https://www.youtube.com/channel/UC5xLV_gJAP9psKcyrJ3ZIcw</uri>
+  </author>
+  <published>2015-09-04T09:27:14+00:00</published>
+  <entry>
+    <id>yt:video:__P5yygfRRQ</id>
+    <yt:videoId>__P5yygfRRQ</yt:videoId>
+    <yt:channelId>UC5xLV_gJAP9psKcyrJ3ZIcw</yt:channelId>
+    <title>Danfei Xu：人类数据，行为克隆，机器人GPT-3 | WhynotTV Podcast #5</title>
+    <link rel="alternate" href="https://www.youtube.com/watch?v=__P5yygfRRQ"/>
+    <author>
+      <name>WhynotTV</name>
+      <uri>https://www.youtube.com/channel/UC5xLV_gJAP9psKcyrJ3ZIcw</uri>
+    </author>
+    <published>2026-05-01T11:35:50+00:00</published>
+    <updated>2026-10-05T18:36:43+00:00</updated>
+    <media:group>
+      <media:title>Danfei Xu：人类数据，行为克隆，机器人GPT-3 | WhynotTV Podcast #5</media:title>
+      <media:content url="https://www.youtube.com/v/__P5yygfRRQ?version=3" type="application/x-shockwave-flash" width="640" height="390"/>
+      <media:thumbnail url="https://i4.ytimg.com/vi/__P5yygfRRQ/hqdefault.jpg" width="480" height="360"/>
+      <media:description>深度探讨 robot learning 与 human data 的技术主线与商业化落地方向。</media:description>
+    </media:group>
+  </entry>
+</feed>`;
+
+test("parsePodcastFeedXml parses YouTube Atom channel and video entries accurately", () => {
+  const feed = parsePodcastFeedXml(MOCK_YOUTUBE_ATOM_XML);
+
+  assert.equal(feed.title, "WhynotTV");
+  assert.equal(feed.author, "WhynotTV");
+  assert.equal(feed.link, "https://www.youtube.com/channel/UC5xLV_gJAP9psKcyrJ3ZIcw");
+  assert.equal(feed.episodes.length, 1);
+
+  const ep = feed.episodes[0];
+  assert.equal(ep.guid, "__P5yygfRRQ");
+  assert.equal(ep.title, "Danfei Xu：人类数据，行为克隆，机器人GPT-3 | WhynotTV Podcast #5");
+  assert.equal(ep.link, "https://www.youtube.com/watch?v=__P5yygfRRQ");
+  assert.equal(ep.audioUrl, "https://www.youtube.com/watch?v=__P5yygfRRQ");
+  assert.equal(ep.coverUrl, "https://i4.ytimg.com/vi/__P5yygfRRQ/hqdefault.jpg");
+  assert.match(ep.showNotes, /深度探讨 robot learning/);
+});
+
 test("matchAliasInText correctly handles CJK characters, ASCII boundaries, and symbols", async () => {
   const { matchAliasInText } = await import("@aihot/backend/sources/podcast-sync");
 

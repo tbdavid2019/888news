@@ -26,7 +26,8 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T1",
-      "feed_url": "https://lexfridman.com/feed/podcast/"
+      "feed_url": "https://lexfridman.com/feed/podcast/",
+      "youtube_channel_id": "UCSHZKyawb77ixDdsGog4iWA"
     },
     {
       "id": "697bc59e0afa",
@@ -130,7 +131,8 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T1",
-      "feed_url": "https://rss.art19.com/the-road-to-autonomy"
+      "feed_url": "https://rss.art19.com/the-road-to-autonomy",
+      "youtube_channel_id": "UCQgokf2oSrwae4CPeUQBmYw"
     },
     {
       "id": "924c9a8d7b3f",
@@ -728,7 +730,8 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T1",
-      "feed_url": "https://iipod.david888.com/api/rss/UCKV2yWPB3wn0RTZh3cTD8YA.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304"
+      "feed_url": "https://iipod.david888.com/api/rss/UCKV2yWPB3wn0RTZh3cTD8YA.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304",
+      "youtube_channel_id": "UCKV2yWPB3wn0RTZh3cTD8YA"
     },
     {
       "id": "8af742bcd061",
@@ -1261,7 +1264,8 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T2",
-      "feed_url": "https://iipod.david888.com/api/rss/UC5xLV_gJAP9psKcyrJ3ZIcw.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304"
+      "feed_url": "https://iipod.david888.com/api/rss/UC5xLV_gJAP9psKcyrJ3ZIcw.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304",
+      "youtube_channel_id": "UC5xLV_gJAP9psKcyrJ3ZIcw"
     },
     {
       "id": "3fd239769036",
@@ -1274,7 +1278,8 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T2",
-      "feed_url": "https://iipod.david888.com/api/rss/UCM1guA1E-RHLO2OyfQPOkEQ.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304"
+      "feed_url": "https://iipod.david888.com/api/rss/UCM1guA1E-RHLO2OyfQPOkEQ.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304",
+      "youtube_channel_id": "UCM1guA1E-RHLO2OyfQPOkEQ"
     },
     {
       "id": "5fe644590389",
@@ -1287,7 +1292,8 @@
       "bilibili_subscribers": null,
       "rss_subscribers": null,
       "tier": "T2",
-      "feed_url": "https://iipod.david888.com/api/rss/UCdQ0Gy4i5eAL5soVKJGmU7A.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304"
+      "feed_url": "https://iipod.david888.com/api/rss/UCdQ0Gy4i5eAL5soVKJGmU7A.xml?apikey=AK-54fa4403d4fced762aacb01437a18da64304",
+      "youtube_channel_id": "UCdQ0Gy4i5eAL5soVKJGmU7A"
     }
   ]
 }

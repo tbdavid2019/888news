@@ -72,18 +72,38 @@ function parseDuration(val: unknown): { sec?: number; str?: string } {
   return { sec, str };
 }
 
+function extractLink(v: unknown): string {
+  if (!v) return "";
+  if (typeof v === "string") return v.trim();
+  if (Array.isArray(v)) {
+    const alt = v.find((l: any) => l && typeof l === "object" && l["@rel"] === "alternate") || v[0];
+    return extractLink(alt);
+  }
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    if ("@href" in o) return String(o["@href"]).trim();
+    if ("#text" in o) return String(o["#text"]).trim();
+  }
+  return "";
+}
+
 export function parsePodcastFeedXml(xml: string): ParsedPodcastFeed {
   const doc = parser.parse(xml) as Record<string, unknown>;
   const rss = (doc.rss || doc.feed || doc) as Record<string, unknown>;
   const channel = (rss.channel || rss) as Record<string, unknown>;
 
   const channelTitle = text(channel.title) || "Untitled Podcast";
-  const channelDesc = text(channel.description) || text(channel.summary) || "";
-  const channelLink = text(channel.link) || "";
-  const channelAuthor = text(channel["itunes:author"]) || text(channel.author) || "";
+  const channelDesc = text(channel.description) || text(channel.subtitle) || text(channel.summary) || "";
+  const channelLink = extractLink(channel.link);
+  const channelAuthor =
+    text(channel["itunes:author"]) ||
+    (channel.author && typeof channel.author === "object" ? text((channel.author as any).name) : text(channel.author)) ||
+    "";
   const channelCover =
     (channel["itunes:image"] as Record<string, string> | undefined)?.["@href"] ||
     (channel.image as Record<string, string> | undefined)?.url ||
+    (channel.icon as string | undefined) ||
+    (channel.logo as string | undefined) ||
     "";
 
   const rawItems = (channel.item || channel.entry || []) as unknown;
@@ -98,8 +118,13 @@ export function parsePodcastFeedXml(xml: string): ParsedPodcastFeed {
     const title = text(it.title);
     if (!title) continue;
 
-    const guid = text(it.guid) || text(it.id) || text(it.link) || title;
-    const link = text(it.link) || channelLink;
+    const ytVideoId = text(it["yt:videoId"]);
+    const guid = ytVideoId || text(it.guid) || text(it.id) || extractLink(it.link) || title;
+    let link = extractLink(it.link);
+    if (!link && ytVideoId) {
+      link = `https://www.youtube.com/watch?v=${ytVideoId}`;
+    }
+    if (!link) link = channelLink;
 
     // Enclosure (audio file)
     let audioUrl = "";
@@ -115,18 +140,47 @@ export function parsePodcastFeedXml(xml: string): ParsedPodcastFeed {
         audioUrl = (mcObj as Record<string, string>)["@url"] || "";
       }
     }
+    // Fallback audioUrl to direct link if no audio enclosure is present (e.g. YouTube video)
+    if (!audioUrl && link) {
+      audioUrl = link;
+    }
 
-    const { sec: audioDurationSec, str: audioDurationStr } = parseDuration(it["itunes:duration"]);
+    const mediaGroup = it["media:group"] as Record<string, unknown> | undefined;
+
+    let { sec: audioDurationSec, str: audioDurationStr } = parseDuration(it["itunes:duration"]);
+    if (!audioDurationSec && mediaGroup?.["media:content"]) {
+      const mc = Array.isArray(mediaGroup["media:content"]) ? mediaGroup["media:content"][0] : mediaGroup["media:content"];
+      if (mc && typeof mc === "object" && mc["@duration"]) {
+        const d = parseDuration(mc["@duration"]);
+        audioDurationSec = d.sec;
+        audioDurationStr = d.str;
+      }
+    }
+
     const pubDateStr = text(it.pubDate) || text(it.published) || text(it.updated);
     const pubDate = pubDateStr ? new Date(pubDateStr) : new Date();
 
-    const author = text(it["itunes:author"]) || channelAuthor;
-    const rawContent = text(it["content:encoded"]) || text(it.description) || text(it["itunes:summary"]);
+    const author =
+      text(it["itunes:author"]) ||
+      (it.author && typeof it.author === "object" ? text((it.author as any).name) : text(it.author)) ||
+      channelAuthor;
+
+    const rawContent =
+      text(it["content:encoded"]) ||
+      text(mediaGroup?.["media:description"]) ||
+      text(it.description) ||
+      text(it["itunes:summary"]) ||
+      text(it.summary);
     const showNotes = collapseWhitespace(stripTags(rawContent));
 
-    const coverUrl =
+    let coverUrl =
       (it["itunes:image"] as Record<string, string> | undefined)?.["@href"] ||
-      channelCover;
+      (mediaGroup?.["media:thumbnail"] as Record<string, string> | undefined)?.["@url"] ||
+      (Array.isArray(mediaGroup?.["media:thumbnail"]) ? (mediaGroup?.["media:thumbnail"] as any[])[0]?.["@url"] : undefined);
+    if (!coverUrl && ytVideoId) {
+      coverUrl = `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg`;
+    }
+    if (!coverUrl) coverUrl = channelCover;
 
     // Podcasting 2.0 transcript tag
     let transcriptUrl: string | undefined;
