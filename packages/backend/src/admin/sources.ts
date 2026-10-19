@@ -150,9 +150,20 @@ export async function updateSource(id: string, input: { patch: unknown; version:
 /** Source fields the public projection reads (publication/rules.ts and the v1 payload). */
 const PUBLICATION_FIELDS: string[] = ["participation_mode", "site_fulltext", "syndicate_fulltext", "tier", "name", "first_party"];
 
-const CreateSchema = z
+export const CreateSchema = z
   .object({
-    id: z.string().regex(/^[a-z0-9][a-z0-9-_]{1,79}$/),
+    id: z
+      .string()
+      .trim()
+      .transform((v) => v.replace(/^@/, "").toLowerCase())
+      .pipe(
+        z
+          .string()
+          .regex(
+            /^[a-z0-9_][a-z0-9_-]{0,79}$/,
+            "信源 ID 僅支援小寫英數字、底線（_）與連字號（-），且不得以連字號開頭",
+          ),
+      ),
     name: z.string().min(1).max(200),
     kind: z.enum(["rss", "web_list", "json_list", "x_search", "mp_account", "external"]),
     config: z.record(z.string(), z.unknown()),
@@ -171,7 +182,7 @@ export function sourceIdentity(kind: string, config: Record<string, unknown>, so
   const raw = (config.feedUrl ?? config.url ?? config.listUrl ?? config.endpoint ?? null) as string | null;
   if (kind === "x_search") {
     let handle = (typeof config.handle === "string" ? config.handle.trim().replace(/^@/, "") : null) ??
-      /from:([A-Za-z0-9_]{1,20})/i.exec(String(config.query ?? ""))?.[1];
+      /from:@?([A-Za-z0-9_]{1,20})/i.exec(String(config.query ?? ""))?.[1];
     if ((!handle || handle.toLowerCase() === "handle") && sourceId) {
       handle = sourceId.replace(/^x-/, "");
     }

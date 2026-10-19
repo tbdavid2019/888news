@@ -48,11 +48,11 @@ export default function NewSource() {
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <Card title="信源定義">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="ID" hint="小寫字母、數字、連字號與底線（_），若為 X 帳號建議直接輸入 handle（如 elonmusk）">
+            <Field label="ID" hint="小寫字母、數字、連字號與底線（_，支援如 _mohansolo 等開頭底線），若為 X 帳號建議直接輸入 handle（如 elonmusk 或 _mohansolo）">
               <Input
                 value={form.id}
                 onChange={(e) => {
-                  const newId = e.target.value.toLowerCase();
+                  const newId = e.target.value.trim().replace(/^@/, "").toLowerCase();
                   setForm((prev) => ({ ...prev, id: newId }));
                   if (form.kind === "x_search") {
                     try {
@@ -64,7 +64,7 @@ export default function NewSource() {
                     } catch {}
                   }
                 }}
-                placeholder="elonmusk"
+                placeholder="elonmusk 或 _mohansolo"
               />
             </Field>
             <Field label="名稱">

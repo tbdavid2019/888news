@@ -191,7 +191,7 @@ export function extractHandle(source: Pick<SourceRow, "id" | "config" | "name">)
     return source.config.handle.trim().replace(/^@/, "");
   }
   const query = String(source.config?.query ?? "");
-  const m = /from:([A-Za-z0-9_]{1,20})/i.exec(query);
+  const m = /from:@?([A-Za-z0-9_]{1,20})/i.exec(query);
   if (m && m[1] && m[1].toLowerCase() !== "handle") return m[1];
   if (typeof source.config?.url === "string") {
     const urlMatch = /x\.com\/([A-Za-z0-9_]{1,20})/i.exec(source.config.url);
@@ -348,9 +348,9 @@ export async function fetchXSearch(source: SourceRow): Promise<XFetch> {
 // --- Shards: plain account queries read together ------------------------------------------------
 
 /** A query that can share a search: exactly "from:handle -filter:replies", newest first. */
-const SHARDABLE = /^from:([A-Za-z0-9_]{1,15}) -filter:replies$/i;
+const SHARDABLE = /^from:@?([A-Za-z0-9_]{1,15}) -filter:replies$/i;
 /** The same test in SQL, for the schedulers. */
-export const SHARDABLE_SQL = "^from:[A-Za-z0-9_]{1,15} -filter:replies$";
+export const SHARDABLE_SQL = "^from:@?[A-Za-z0-9_]{1,15} -filter:replies$";
 /** SocialData refuses queries over 512 characters; the since_id watermark takes about 30 of them. */
 const SHARD_QUERY_MAX = 470;
 const SHARD_MAX_ACCOUNTS = 24;
