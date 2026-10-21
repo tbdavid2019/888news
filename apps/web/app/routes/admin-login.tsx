@@ -30,9 +30,9 @@ export default function AdminLogin() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-bg px-4">
       <div className="w-full max-w-[360px]">
-        <div className="flex items-center justify-center gap-2">
-          <Wordmark size={26} className="text-ink" />
-          <span className="text-[15px] font-semibold text-ink-3">後臺</span>
+        <div className="flex items-center justify-center gap-3">
+          <Wordmark size={40} />
+          <span className="text-[16px] font-bold text-ink">後臺管理</span>
         </div>
         <form method="post" action="/api/auth/password" className="card mt-8 p-6">
           <input type="hidden" name="return" value={returnTo} />
