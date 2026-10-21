@@ -1,9 +1,12 @@
 // Re-composes a daily report for a given Beijing date (default: today's date).
-// Usage: node --env-file=.env scripts/recompose-daily.ts [YYYY-MM-DD]
+// Usage: node scripts/recompose-daily.ts [YYYY-MM-DD]
 import { closeDb, sql } from "@aihot/backend/db";
 import { stopBoss } from "@aihot/backend/jobs/queue";
 import { composeDaily } from "@aihot/backend/reports/compose";
-import { beijingDate } from "@aihot/backend/lib/dates";
+
+function beijingDate(d = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
 
 const date = process.argv[2] || beijingDate(new Date());
 
