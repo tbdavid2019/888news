@@ -6,7 +6,6 @@ import { useChangelogSeen } from "../../lib/local-state";
 import { getSidebar, tabIsActive, type NavItem } from "./nav";
 import { ThemeSwitch } from "./ThemeSwitch";
 import { LanguageSwitch } from "./LanguageSwitch";
-import { IconGithub } from "../icons";
 import { useI18n } from "../../lib/i18n";
 import { SidebarPwaInstall } from "./PwaInstall";
 
@@ -51,7 +50,7 @@ export function Sidebar({ changelogVersion }: { changelogVersion: string | null 
   return (
     <aside className="sticky top-0 hidden h-dvh w-[180px] shrink-0 flex-col border-r border-line bg-sidebar px-3 pb-3.5 pt-6 lg:flex">
       <Link to="/" className="mb-4 flex h-[50px] items-center px-1 text-ink" aria-label={`${SITE.name}`}>
-        <Wordmark size={24} />
+        <Wordmark size={20} />
       </Link>
       <nav className="-mx-1 flex-1 overflow-y-auto px-1" aria-label="Sidebar navigation">
         {sidebar.map((section) => (
@@ -69,18 +68,6 @@ export function Sidebar({ changelogVersion }: { changelogVersion: string | null 
         <LanguageSwitch className="mx-1" />
         <ThemeSwitch className="mx-1" />
         <SidebarPwaInstall />
-        {SITE.githubUrl && (
-          <a
-            href={SITE.githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 rounded-full py-1 text-[12px] text-ink-4 transition-colors hover:text-ink"
-            aria-label="GitHub 原始碼"
-          >
-            <IconGithub size={14} />
-            <span>GitHub</span>
-          </a>
-        )}
         {SITE.icp && (
           <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="block px-2 text-[10px] text-ink-4 hover:text-ink-3">
             {SITE.icp}

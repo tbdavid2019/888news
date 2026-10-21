@@ -202,6 +202,23 @@ export function extractHandle(source: Pick<SourceRow, "id" | "config" | "name">)
   return null;
 }
 
+/** Decodes the publication timestamp from a Twitter 64-bit snowflake ID. */
+export function tweetIdToDate(idStr: string): Date | null {
+  try {
+    if (!/^\d{15,22}$/.test(idStr)) return null;
+    const id = BigInt(idStr);
+    const epoch = 1288834974657n; // Twitter Snowflake epoch (2010-11-04T01:42:54.657Z)
+    const timeMs = Number((id >> 22n) + epoch);
+    const now = Date.now();
+    if (timeMs > 1293840000000 && timeMs < now + 86400000) {
+      return new Date(timeMs);
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
 /** Crawls recent tweets from an X profile using 2md.aiurl.tw without requiring paid API keys. */
 export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
   const handle = extractHandle(source);
@@ -225,8 +242,21 @@ export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
 
   for (const block of blocks) {
     if (!block.trimStart().startsWith("*")) continue;
+
+    // Skip pinned posts on X profiles: pinned posts are static highlights from weeks/months/years ago,
+    // not chronological new arrivals. Ingesting them causes old announcements to recur as breaking news.
+    const trimmed = block.trim();
+    if (/^\*\s*Pinned\b/i.test(trimmed) || trimmed.includes("Pinned\n") || trimmed.includes("Pinned\r\n")) {
+      continue;
+    }
+
     const statusMatch = new RegExp(`https://x\\.com/${handle}/status/(\\d+)`, "i").exec(block) ||
-      new RegExp(`https://x\\.com/[A-Za-z0-9_]+/status/(\\d+)`, "i").exec(block);
+      new RegExp(`https://x\\.com/[A-Za-z0-9_]+/status/(\\d+)`, "i").exec(block) ||
+      new RegExp(`(?:amplify_video_thumb|media)/(\\d{15,22})`, "i").exec(block);
+
+    // If there is no real tweet ID, skip this block (e.g. bio, navigation, footer snippets)
+    if (!statusMatch) continue;
+    const tweetId = statusMatch[1]!;
 
     let text = block
       .replace(/\*?\s*\[!\[Image.*?\]\(.*?\)\]\(.*?\)/g, "")
@@ -252,12 +282,19 @@ export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
     if (!text && media.length === 0) continue;
     if (text.length < 5 && media.length === 0) continue;
 
-    const tweetId = statusMatch ? statusMatch[1]! : sha256(`${handle}:${text}`).slice(0, 16);
     if (candidates.some((c) => c.identityKey === `x:${tweetId}`)) continue;
+
+    const tweetDate = tweetIdToDate(tweetId);
+    const publishedAt = tweetDate ?? new Date();
+
+    // Skip tweets older than 14 days from regular crawl
+    if (tweetDate && Date.now() - tweetDate.getTime() > 14 * 86400000) {
+      continue;
+    }
 
     const firstLine = text.split("\n").find((l) => l.trim()) ?? text;
     const title = firstLine.length > 140 ? `${firstLine.slice(0, 137)}...` : firstLine || `${source.name || handle} 於 X 發布動態`;
-    const tweetUrl = statusMatch ? `https://x.com/${handle}/status/${tweetId}` : `https://x.com/${handle}#${tweetId}`;
+    const tweetUrl = `https://x.com/${handle}/status/${tweetId}`;
 
     candidates.push({
       url: tweetUrl,
@@ -265,7 +302,7 @@ export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
       title,
       author: handle,
       language: null,
-      publishedAt: new Date(),
+      publishedAt,
       bodyText: text,
       bodyStatus: "ok",
       xPost: {
@@ -286,13 +323,17 @@ export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
 
   for (const id of tweetIds.slice(0, 10)) {
     if (!candidates.some((c) => c.identityKey === `x:${id}`)) {
+      const tweetDate = tweetIdToDate(id);
+      if (tweetDate && Date.now() - tweetDate.getTime() > 14 * 86400000) {
+        continue;
+      }
       candidates.push({
         url: `https://x.com/${handle}/status/${id}`,
         identityKey: `x:${id}`,
         title: `${source.name || handle} 的推文 (${id})`,
         author: handle,
         language: null,
-        publishedAt: new Date(),
+        publishedAt: tweetDate ?? new Date(),
         bodyText: "",
         bodyStatus: "ok",
         xPost: {

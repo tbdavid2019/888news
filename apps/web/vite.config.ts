@@ -46,7 +46,7 @@ export default defineConfig({
   plugins: [devEdge(), tailwindcss(), reactRouter()],
   server: { port: 3000, strictPort: true },
   define: {
-    "process.env.GITHUB_REPO_URL": JSON.stringify(process.env.GITHUB_REPO_URL || "https://github.com/tbdavid2019/888news"),
+    "process.env.GITHUB_REPO_URL": JSON.stringify(process.env.GITHUB_REPO_URL || ""),
     "process.env.SITE_ICP": JSON.stringify(process.env.SITE_ICP || ""),
   },
   build: {

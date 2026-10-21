@@ -31,8 +31,8 @@ export const SITE = {
   footerNote: "由 888news 開源專案驅動",
   /** 中国大陆网站的 ICP 备案号（选填，支持通过环境变量 SITE_ICP 配置，默认无）。 */
   icp: (typeof process !== "undefined" && process.env?.SITE_ICP ? process.env.SITE_ICP : null) as string | null,
-  /** GitHub 开源仓库链接（选填，支持通过环境变量 GITHUB_REPO_URL 配置）。 */
-  githubUrl: (typeof process !== "undefined" && process.env?.GITHUB_REPO_URL ? process.env.GITHUB_REPO_URL : "https://github.com/tbdavid2019/888news") as string | null,
+  /** GitHub 开源仓库链接（选填，支持通过环境变量 GITHUB_REPO_URL 配置，默认不公开展示）。 */
+  githubUrl: (typeof process !== "undefined" && process.env?.GITHUB_REPO_URL ? process.env.GITHUB_REPO_URL : null) as string | null,
   /** 结构化数据里的网站运营者（搜索引擎用）。 */
   organization: {
     name: "888news",
