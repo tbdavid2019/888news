@@ -85,6 +85,8 @@ test("Brand (VI) fixed tokens are configured correctly in @theme", () => {
   assert.equal(themeTokens["--color-brand-saffron"], "#ffb010");
   assert.equal(themeTokens["--color-brand-blue"], "#17324d");
   assert.equal(themeTokens["--color-brand-clay"], "#a9471d");
+  assert.equal(themeTokens["--color-saffron"], "#ffb010");
+  assert.equal(themeTokens["--color-saffron-ink"], "#2b251a");
 });
 
 test("Light Mode: Key text colors strictly satisfy WCAG AA (>= 4.5:1) and AAA (>= 7.0:1)", () => {
@@ -93,7 +95,7 @@ test("Light Mode: Key text colors strictly satisfy WCAG AA (>= 4.5:1) and AAA (>
     { name: "--surface", hex: lightTokens["--surface"] },
     { name: "--surface-2", hex: lightTokens["--surface-2"] },
     { name: "--bg-sunk", hex: lightTokens["--bg-sunk"] },
-    { name: "--bg-muted", hex: lightTokens["--bg-muted"] },
+    { name: "--sidebar", hex: lightTokens["--sidebar"] },
     { name: "--daybar", hex: lightTokens["--daybar"] },
   ];
 
@@ -150,6 +152,20 @@ test("Light Mode: Key text colors strictly satisfy WCAG AA (>= 4.5:1) and AAA (>
     crAccentContrast >= 7.0,
     `Light Mode: expected --accent-contrast on --accent to satisfy WCAG AAA (>= 7.0:1), got ${crAccentContrast.toFixed(2)}:1`,
   );
+
+  // 5. Secondary muted background (--bg-muted) coverage
+  const bgMuted = lightTokens["--bg-muted"];
+  const crInkMuted = contrastRatio(lightTokens["--ink"], bgMuted);
+  const crInk2Muted = contrastRatio(lightTokens["--ink-2"], bgMuted);
+  const crInk3Muted = contrastRatio(lightTokens["--ink-3"], bgMuted);
+  const crInk4Muted = contrastRatio(lightTokens["--ink-4"], bgMuted);
+  const crAccentMuted = contrastRatio(lightTokens["--accent"], bgMuted);
+
+  assert.ok(crInkMuted >= 7.0, `expected --ink on --bg-muted to satisfy AAA (>= 7.0:1), got ${crInkMuted.toFixed(2)}:1`);
+  assert.ok(crInk2Muted >= 7.0, `expected --ink-2 on --bg-muted to satisfy AAA (>= 7.0:1), got ${crInk2Muted.toFixed(2)}:1`);
+  assert.ok(crInk3Muted >= 4.5, `expected --ink-3 on --bg-muted to satisfy AA (>= 4.5:1), got ${crInk3Muted.toFixed(2)}:1`);
+  assert.ok(crInk4Muted >= 4.5, `expected --ink-4 on --bg-muted to satisfy AA (>= 4.5:1), got ${crInk4Muted.toFixed(2)}:1`);
+  assert.ok(crAccentMuted >= 7.0, `expected --accent on --bg-muted to satisfy AAA (>= 7.0:1), got ${crAccentMuted.toFixed(2)}:1`);
 });
 
 test("Dark Mode: Key text colors strictly satisfy WCAG AA (>= 4.5:1) and AAA (>= 7.0:1)", () => {
@@ -235,6 +251,13 @@ test("Dark Mode: Key text colors strictly satisfy WCAG AA (>= 4.5:1) and AAA (>=
     crAccentContrast >= 7.0,
     `Dark Mode: expected --accent-contrast on --accent to satisfy WCAG AAA (>= 7.0:1), got ${crAccentContrast.toFixed(2)}:1`,
   );
+});
+
+test("Saffron (#ffb010) active indicator contrast complies with WCAG AAA", () => {
+  const crInk = contrastRatio(themeTokens["--color-saffron-ink"] ?? "#2b251a", "#ffb010");
+  const crBlue = contrastRatio("#17324d", "#ffb010");
+  assert.ok(crInk >= 7.0, `Saffron with ink must pass AAA (>=7.0:1), got ${crInk.toFixed(2)}:1`);
+  assert.ok(crBlue >= 7.0, `Saffron with deep blue must pass AAA (>=7.0:1), got ${crBlue.toFixed(2)}:1`);
 });
 
 test("Rank tokens satisfy WCAG contrast requirements on both Light and Dark themes", () => {

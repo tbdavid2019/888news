@@ -51,8 +51,8 @@ async function tree(p: Poster): Promise<Node> {
       padding: "84px 88px 72px",
       fontFamily: "'Noto Sans TC', 'Noto Sans SC'",
       color: INK,
-      backgroundColor: "#fbf7ee",
-      backgroundImage: "radial-gradient(circle at 100% 0%, rgba(23,50,77,0.12), rgba(251,247,238,0) 52%), radial-gradient(circle at 0% 100%, rgba(255,176,16,0.12), rgba(251,247,238,0) 45%)",
+      backgroundColor: "#fff0cc",
+      backgroundImage: "radial-gradient(circle at 100% 0%, rgba(23,50,77,0.12), rgba(255,240,204,0) 52%), radial-gradient(circle at 0% 100%, rgba(255,176,16,0.12), rgba(255,240,204,0) 45%)",
     },
     [
       h("div", { display: "flex", alignItems: "center", justifyContent: "space-between" }, [

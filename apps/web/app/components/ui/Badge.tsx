@@ -3,11 +3,11 @@ import type { ReactNode } from "react";
 type Tone = "selected" | "accent" | "amber" | "hot" | "ok" | "neutral";
 
 const TONES: Record<Tone, string> = {
-  selected: "bg-amber-soft text-amber-ink",
-  accent: "bg-accent-soft text-accent",
-  amber: "bg-amber-soft text-amber-ink",
-  hot: "bg-hot-soft text-hot",
-  ok: "bg-ok-soft text-ok",
+  selected: "bg-amber-soft text-amber-ink border border-amber/30 dark:border-amber/40 shadow-xs",
+  accent: "bg-accent-soft text-accent border border-accent/20",
+  amber: "bg-amber-soft text-amber-ink border border-amber/30 dark:border-amber/40",
+  hot: "bg-hot-soft text-hot border border-hot/20 dark:border-hot/30",
+  ok: "bg-ok-soft text-ok border border-ok/20 dark:border-ok/30",
   neutral: "bg-bg-sunk text-ink-3 border border-line-soft",
 };
 

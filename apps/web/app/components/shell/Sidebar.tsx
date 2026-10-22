@@ -30,14 +30,14 @@ function SideLink({ item, dot }: { item: NavItem; dot: boolean }) {
       prefetch="intent"
       aria-current={isActive ? "page" : undefined}
       className={`flex h-10 items-center gap-2.5 rounded-control px-2.5 text-[14px] transition-colors duration-150 ${
-        isActive ? "bg-accent/10 font-semibold text-ink dark:bg-accent-soft" : "font-medium text-ink-3 hover:bg-bg-sunk hover:text-ink"
+        isActive ? "bg-saffron font-semibold text-saffron-ink shadow-sm dark:bg-saffron dark:text-brand-blue" : "font-medium text-ink-3 hover:bg-bg-sunk hover:text-ink"
       }`}
     >
-      <span className={`flex w-[22px] shrink-0 justify-center ${isActive ? "text-accent" : ""}`}>
+      <span className={`flex w-[22px] shrink-0 justify-center ${isActive ? "text-saffron-ink dark:text-brand-blue" : ""}`}>
         <Icon size={17} />
       </span>
       <span className="min-w-0 truncate">{item.label}</span>
-      {dot && item.changelog && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-hot" aria-label={t("nav.new_update")} />}
+      {dot && item.changelog && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-hot ring-1 ring-white/70 dark:ring-black/50" aria-label={t("nav.new_update")} />}
     </Link>
   );
 }
