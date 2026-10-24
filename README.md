@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-176b75?style=flat-square" alt="AGPL-3.0 License"></a>
-  <img src="https://img.shields.io/badge/Node.js-24-176b75?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 24">
+  <img src="https://img.shields.io/badge/Node.js-26-176b75?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 26">
   <img src="https://img.shields.io/badge/PostgreSQL-17-176b75?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL 17">
   <img src="https://img.shields.io/badge/Docker-Compose-176b75?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose">
   <a href="https://github.com/tbdavid2019/888news"><img src="https://img.shields.io/badge/GitHub-tbdavid2019%2F888news-202a30?style=flat-square&logo=github" alt="GitHub Repository"></a>
@@ -120,7 +120,7 @@
 
 ### 系統需求
 - [Docker](https://docs.docker.com/get-docker/) 與 Docker Compose
-- Node.js 24+（後端原生執行 TypeScript）
+- Node.js 26+（後端原生執行 TypeScript，相容 24+）
 - 一組大模型 API Key（OpenAI, Groq, Gemini, DeepSeek 等均可）
 
 ### 🚀 方式一：直接使用官方預編譯 Docker 映像檔（推薦）
@@ -227,7 +227,7 @@ industry/
 
 ## 技術棧
 
-- **Runtime & Language**：Node.js 24（原生 ESM / TypeScript 執行，無編譯負擔）
+- **Runtime & Language**：Node.js 26（原生 ESM / TypeScript 執行，無編譯負擔，相容 24+）
 - **Web 前端**：React Router (SSR) · Tailwind CSS
 - **API 後端**：Fastify · OpenAPI
 - **任務排程**：Worker Process · pg-boss 隊列

@@ -12,7 +12,7 @@
 
 ## 运行与检查
 
-- Node.js 24 直接运行 TypeScript，后端没有构建步骤。npm workspaces：`apps/*`、`packages/*`、`industry`。
+- Node.js 26 直接运行 TypeScript（兼容 24+），后端没有构建步骤。npm workspaces：`apps/*`、`packages/*`、`industry`。
 - 本机运行和 Docker 见 `docs/deploy.md`。
 - 改完至少跑：
   ```bash

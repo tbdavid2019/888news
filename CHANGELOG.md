@@ -2,6 +2,23 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-24] — ⚡️ 全面升級 Node.js 26 (v26.12.1) 與最新安全漏洞修補加固 (Node.js 26 Runtime & Security Hardening)
+
+### ⚡️ 核心運行環境升級 Node.js 26 (`v26.12.1`)
+- **Docker 容器基礎升級**：
+  - 更新 [`Dockerfile`](Dockerfile) 基礎映像檔為 `node:26.12.1-trixie-slim`。
+  - 全面啟用最新 V8 引擎，帶來更優異的 JavaScript/TypeScript 執行效能、更低的記憶體佔用與更高效的垃圾回收（GC）機制。
+- **最新官方安全性修補（October 2026 Security Releases）完整防禦**：
+  - 完整修復官方近期披露之 10 項安全漏洞，特別針對 4 項重大高風險 CVE 進行全面加固：
+    - **CVE-2026-111497 (High - Node2Shell)**：修復 Brotli 解碼器越界寫入造成之遠端代碼執行（RCE）重大漏洞，防止外部未受信任網頁/RSS/API 回應觸發異常。
+    - **CVE-2026-105482 (High)**：修復 `dns.resolve` 遇到空字元造成域名截斷之漏洞。
+    - **CVE-2026-105483 & CVE-2026-106069 (High)**：修復 TLS 憑證主機名檢查繞過漏洞。
+    - 升級相依之底層 OpenSSL 3.5.9 與最新 CA 憑證庫。
+- **CI/CD 自動化與文件同步**：
+  - 更新 [`.github/workflows/check.yml`](.github/workflows/check.yml) 的 GitHub Actions Node 版本為 26。
+  - 同步更新 [`README.md`](README.md) 版本徽章與 [`AGENTS.md`](AGENTS.md) 執行規範。
+  - 經單元測試套件驗證，37 項 Web 測試與後端測試全數 100% 通過（0 失敗）。
+
 ## [2026-10-24] — 📊 Markdown 表格全鏈路原生渲染與歷史正文修復 (Markdown Tables Rendering Engine)
 
 ### 📊 完整支援 Markdown 表格語意化渲染
