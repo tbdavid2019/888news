@@ -10,7 +10,7 @@ import { BudgetExceededError } from "../providers/receipts.ts";
 import { credential } from "../config.ts";
 import { getArticle } from "../providers/socialdata.ts";
 import { onlyXArticleLink, xArticleText } from "../sources/x.ts";
-import { sanitizeBody, trimTrailingChrome } from "./sanitize.ts";
+import { parseTableLines, sanitizeBody, trimTrailingChrome } from "./sanitize.ts";
 import { contentHash } from "./materials.ts";
 
 export interface ExtractedBody {
@@ -64,6 +64,15 @@ function markdownToHtml(md: string): string {
       if (h) return `<h${Math.min(h[1]!.length + 1, 4)}>${inline(h[2]!)}</h${Math.min(h[1]!.length + 1, 4)}>`;
       if (/^[-*]\s/.test(t)) return `<ul>${t.split("\n").map((l) => `<li>${inline(l.replace(/^[-*]\s+/, ""))}</li>`).join("")}</ul>`;
       if (/^>\s?/.test(t)) return `<blockquote><p>${inline(t.replace(/^>\s?/gm, ""))}</p></blockquote>`;
+      const tableMatch = t.includes("|") ? parseTableLines(t.split("\n")) : null;
+      if (tableMatch) {
+        const lines = t.split("\n");
+        const beforeLines = lines.slice(0, tableMatch.startIdx).map((l) => l.trim()).filter(Boolean);
+        const afterLines = lines.slice(tableMatch.endIdx).map((l) => l.trim()).filter(Boolean);
+        const beforeHtml = beforeLines.length > 0 ? `<p>${beforeLines.map(inline).join("<br>")}</p>` : "";
+        const afterHtml = afterLines.length > 0 ? `<p>${afterLines.map(inline).join("<br>")}</p>` : "";
+        return `${beforeHtml}${tableMatch.tableHtml}${afterHtml}`;
+      }
       return `<p>${inline(t).replace(/\n/g, "<br>")}</p>`;
     })
     .join("");

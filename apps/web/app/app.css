@@ -545,13 +545,29 @@
 }
 .prose table {
   display: block;
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   border-collapse: collapse;
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.6;
+  margin: 1.5em 0;
 }
-.prose th, .prose td { border: 1px solid var(--line); padding: 0.5em 0.75em; text-align: left; }
-.prose th { background: var(--bg-sunk); font-weight: 600; }
+.prose th, .prose td {
+  border: 1px solid var(--line);
+  padding: 0.6em 0.85em;
+  text-align: left;
+  vertical-align: top;
+}
+.prose th {
+  background: var(--bg-sunk);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.prose tr:nth-child(even) td {
+  background: var(--surface-2, rgba(0, 0, 0, 0.02));
+}
 .prose hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
 
 /* AI summaries on item detail pages: readable leading sentence with structured points */

@@ -9,6 +9,7 @@ import { parsePodcastFeedXml } from "./podcast-rss.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { bridgePodcastsToPublications } from "../publication/podcast-bridge.ts";
 import { ENTITIES } from "@aihot/industry/taxonomy";
+import { parseTableLines } from "../content/sanitize.ts";
 
 export interface SyncBigGoOptions {
   limit?: number;
@@ -44,6 +45,15 @@ export function convertMarkdownToHtml(md: string): string {
       if (h) return `<h${Math.min(h[1]!.length + 1, 4)}>${inline(h[2]!)}</h${Math.min(h[1]!.length + 1, 4)}>`;
       if (/^[-*]\s/.test(t)) return `<ul>${t.split("\n").map((l) => `<li>${inline(l.replace(/^[-*]\s+/, ""))}</li>`).join("")}</ul>`;
       if (/^>\s?/.test(t)) return `<blockquote><p>${inline(t.replace(/^>\s?/gm, ""))}</p></blockquote>`;
+      const tableMatch = t.includes("|") ? parseTableLines(t.split("\n")) : null;
+      if (tableMatch) {
+        const lines = t.split("\n");
+        const beforeLines = lines.slice(0, tableMatch.startIdx).map((l) => l.trim()).filter(Boolean);
+        const afterLines = lines.slice(tableMatch.endIdx).map((l) => l.trim()).filter(Boolean);
+        const beforeHtml = beforeLines.length > 0 ? `<p>${beforeLines.map(inline).join("<br>")}</p>` : "";
+        const afterHtml = afterLines.length > 0 ? `<p>${afterLines.map(inline).join("<br>")}</p>` : "";
+        return `${beforeHtml}${tableMatch.tableHtml}${afterHtml}`;
+      }
       return `<p>${inline(t).replace(/\n/g, "<br>")}</p>`;
     })
     .join("");

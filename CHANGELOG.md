@@ -2,6 +2,36 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-24] — 📊 Markdown 表格全鏈路原生渲染與歷史正文修復 (Markdown Tables Rendering Engine)
+
+### 📊 完整支援 Markdown 表格語意化渲染
+- **問題根因分析**：
+  - **採集/同步層語法解析缺失**：Podcast 節目摘要（如 BigGo API 與 RSS Show Notes）及備援擷取模組（`podcast-sync.ts` 與 `extract.ts`）在將 Markdown 轉為 HTML 時，`convertMarkdownToHtml` 缺少對 GFM Markdown 表格（`| Header | ... |` 與 `|---|---|`）的識別處理，直接降級為普通 `<p>` 段落並將分行換為 `<br>`，導致正文殘留未渲染的管線符號表格（如 `pod_855f1c97d4a67d3c`）。
+  - **前端/發布層未做容錯還原**：Web 端在渲染 `bodyHtml` 時未針對 `<p>|...|<br>|---|...</p>` 進行表格識別，加上既有資料庫歷史文章已儲存該格式，導致即便後續更新同步邏輯，舊文章仍顯示為純文字。
+  - **Markdown 匯出表格遺失**：`TurndownService` 未掛載 `table` 規則，導致匯出 Markdown 時表格被壓扁為散落的多行純文字。
+
+### 🛠️ 解決方案與實作細節
+- **前端與發布層容錯表格解析引擎 (`renderTablesInHtml`)**：
+  - 在 [`apps/web/app/lib/markdown.ts`](apps/web/app/lib/markdown.ts) 與 [`packages/backend/src/content/sanitize.ts`](packages/backend/src/content/sanitize.ts) 新增 `renderTablesInHtml` 高性能轉換函數。
+  - 自動偵測 HTML 段落中含有 GFM 欄位分隔線（`:?-+:?`）之 Markdown 表格語法，動態重組為語意化標準 `<table><thead><tr><th>...</th></tr></thead><tbody><tr><td>...</td></tr></tbody></table>`。
+  - 支援單一段落前後混雜說明文字、多重表格分離解析，並兼顧表格內部粗體 `**`、行內代碼 `` ` `` 與連結語法。
+  - 在 [`apps/web/app/routes/item.tsx`](apps/web/app/routes/item.tsx) 與 [`packages/backend/src/publication/detail.ts`](packages/backend/src/publication/detail.ts) 的本文載入流程中無縫套用，即時修復現有資料庫所有包含未渲染表格之歷史文章。
+- **採集與轉換層原生表格支援**：
+  - 更新 [`packages/backend/src/sources/podcast-sync.ts`](packages/backend/src/sources/podcast-sync.ts) 的 `convertMarkdownToHtml`，原生支援 GFM 表格語法直接輸出 HTML Table。
+  - 同步更新 [`packages/backend/src/content/extract.ts`](packages/backend/src/content/extract.ts) 的 `markdownToHtml`。
+- **Markdown 匯出表格規則 (`turndown`)**：
+  - 在 [`packages/backend/src/publication/detail.ts`](packages/backend/src/publication/detail.ts) 的 `turndown` 實例中注入表格解析器，確保匯出 `.md` 檔案時完整保留 Markdown 管道表格語法。
+- **CSS 樣式美化與行動端自適應 (`app.css`)**：
+  - 優化 `.prose table` 樣式，設定 `display: block; width: 100%; overflow-x: auto;` 與 `-webkit-overflow-scrolling: touch`，確保在手機等窄螢幕下具備平滑水平捲動能力。
+  - 補齊邊框色彩、表頭深底高亮（`--bg-sunk`）與交替斑馬紋（`--surface-2`），完美適配淺色與深色主題。
+- **歷史庫存修復腳本與單元測試**：
+  - 新增維護腳本 [`scripts/repair-podcast-tables.ts`](scripts/repair-podcast-tables.ts)，可一鍵掃描並修復資料庫中既有 Podcast、文章與多語翻譯 (`translations`) 的正文 HTML；`package.json` 新增 `npm run db:repair-tables`。
+  - 在 [`apps/web/tests/markdown.test.ts`](apps/web/tests/markdown.test.ts) 與 [`tests/podcast-publication.test.ts`](tests/podcast-publication.test.ts) 中增加針對正則、混雜文字、特殊符號、跳脫管道符、代碼區間、非對稱欄位與真實節目資料樣本的完整單元測試。
+- **嚴謹代碼審查與邊界防護覆核 (Codex Code Review)**：
+  - **歷史存量標籤與實體保護**：針對歷史資料庫中已部分轉為 HTML 之舊文章表格單元格，保護合法行內元素（`<a>`、`<strong>`、`<code>` 等）與實體字元（`&amp;`），杜絕二次跳脫為字面文字或 `&amp;amp;`。
+  - **嚴格截斷尾隨文字**：強化表格終止條件，當表格下方文字含有 `|` 但欄位數或前綴不符時，終止表格解析並完整保留為後續段落，防止文字被誤吞為表格列。
+  - **防禦性屬性注入防護**：單元格 Markdown 連結透過 `new URL` 校驗通訊協定與單雙引號，防範潛在 XSS 屬性逃逸。
+
 ## [2026-10-24] — 🏷️ 歷史文章主題標籤精準回填工具 (Topic Tags Backfill Engine) 與線上資料回填完成
 
 ### 🏷️ 歷史文章主題標籤自動化回填腳本 (`scripts/backfill-topic-tags.ts`)

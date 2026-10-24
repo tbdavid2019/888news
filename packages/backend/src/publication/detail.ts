@@ -3,7 +3,7 @@ import type { ItemDetail, SiteItemDetail, OutlineEntry, StoryRef } from "@aihot/
 import TurndownService from "turndown";
 import { sql } from "../db.ts";
 import { proxyBodyImages } from "../media/imgproxy.ts";
-import { cleanTweetText, textToHtml, tweetTextToHtml } from "../content/sanitize.ts";
+import { cleanTweetText, renderTablesInHtml, textToHtml, tweetTextToHtml } from "../content/sanitize.ts";
 import { ITEM_COLUMNS, ITEM_FROM, selectedCondition, toItemSummary, xView, type ItemRow } from "./items.ts";
 import { itemUrl } from "./links.ts";
 import { hasItemPage } from "./rules.ts";
@@ -92,8 +92,8 @@ export async function loadItemDetail(id: string, now = new Date()): Promise<Deta
     };
   } else if (row.body_mode === "full" && row.body_html) {
     const isZh = row.language === "zh" || (/[一-鿿]/.test(row.body_text?.slice(0, 400) ?? "") && row.language !== "en");
-    const original = proxyBodyImages(row.body_html);
-    const zh = isZh ? original : row.tr_html ? proxyBodyImages(row.tr_html) : null;
+    const original = renderTablesInHtml(proxyBodyImages(row.body_html));
+    const zh = isZh ? original : row.tr_html ? renderTablesInHtml(proxyBodyImages(row.tr_html)) : null;
     const primary = withOutline(zh ?? original);
     outline = primary.outline;
     body = {
@@ -153,7 +153,70 @@ export function markdownAvailable(row: {
   return !!row.summary || (row.channel === "x" && !!row.x_post?.text) || (row.body_mode === "full" && !!row.body_html);
 }
 
+function cellToMarkdown(cell: any): string {
+  let md = "";
+  for (const child of Array.from((cell.childNodes ?? []) as any[])) {
+    if (child.nodeType === 3) {
+      md += child.textContent ?? "";
+    } else if (child.nodeType === 1) {
+      const tag = String(child.tagName ?? "").toLowerCase();
+      if (tag === "a") {
+        const href = String(child.getAttribute?.("href") ?? "");
+        const text = String(child.textContent ?? "");
+        md += href ? `[${text}](${href})` : text;
+      } else if (tag === "strong" || tag === "b") {
+        md += `**${child.textContent ?? ""}**`;
+      } else if (tag === "code") {
+        md += `\`${child.textContent ?? ""}\``;
+      } else if (tag === "br") {
+        md += " ";
+      } else {
+        md += child.textContent ?? "";
+      }
+    }
+  }
+  return md.trim().replace(/\|/g, "\\|").replace(/\n+/g, " ");
+}
+
 const turndown = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced", bulletListMarker: "-" });
+turndown.addRule("table", {
+  filter: "table",
+  replacement: (_content, node) => {
+    const el = node as any;
+    const directRows: any[] = [];
+    for (const child of Array.from((el.children ?? []) as any[])) {
+      const tag = String(child.tagName ?? "").toLowerCase();
+      if (tag === "tr") {
+        directRows.push(child);
+      } else if (tag === "thead" || tag === "tbody" || tag === "tfoot") {
+        for (const sub of Array.from((child.children ?? []) as any[])) {
+          if (String(sub.tagName ?? "").toLowerCase() === "tr") {
+            directRows.push(sub);
+          }
+        }
+      }
+    }
+
+    if (directRows.length === 0) return "";
+    const tableLines: string[] = [];
+    for (let i = 0; i < directRows.length; i++) {
+      const row = directRows[i];
+      const cells: string[] = [];
+      for (const cell of Array.from((row.children ?? []) as any[])) {
+        const tag = String(cell.tagName ?? "").toLowerCase();
+        if (tag === "th" || tag === "td") {
+          cells.push(cellToMarkdown(cell));
+        }
+      }
+      if (cells.length === 0) continue;
+      tableLines.push(`| ${cells.join(" | ")} |`);
+      if (i === 0) {
+        tableLines.push(`| ${cells.map(() => "---").join(" | ")} |`);
+      }
+    }
+    return `\n\n${tableLines.join("\n")}\n\n`;
+  },
+});
 
 export async function exportMarkdown(id: string): Promise<{ filename: string; body: string } | null> {
   const row = await loadRow(id);
@@ -175,8 +238,10 @@ export async function exportMarkdown(id: string): Promise<{ filename: string; bo
     if (q?.text && row.quoted_zh) lines.push("### 引用中文译文", "", ...row.quoted_zh.split("\n").map((l) => `> ${l}`), "");
   } else if (row.body_mode === "full" && row.body_html) {
     const isZh = row.language === "zh";
-    if (!isZh && row.tr_html && row.tr_complete) lines.push("## 正文 · 中文译文", "", turndown.turndown(row.tr_html), "");
-    lines.push(isZh ? "## 正文" : "## 正文 · 原文", "", turndown.turndown(row.body_html), "");
+    const bodyHtml = renderTablesInHtml(row.body_html);
+    const trHtml = row.tr_html ? renderTablesInHtml(row.tr_html) : null;
+    if (!isZh && trHtml && row.tr_complete) lines.push("## 正文 · 中文译文", "", turndown.turndown(trHtml), "");
+    lines.push(isZh ? "## 正文" : "## 正文 · 原文", "", turndown.turndown(bodyHtml), "");
   }
   return { filename: `${SITE.mcpPrefix}-${row.id}.md`, body: lines.join("\n").replace(/\n{3,}/g, "\n\n") };
 }

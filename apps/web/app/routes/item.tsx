@@ -8,7 +8,7 @@ import { breadcrumbLd, pageMeta, siteUrl, titled } from "../lib/seo";
 import { fullDateTime, relativeTime } from "../lib/format";
 import { markRead } from "../lib/local-state";
 import { useI18n } from "../lib/i18n";
-import { formatArticleSummary, renderMarkdown } from "../lib/markdown";
+import { formatArticleSummary, renderMarkdown, renderTablesInHtml } from "../lib/markdown";
 import { SelectedBadge } from "../components/ui/Badge";
 import { ScoreLabel } from "../components/ui/Score";
 import { PillTabs } from "../components/ui/Tabs";
@@ -125,7 +125,8 @@ export default function ItemPage() {
     if (r === "copied") setToast(t("item.link_copied"));
   };
 
-  const bodyHtml = lang === "zh" ? (item.body?.zh ?? item.body?.original) : (item.body?.original ?? item.body?.zh);
+  const rawBodyHtml = lang === "zh" ? (item.body?.zh ?? item.body?.original) : (item.body?.original ?? item.body?.zh);
+  const bodyHtml = rawBodyHtml ? renderTablesInHtml(rawBodyHtml) : null;
   const bodyRef = useRef<HTMLDivElement>(null);
   useMermaid(bodyRef, [bodyHtml]);
   const bodyLabel = !item.body ? null : lang === "zh" && item.body.zhKind === "translation" ? t("item.body_translation") : lang === "original" && hasTranslation ? t("item.body_original") : t("item.body");
