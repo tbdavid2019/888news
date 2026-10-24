@@ -428,11 +428,109 @@
       "tags": [
         "安全/對齊"
       ],
-      "definition": "AI 安全与对齐：越狱与防御、模型行为研究、安全评测与治理框架的进展。",
+      "definition": "模型能力與道德約束：LLM 價值觀對齊、防越獄機制、模型行為與有害內容過濾的學術研究（純模型層面，不含底層系統資安）。",
       "related": [
         "papers",
         "policy",
         "reasoning"
+      ]
+    },
+    {
+      "slug": "infosec",
+      "name": "資訊安全與隱私",
+      "group": "field",
+      "tags": [
+        "資訊安全"
+      ],
+      "definition": "全網資訊安全動態：重大 CVE 與零日漏洞（0-day）、RCE、記憶體安全、系統應急修補、逆向工程、密碼學與數位隱私防護。",
+      "related": [
+        "systems",
+        "languages",
+        "digital-rights"
+      ]
+    },
+    {
+      "slug": "systems",
+      "name": "系統與底層架構",
+      "group": "field",
+      "tags": [
+        "系統架構"
+      ],
+      "definition": "電腦系統與底層基礎設施：作業系統與 Linux 核心、分散式架構、資料庫與儲存引擎、網路協定、容器與虛擬化技術。",
+      "related": [
+        "engineering",
+        "infosec",
+        "languages",
+        "hardware"
+      ]
+    },
+    {
+      "slug": "languages",
+      "name": "程式語言與編譯器",
+      "group": "field",
+      "tags": [
+        "程式語言"
+      ],
+      "definition": "程式語言設計與演進：Rust、Go、Zig、C/C++、Python、TypeScript 等語言特性、編譯器架構（LLVM/JIT）、Runtime 引擎與型別系統。",
+      "related": [
+        "systems",
+        "coding",
+        "dev-tools"
+      ]
+    },
+    {
+      "slug": "dev-tools",
+      "name": "開發工具與終端",
+      "group": "field",
+      "tags": [
+        "開發工具"
+      ],
+      "definition": "工程師生產力與終端生態：命令列工具（CLI/TUI）、終端環境、現代編輯器、套件管理、建置系統與 Unix 哲學工具。",
+      "related": [
+        "coding",
+        "languages",
+        "open-source"
+      ]
+    },
+    {
+      "slug": "hardware",
+      "name": "硬體與半導體",
+      "group": "field",
+      "tags": [
+        "硬體/半導體"
+      ],
+      "definition": "運算晶片與實體硬體工程：GPU、TPU、CPU、RISC-V、ARM 架構、半導體製造與先進製程、嵌入式系統與單板電腦。",
+      "related": [
+        "systems",
+        "on-device",
+        "embodied"
+      ]
+    },
+    {
+      "slug": "indie-dev",
+      "name": "獨立開發與產品",
+      "group": "field",
+      "tags": [
+        "獨立開發"
+      ],
+      "definition": "獨立開發者（Indie Hackers）與 Side Projects：個人創業、微型 SaaS 打造、自託管（Self-hosting）與開放網路產品實驗。",
+      "related": [
+        "product-updates",
+        "open-source",
+        "dev-tools"
+      ]
+    },
+    {
+      "slug": "science",
+      "name": "前沿科學與硬科技",
+      "group": "field",
+      "tags": [
+        "前沿科學"
+      ],
+      "definition": "基礎科學與深度技術突破：生物醫學、量子計算、能源與資料中心電網、航太工程與應用數學。",
+      "related": [
+        "papers",
+        "hardware"
       ]
     },
     {
@@ -567,11 +665,26 @@
       "tags": [
         "政策/法規"
       ],
-      "definition": "AI 相关政策法规与政府监管动态：立法进展、出口管制与全球治理框架的追踪。",
+      "definition": "科技與 AI 相關政策法規、政府監管與全球治理框架的追蹤。",
       "related": [
         "industry",
+        "digital-rights",
         "safety",
         "trends"
+      ]
+    },
+    {
+      "slug": "digital-rights",
+      "name": "數位權益與開放網路",
+      "group": "genre",
+      "tags": [
+        "數位權益"
+      ],
+      "definition": "數位權利、隱私法規與開源哲學：科技巨頭反壟斷、監控法案爭議、開源授權糾紛、自由軟體精神與開放網路防衛。",
+      "related": [
+        "policy",
+        "infosec",
+        "open-source"
       ]
     }
   ]

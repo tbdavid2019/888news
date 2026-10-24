@@ -520,6 +520,29 @@
   overflow-x: auto;
 }
 .prose pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+.mermaid-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  margin: 1.75em 0;
+  padding: 1.25em;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
+  -webkit-overflow-scrolling: touch;
+}
+.mermaid-container svg {
+  min-width: fit-content;
+  max-width: none;
+  height: auto;
+}
+@media (min-width: 640px) {
+  .mermaid-container svg {
+    max-width: 100%;
+  }
+}
 .prose table {
   display: block;
   overflow-x: auto;

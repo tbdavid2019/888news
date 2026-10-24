@@ -21,6 +21,7 @@ import { MediaGallery } from "../features/item/MediaGallery";
 import { QuotedPost } from "../features/item/QuotedPost";
 import { TweetCard } from "../features/item/TweetCard";
 import { IconArrowLeft, IconCopy, IconDownload, IconExternal, IconImage, IconMenu, IconShare } from "../components/icons";
+import { useMermaid } from "../lib/use-mermaid";
 
 const PosterSheet = lazy(() => import("../features/item/PosterSheet"));
 
@@ -125,6 +126,8 @@ export default function ItemPage() {
   };
 
   const bodyHtml = lang === "zh" ? (item.body?.zh ?? item.body?.original) : (item.body?.original ?? item.body?.zh);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useMermaid(bodyRef, [bodyHtml]);
   const bodyLabel = !item.body ? null : lang === "zh" && item.body.zhKind === "translation" ? t("item.body_translation") : lang === "original" && hasTranslation ? t("item.body_original") : t("item.body");
   const isX = item.channel === "x" && !!item.x;
   const publishedIso = item.publishedAt ?? item.discoveredAt;
@@ -443,7 +446,7 @@ export default function ItemPage() {
               {hasTranslation && lang === "zh" && !item.body.complete && (
                 <p className="mb-5 rounded-control bg-bg-sunk px-3 py-2 text-[13px] text-ink-3">{t("item.body_incomplete")}</p>
               )}
-              <div className="prose" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+              <div ref={bodyRef} className="prose" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
             </section>
           )}
 

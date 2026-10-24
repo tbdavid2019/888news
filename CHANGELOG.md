@@ -2,6 +2,52 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-24] — 🛡️ 全資訊世界資安與 Hacker News 級底層工程主題體系全面升級 & Mermaid 圖表原生渲染
+
+### 📊 Mermaid 流程圖與架構圖動態渲染引擎 (On-Demand Mermaid Hydration)
+- **支援文章正文 Mermaid 原生渲染**：
+  - 針對長文與 Podcast 文章（如 `pod_866d25e49f62d9b1`）內嵌的 `flowchart`、`sequenceDiagram`、`classDiagram`、`stateDiagram`、`erDiagram` 等架構圖代碼塊，自動轉換為高品質向量 SVG 圖表呈現。
+- **隨選延遲載入 (On-Demand Dynamic Import)**：
+  - 核心主頁與無圖表文章保持 0KB Mermaid 體積負擔；僅在偵測到 Mermaid 語法代碼塊時，才以動態 `import("mermaid")` 延遲載入渲染引擎。
+- **全主題自適應、嚴格沙箱安全與容錯雙軌 (Strict Security, Mobile RWD & Resilient Fallback)**：
+  - 嚴格啟用 `securityLevel: "strict"` 沙箱，杜絕第三方信源內嵌惡意腳本（XSS）風險。
+  - 行動端優化：配置 `.mermaid-container svg { min-width: fit-content }` 搭配水平捲動，徹底解決手機端複雜圖表被縮成微字無法閱讀的問題。
+  - 自動偵測系統與網站的淺色/深色主題 (`data-theme`)，並透過 `MutationObserver` 在切換主題時即時重繪圖表配色。
+  - 保留原始 code 區塊，若圖表語法解析失敗時自動優雅降級顯示純代碼，絕不造成畫面崩潰或文字遺失。
+  - 新增單元測試 [`apps/web/tests/mermaid.test.ts`](apps/web/tests/mermaid.test.ts) 驗證各類 Mermaid 語法、YAML Frontmatter、註解與常規程式碼之高精度識別。
+
+### 🛡️ 拒絕「AI」前綴與概念偏差：重構「資訊安全 (Infosec)」為獨立核心維度
+- **切割模型道德與真正資安**：
+  - 將原先偏向 LLM 價值觀對齊、越獄與有害內容過濾的 `safety`（安全與對齊）限縮於純模型認知層面。
+  - 拒絕濫用「AI」字眼，回歸全電腦科學與網際網路世界的純粹硬核資安，新增獨立主題 `infosec`（資訊安全與隱私）。
+  - 全面納管全球重大 CVE 與零日漏洞（0-day）、遠端代碼執行（RCE）、記憶體安全（Use-after-free/Buffer overflow）、系統應急修補、逆向工程、密碼學防護與數位隱私監控。
+
+### 🌐 對標 Hacker News 深度：全方位擴充 8 大底層系統與工程主題 (`industry/topics.json`)
+- **比照 Hacker News 社群關切的實體科技與工程命脈，新增 8 大專業主題**：
+  1. `infosec`（**資訊安全與隱私**，field）：CVE 追蹤、零日漏洞、底層利用、安全修補與隱私防禦。
+  2. `systems`（**系統與底層架構**，field）：作業系統核心（Linux Kernel/BSD）、分散式架構（Raft/Paxos）、資料庫儲存引擎（Postgres/SQLite/ClickHouse）、網路協定（DNS/QUIC/HTTP3）與容器虛擬化。
+  3. `languages`（**程式語言與編譯器**，field）：Rust、Go、Zig、C/C++、Python、TypeScript 等語言設計演進、編譯器架構（LLVM/JIT）、Runtime 引擎與型別系統。
+  4. `dev-tools`（**開發工具與終端**，field）：終端生態（CLI/TUI/zsh/tmux）、現代編輯器（Neovim/Helix）、套件管理與建置系統（Cargo/uv/Vite/Nix）及 Unix 哲學工具。
+  5. `hardware`（**硬體與半導體**，field）：運算晶片與架構（GPU/TPU/CPU/RISC-V/ARM/Apple Silicon）、半導體先進製程（台積電/ASML）、嵌入式系統與單板電腦。
+  6. `indie-dev`（**獨立開發與產品**，field）：獨立開發者（Indie Hackers）、Show HN 作品、Side Projects、微型 SaaS 創業、自託管（Self-hosting）與開放網路精神。
+  7. `science`（**前沿科學與硬科技**，field）：生物醫學、量子計算、能源與資料中心電網、航太工程與應用數學突破。
+  8. `digital-rights`（**數位權益與開放網路**，genre）：科技巨頭反壟斷、隱私監控法案爭議、開源授權糾紛、自由軟體哲學與開放網路防衛。
+
+### 🏷️ 標籤體系 (`industry/taxonomy.ts`) 與全網語料同義詞映射大幅增強
+- **新增 8 個正統科技領域主題標籤**：
+  - `TOPIC_TAGS` 擴充納入：`資訊安全`、`系統架構`、`程式語言`、`開發工具`、`硬體/半導體`、`獨立開發`、`前沿科學`、`數位權益`。
+- **建置完整的全領域多語同義詞對照庫 (`TAG_SYNONYMS`)**：
+  - 資安領域：`cve`, `cves`, `漏洞`, `零日`, `0-day`, `0day`, `rce`, `提權`, `滲透測試`, `逆向工程`, `密碼學`, `供應鏈安全`, `駭客`, `安全防護`, `安全扫描` 等自動統一對照為 `資訊安全`。
+  - 系統基建：`kernel`, `linux`, `ebpf`, `分布式系统`, `操作系统`, `数据库`, `网络协议`, `容器`, `docker`, `k8s` 自動統一對照為 `系統架構`。
+  - 語言與工具：`rust`, `golang`, `zig`, `c++`, `compiler`, `runtime`, `cli`, `tui`, `neovim`, `vim` 等精確收斂至對應標籤。
+  - 獨立開發與硬體：`indie hacker`, `show hn`, `side project`, `自托管`, `gpu`, `cpu`, `risc-v`, `arm`, `芯片` 自動映射為標準科技標籤。
+
+### 🤖 模型內容理解與品味評分提示詞校準 (`industry/prompts/`)
+- **`content-understanding.md`**：同步更新標籤白名單，賦予模型識別系統底層架構、重大漏洞與開發生態的主題打標能力。
+- **`selection-score.md`**：在「必須正常評價的價值」中明確納入重大 CVE、基礎設施漏洞修補、系統核心突破、編譯器演進與獨立開發優秀代表作，杜絕評分模型將硬核工程與資安報告誤判為邊緣噪聲。
+
+---
+
 ## [2026-10-17] — 🌐 Git 遠端存儲庫綁定與 JetBrains Mono + Gen Jyuu Gothic（源柔黑體）字體升級
 
 ### 🌐 Git 遠端倉庫綁定與遠端優先同步 (Git Remote Synchronization)

@@ -1,13 +1,16 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { Link } from "react-router";
 import type { CopyDocument, RenderedCopy } from "../../lib/markdown";
 import { ArticleLayout, RailSection } from "../../components/ui/Page";
+import { useMermaid } from "../../lib/use-mermaid";
 
 /**
  * Legal and policy pages, read like articles: the document on the page in one column, its facts in the
  * left rail and its outline in the right (phones get the facts above the text and no outline).
  */
 export function CopyPage({ doc, rendered, eyebrow, footer, aside }: { doc: CopyDocument; rendered: RenderedCopy; eyebrow?: ReactNode; footer?: ReactNode; aside?: ReactNode }) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  useMermaid(contentRef, [rendered.html]);
   const facts = (["版本", "生效日期", "運營主體", "備案號"] as const).filter((k) => doc.meta[k]);
   const info = facts.length > 0 && (
     <RailSection title="文件資訊">
@@ -65,7 +68,7 @@ export function CopyPage({ doc, rendered, eyebrow, footer, aside }: { doc: CopyD
             ))}
           </dl>
         )}
-        <div className="prose prose-compact mt-6 lg:mt-8" dangerouslySetInnerHTML={{ __html: rendered.html }} />
+        <div ref={contentRef} className="prose prose-compact mt-6 lg:mt-8" dangerouslySetInnerHTML={{ __html: rendered.html }} />
         {footer && <div className="mt-12 border-t border-line pt-5 text-[12.5px] text-ink-3">{footer}</div>}
       </article>
     </ArticleLayout>
