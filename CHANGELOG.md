@@ -2,6 +2,28 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-24] — 🏷️ 歷史文章主題標籤精準回填工具 (Topic Tags Backfill Engine) 與線上資料回填完成
+
+### 🏷️ 歷史文章主題標籤自動化回填腳本 (`scripts/backfill-topic-tags.ts`)
+- **歷史庫存標籤回填工具**：
+  - 新增 [`scripts/backfill-topic-tags.ts`](scripts/backfill-topic-tags.ts)，專門用於新增主題與分類體系後的歷史文章追溯打標。
+  - 支援 `--dry-run` 模式，可預先統計候選篇數並預覽匹配標題，避免誤打標籤。
+  - 採用高精度正則與詞義過濾，杜絕中文多義詞誤判（例如排除單獨「核心」、「執行環境」與單純提及「NVIDIA」非硬體文章的誤傷）。
+  - 同步更新 `publications.tags` 與 `analyses.tags`，確保快取重整後各主題頁面文章數精準呈現。
+  - `package.json` 新增便利指令 `npm run db:backfill-tags`。
+
+### 🚀 線上生產環境回填成果
+- **8 大新主題已全面 Populate，告別「0 條」冷啟動狀態**：
+  - **資訊安全 (infosec)**：成功回填 **72 篇**（重大 CVE 漏洞、零日利用、RCE 與攻防）
+  - **硬體/半導體 (hardware)**：成功回填 **42 篇**（晶片、GPU、台積電先進製程）
+  - **數位權益 (digital-rights)**：成功回填 **33 篇**（隱私權保護、科技反壟斷、開放網路）
+  - **系統架構 (systems)**：成功回填 **18 篇**（Linux、作業系統、分散式架構與儲存引擎）
+  - **程式語言 (languages)**：成功回填 **11 篇**（Rust、TypeScript、Common Lisp、編譯器與 Runtime）
+  - **開發工具 (dev-tools)**：成功回填 **10 篇**（終端 CLI/TUI、Neovim、套件管理）
+  - **前沿科學 (science)**：成功回填 **8 篇**（量子計算、分子機器、硬科技突破）
+  - **獨立開發 (indie-dev)**：成功回填 **4 篇**（微型 SaaS、自託管與 Indie Hackers）
+- 線上主題頁面（如 `https://news2.david888.com/topics/infosec` 等）均已即時更新上線。
+
 ## [2026-10-24] — 🐦 X (Twitter) 採集引擎升級為 SSR GraphQL 全量解析 & 主題資料庫自啟動同步
 
 ### 🐦 X (Twitter) 採集引擎升級與正則缺陷徹底修復

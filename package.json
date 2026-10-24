@@ -12,6 +12,7 @@
   },
   "scripts": {
     "db:migrate": "node --env-file-if-exists=.env scripts/migrate.ts",
+    "db:backfill-tags": "node --env-file-if-exists=.env scripts/backfill-topic-tags.ts",
     "dev:api": "npm run dev -w @aihot/api",
     "dev:worker": "npm run dev -w @aihot/worker",
     "dev:web": "npm run dev -w @aihot/web",
