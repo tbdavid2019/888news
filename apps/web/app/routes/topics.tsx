@@ -18,7 +18,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export function meta() {
-  return pageMeta({ title: "主題", description: "按公司與模型、技術方向、內容形態聚合的 AI 主題頁：OpenAI、Anthropic、Agent、多模態、論文與教學等 38 個方向。", path: "/topics", image: "/og/pages/topics.png" });
+  return pageMeta({ title: "主題", description: "按公司與模型、技術方向、內容形態聚合的技術與產業主題頁：涵蓋資訊安全、系統架構、程式語言、開發工具、開源與前沿探索等方向。", path: "/topics", image: "/og/pages/topics.png" });
 }
 
 export function headers() {
@@ -36,7 +36,7 @@ export default function TopicsPage() {
   return (
     <div className="pb-10">
       <header className="pb-2 pt-5 lg:pt-1">
-        <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">按主題看 AI</h1>
+        <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">按技術與主題瀏覽</h1>
         <p className="mt-1.5 text-[13px] leading-relaxed text-ink-3">
           按公司與模型、技術方向、內容形態瀏覽 <span className="num">{topics.length}</span> 個主題，持續彙集近期焦點與精選。
         </p>

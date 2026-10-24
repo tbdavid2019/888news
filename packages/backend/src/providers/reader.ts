@@ -69,3 +69,31 @@ export async function readPageAsMarkdown(
 
   throw new Error(`[Reader] 2md reader returned HTTP ${res.status} for ${targetUrl}`);
 }
+
+export async function readPageAsHtml(
+  targetUrl: string,
+  _opts?: { purpose?: string; subject?: string; cacheToleranceSeconds?: number; perRead?: boolean },
+): Promise<string> {
+  const base = (credential("collectors", "READER_BASE_URL") ?? process.env.READER_BASE_URL ?? process.env.JINA_BASE_URL ?? "https://2md.aiurl.tw").replace(/\/$/, "");
+
+  // Anti-thundering herd jitter delay (50-250ms random delay, skipped in tests and local stubs)
+  if (process.env.NODE_ENV !== "test" && !process.env.JINA_BASE_URL && !base.includes("127.0.0.1")) {
+    const jitterMs = Math.floor(Math.random() * 200) + 50;
+    await new Promise((r) => setTimeout(r, jitterMs));
+  }
+
+  const endpoint = `${base}/${targetUrl}`;
+  const res = await guardedFetch(endpoint, {
+    headers: {
+      "X-Respond-With": "html",
+    },
+    timeoutMs: 30_000,
+    maxBytes: 8 * 1024 * 1024,
+  });
+
+  if (res.status === 200) {
+    return res.text();
+  }
+
+  throw new Error(`[Reader] 2md reader returned HTTP ${res.status} for ${targetUrl}`);
+}

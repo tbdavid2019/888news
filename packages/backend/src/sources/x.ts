@@ -5,7 +5,7 @@ import { ProviderRejectedError } from "../providers/receipts.ts";
 import type { XPostData } from "../content/materials.ts";
 import { sha256 } from "../lib/ids.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
-import { readPageAsMarkdown } from "../providers/reader.ts";
+import { readPageAsHtml, readPageAsMarkdown } from "../providers/reader.ts";
 import { credential } from "../config.ts";
 import { cleanTweetText } from "../content/sanitize.ts";
 
@@ -186,20 +186,40 @@ export async function readXSearch(base: string, opts: { lastId: string | null; b
   return { tweets, lastId: maxId, backlog, pages, truncated, backlogPages, dropped };
 }
 
+function cleanHandle(s: string | undefined | null): string | null {
+  if (!s) return null;
+  let str = s.trim();
+  const urlMatch = /(?:^|https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/@?([A-Za-z0-9_]{1,30})/i.exec(str);
+  if (urlMatch && urlMatch[1]) {
+    str = urlMatch[1];
+  }
+  str = str.replace(/^@/, "").replace(/\/+$/, "").trim();
+  if (/^[A-Za-z0-9_]{1,30}$/.test(str) && !["home", "explore", "search", "handle"].includes(str.toLowerCase())) {
+    return str;
+  }
+  return null;
+}
+
 export function extractHandle(source: Pick<SourceRow, "id" | "config" | "name">): string | null {
-  if (typeof source.config?.handle === "string" && source.config.handle.trim() && source.config.handle.toLowerCase() !== "handle") {
-    return source.config.handle.trim().replace(/^@/, "");
+  if (typeof source.config?.handle === "string") {
+    const cleaned = cleanHandle(source.config.handle);
+    if (cleaned) return cleaned;
   }
   const query = String(source.config?.query ?? "");
-  const m = /from:@?([A-Za-z0-9_]{1,20})/i.exec(query);
-  if (m && m[1] && m[1].toLowerCase() !== "handle") return m[1];
-  if (typeof source.config?.url === "string") {
-    const urlMatch = /x\.com\/([A-Za-z0-9_]{1,20})/i.exec(source.config.url);
-    if (urlMatch && urlMatch[1] && !["home", "explore", "search", "handle"].includes(urlMatch[1].toLowerCase())) return urlMatch[1];
+  const m = /from:@?([A-Za-z0-9_]{1,30})/i.exec(query);
+  if (m && m[1]) {
+    const cleaned = cleanHandle(m[1]);
+    if (cleaned) return cleaned;
   }
-  if (source.id.startsWith("x-")) return source.id.replace(/^x-/, "");
-  if (source.id && source.id.toLowerCase() !== "handle") return source.id;
-  return null;
+  if (typeof source.config?.url === "string") {
+    const cleaned = cleanHandle(source.config.url);
+    if (cleaned) return cleaned;
+  }
+  if (source.id.startsWith("x-")) {
+    const cleaned = cleanHandle(source.id.replace(/^x-/, ""));
+    if (cleaned) return cleaned;
+  }
+  return cleanHandle(source.id);
 }
 
 /** Decodes the publication timestamp from a Twitter 64-bit snowflake ID. */
@@ -219,139 +239,266 @@ export function tweetIdToDate(idStr: string): Date | null {
   return null;
 }
 
+/**
+ * Safely unescapes JS/Seroval string literals from Twitter SSR script blocks into standard JSON.
+ * Twitter SSR emits JS escapes like \x3C, \x3E, \', which standard JSON.parse rejects.
+ */
+export function sanitizeJsStringLiteral(raw: string): string {
+  return raw
+    .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => `\\u00${hex}`)
+    .replace(/\\'/g, "'");
+}
+
+export interface ParseXSsrResult {
+  timelineFound: boolean;
+  candidates: Candidate[];
+}
+
+export function parseXSsrTimeline(html: string, handle: string, sourceName?: string): ParseXSsrResult {
+  const candidates: Candidate[] = [];
+  const seenIds = new Set<string>();
+  let timelineFound = false;
+
+  // Match SSR JSON value chunks in Twitter SSR payload
+  const jsonChunks = Array.from(html.matchAll(/value:"(\{\\"data\\":.*?})"\s*[,}]/gs));
+
+  for (const chunk of jsonChunks) {
+    try {
+      const sanitized = sanitizeJsStringLiteral(chunk[1]!);
+      const unescaped = JSON.parse(`"${sanitized}"`);
+      const data = JSON.parse(unescaped) as Record<string, any>;
+      const timeline = data?.data?.user_result_by_screen_name?.result?.profile_user_originals_timeline?.timeline ||
+                       data?.data?.user_result_by_screen_name?.result?.timeline_response?.timeline;
+      if (!timeline) continue;
+      timelineFound = true;
+
+      for (const inst of timeline.instructions || []) {
+        // Skip pinned tweet instruction to keep chronological order clean
+        if (inst.__typename === "TimelinePinEntry") continue;
+
+        for (const e of inst.entries || []) {
+          let tweet = e.content?.content?.tweet_results?.result ||
+                      e.content?.itemContent?.tweet_results?.result;
+          if (!tweet) continue;
+          if (tweet.tweet) tweet = tweet.tweet;
+
+          // Skip retweets
+          if (tweet.legacy?.retweeted_status_result || tweet.retweeted_status_result) continue;
+
+          // Skip replies by default (matching standard from:handle -filter:replies query semantics)
+          if (tweet.legacy?.in_reply_to_status_id_str) continue;
+
+          const tweetId = String(tweet.rest_id ?? "");
+          if (!tweetId || seenIds.has(tweetId)) continue;
+
+          const author = String(tweet.core?.user_results?.result?.core?.screen_name || handle);
+          const authorName = String(tweet.core?.user_results?.result?.core?.name || sourceName || author);
+          const rawAvatar = tweet.core?.user_results?.result?.avatar?.image_url;
+          const avatarUrl = typeof rawAvatar === "string" && rawAvatar.startsWith("https://") ? avatar(rawAvatar) : null;
+
+          const noteText = tweet.note_tweet?.note_tweet_results?.result?.text;
+          const rawText = noteText || tweet.details?.full_text || tweet.legacy?.full_text || "";
+          const text = cleanTweetText(String(rawText).trim());
+
+          let tweetDate: Date | null = null;
+          if (tweet.details?.created_at_ms) {
+            const ms = Number(tweet.details.created_at_ms);
+            if (!Number.isNaN(ms) && ms > 0) tweetDate = new Date(ms);
+          }
+          if (!tweetDate && tweet.legacy?.created_at) {
+            const d = new Date(tweet.legacy.created_at);
+            if (!Number.isNaN(d.getTime())) tweetDate = d;
+          }
+          if (!tweetDate) {
+            tweetDate = tweetIdToDate(tweetId);
+          }
+          const publishedAt = (tweetDate && !Number.isNaN(tweetDate.getTime())) ? tweetDate : new Date();
+
+          // Skip tweets older than 14 days from regular crawl
+          if (Date.now() - publishedAt.getTime() > 14 * 86400000) {
+            continue;
+          }
+
+          const mediaEntities = tweet.media_entities2 || tweet.legacy?.extended_entities?.media || [];
+          const media = (mediaEntities as any[])
+            .map((m) => {
+              const url = m.media_url_https || m.media_url;
+              if (typeof url !== "string" || !url.startsWith("https://")) return null;
+              return {
+                kind: m.type === "video" || m.type === "animated_gif" ? ("video" as const) : ("image" as const),
+                url,
+                width: typeof m.original_info?.width === "number" ? m.original_info.width : null,
+                height: typeof m.original_info?.height === "number" ? m.original_info.height : null,
+                poster: url,
+              };
+            })
+            .filter((m): m is NonNullable<typeof m> => m !== null);
+
+          if (!text && media.length === 0) continue;
+
+          const firstLine = text.split("\n").find((l) => l.trim()) ?? text;
+          const title = firstLine.length > 140 ? `${firstLine.slice(0, 137)}...` : firstLine || `${authorName} 於 X 發布動態`;
+          const tweetUrl = `https://x.com/${author}/status/${tweetId}`;
+
+          seenIds.add(tweetId);
+          candidates.push({
+            url: tweetUrl,
+            identityKey: `x:${tweetId}`,
+            title,
+            author,
+            language: tweet.legacy?.lang ?? null,
+            publishedAt,
+            bodyText: text,
+            bodyStatus: linksXArticle(text) ? "pending" : "ok",
+            xPost: {
+              tweetId,
+              authorName,
+              handle: author,
+              avatarUrl,
+              text,
+              lang: tweet.legacy?.lang ?? null,
+              replyTo: tweet.legacy?.in_reply_to_status_id_str ?? null,
+              media,
+              quoted: null,
+            },
+            media,
+            raw: {
+              favorite: tweet.counts?.favorite_count ?? tweet.legacy?.favorite_count ?? null,
+              retweet: tweet.counts?.retweet_count ?? tweet.legacy?.retweet_count ?? null,
+              views: tweet.views?.count ? Number(tweet.views.count) : null,
+            },
+          });
+        }
+      }
+    } catch {
+      // Continue to next chunk
+    }
+  }
+
+  return { timelineFound, candidates };
+}
+
 /** Crawls recent tweets from an X profile using 2md.aiurl.tw without requiring paid API keys. */
 export async function fetchXVia2md(source: SourceRow): Promise<XFetch> {
   const handle = extractHandle(source);
   if (!handle) throw new FetchError(`無法從信源 ${source.id} 判斷 X / Twitter 帳號 handle`);
 
-  const page = await readPageAsMarkdown(`https://x.com/${handle}`);
-  const statusRegex = new RegExp(`https://x\\.com/${handle}/status/(\\d+)`, "gi");
-  const allMatches = Array.from(page.raw.matchAll(statusRegex));
-  const seenIds = new Set<string>();
-  const tweetIds: string[] = [];
-  for (const m of allMatches) {
-    const id = m[1]!;
-    if (!seenIds.has(id)) {
-      seenIds.add(id);
-      tweetIds.push(id);
-    }
+  let candidates: Candidate[] = [];
+  let timelineFound = false;
+
+  // 1. Primary strategy: Fetch HTML via 2md with X-Respond-With: html to extract complete Twitter SSR GraphQL state
+  try {
+    const html = await readPageAsHtml(`https://x.com/${handle}`);
+    const parsed = parseXSsrTimeline(html, handle, source.name);
+    timelineFound = parsed.timelineFound;
+    candidates = parsed.candidates;
+  } catch (err) {
+    // If HTML fetch failed, fall back to markdown reader
   }
 
-  const candidates: Candidate[] = [];
-  const blocks = page.markdown.split(/\n(?=\*\s+)/);
-
-  for (const block of blocks) {
-    if (!block.trimStart().startsWith("*")) continue;
-
-    // Skip pinned posts on X profiles: pinned posts are static highlights from weeks/months/years ago,
-    // not chronological new arrivals. Ingesting them causes old announcements to recur as breaking news.
-    const trimmed = block.trim();
-    if (/^\*\s*Pinned\b/i.test(trimmed) || trimmed.includes("Pinned\n") || trimmed.includes("Pinned\r\n")) {
-      continue;
+  // 2. Fallback strategy: Only if SSR extraction failed to find any timeline structure
+  if (!timelineFound && candidates.length === 0) {
+    const page = await readPageAsMarkdown(`https://x.com/${handle}`);
+    // Strict status link regex for this handle only (avoids attributing other users' reply/quote status IDs)
+    const statusRegex = new RegExp(`(?:https?:\\/\\/x\\.com\\/${handle}\\/status\\/|href="\\/${handle}\\/status\\/)(\\d+)`, "gi");
+    const allMatches = Array.from(page.raw.matchAll(statusRegex));
+    const tweetIds: string[] = [];
+    for (const m of allMatches) {
+      const id = m[1]!;
+      if (!tweetIds.includes(id)) {
+        tweetIds.push(id);
+      }
     }
 
-    const statusMatch = new RegExp(`https://x\\.com/${handle}/status/(\\d+)`, "i").exec(block) ||
-      new RegExp(`https://x\\.com/[A-Za-z0-9_]+/status/(\\d+)`, "i").exec(block) ||
-      new RegExp(`(?:amplify_video_thumb|media)/(\\d{15,22})`, "i").exec(block);
+    const blocks = page.markdown.split(/\n(?=\*\s+)/);
 
-    // If there is no real tweet ID, skip this block (e.g. bio, navigation, footer snippets)
-    if (!statusMatch) continue;
-    const tweetId = statusMatch[1]!;
+    for (const block of blocks) {
+      if (!block.trimStart().startsWith("*")) continue;
 
-    let text = block
-      .replace(/\*?\s*\[!\[Image.*?\]\(.*?\)\]\(.*?\)/g, "")
-      .replace(/\[!\[Image.*?\]\(.*?\)\]/g, "")
-      .replace(/!\[.*?\]\(.*?\)/g, "")
-      .replace(/\[(?:Log in|Sign up|Continue with.*?|Video \d+)\]\(.*?\)/gi, "")
-      .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/${handle}\\)`, "gi"), "")
-      .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/${handle}/status/\\d+\\)`, "gi"), "")
-      .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/hashtag/.*?\\)`, "gi"), "")
-      .trim();
+      const trimmed = block.trim();
+      if (/^\*\s*Pinned\b/i.test(trimmed) || trimmed.includes("Pinned\n") || trimmed.includes("Pinned\r\n")) {
+        continue;
+      }
 
-    text = cleanTweetText(text.replace(/^[^\n]*?@[A-Za-z0-9_]+\s*(?:\[\w+\])?\s*/i, "").trim());
+      const statusMatch = new RegExp(`https?:\\/\\/x\\.com\\/${handle}\\/status\\/(\\d+)`, "i").exec(block) ||
+        new RegExp(`\\/${handle}\\/status\\/(\\d+)`, "i").exec(block) ||
+        new RegExp(`(?:amplify_video_thumb|media)\\/(\\d{15,22})`, "i").exec(block);
 
-    const mediaUrls = Array.from(block.matchAll(/https:\/\/pbs\.twimg\.com\/(?:media|amplify_video_thumb)\/[A-Za-z0-9_-]+\.(?:jpg|png|webp)/g), (m) => m[0]);
-    const media = Array.from(new Set(mediaUrls)).map((url) => ({
-      kind: "image" as const,
-      url,
-      width: null,
-      height: null,
-      poster: null,
-    }));
+      const matchedId = statusMatch ? statusMatch[1]! : null;
+      if (matchedId) {
+        const idx = tweetIds.indexOf(matchedId);
+        if (idx !== -1) tweetIds.splice(idx, 1);
+      }
+      const tweetId = matchedId ?? null;
+      if (!tweetId) continue;
 
-    if (!text && media.length === 0) continue;
-    if (text.length < 5 && media.length === 0) continue;
+      let text = block
+        .replace(/\*?\s*\[!\[Image.*?\]\(.*?\)\]\(.*?\)/g, "")
+        .replace(/\[!\[Image.*?\]\(.*?\)\]/g, "")
+        .replace(/!\[.*?\]\(.*?\)/g, "")
+        .replace(/\[(?:Log in|Sign up|Continue with.*?|Video \d+)\]\(.*?\)/gi, "")
+        .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/${handle}\\)`, "gi"), "")
+        .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/${handle}/status/\\d+\\)`, "gi"), "")
+        .replace(new RegExp(`\\[.*?\\]\\(https://x\\.com/hashtag/.*?\\)`, "gi"), "")
+        .trim();
 
-    if (candidates.some((c) => c.identityKey === `x:${tweetId}`)) continue;
+      text = cleanTweetText(text.replace(/^[^\n]*?@[A-Za-z0-9_]+\s*(?:\[\w+\])?\s*/i, "").trim());
 
-    const tweetDate = tweetIdToDate(tweetId);
-    const publishedAt = tweetDate ?? new Date();
+      const mediaUrls = Array.from(block.matchAll(/https:\/\/pbs\.twimg\.com\/(?:media|amplify_video_thumb)\/[A-Za-z0-9_-]+\.(?:jpg|png|webp)/g), (m) => m[0]);
+      const media = Array.from(new Set(mediaUrls)).map((url) => ({
+        kind: "image" as const,
+        url,
+        width: null,
+        height: null,
+        poster: null,
+      }));
 
-    // Skip tweets older than 14 days from regular crawl
-    if (tweetDate && Date.now() - tweetDate.getTime() > 14 * 86400000) {
-      continue;
-    }
+      if (!text && media.length === 0) continue;
+      if (text.length < 5 && media.length === 0) continue;
 
-    const firstLine = text.split("\n").find((l) => l.trim()) ?? text;
-    const title = firstLine.length > 140 ? `${firstLine.slice(0, 137)}...` : firstLine || `${source.name || handle} 於 X 發布動態`;
-    const tweetUrl = `https://x.com/${handle}/status/${tweetId}`;
+      if (candidates.some((c) => c.identityKey === `x:${tweetId}`)) continue;
 
-    candidates.push({
-      url: tweetUrl,
-      identityKey: `x:${tweetId}`,
-      title,
-      author: handle,
-      language: null,
-      publishedAt,
-      bodyText: text,
-      bodyStatus: "ok",
-      xPost: {
-        tweetId,
-        authorName: source.name || handle,
-        handle,
-        avatarUrl: null,
-        text,
-        lang: null,
-        replyTo: null,
-        media,
-        quoted: null,
-      },
-      media,
-      raw: {},
-    });
-  }
+      const tweetDate = tweetIdToDate(tweetId);
+      const publishedAt = tweetDate ?? new Date();
 
-  for (const id of tweetIds.slice(0, 10)) {
-    if (!candidates.some((c) => c.identityKey === `x:${id}`)) {
-      const tweetDate = tweetIdToDate(id);
+      // Skip tweets older than 14 days from regular crawl
       if (tweetDate && Date.now() - tweetDate.getTime() > 14 * 86400000) {
         continue;
       }
+
+      const firstLine = text.split("\n").find((l) => l.trim()) ?? text;
+      const title = firstLine.length > 140 ? `${firstLine.slice(0, 137)}...` : firstLine || `${source.name || handle} 於 X 發布動態`;
+      const tweetUrl = `https://x.com/${handle}/status/${tweetId}`;
+
       candidates.push({
-        url: `https://x.com/${handle}/status/${id}`,
-        identityKey: `x:${id}`,
-        title: `${source.name || handle} 的推文 (${id})`,
+        url: tweetUrl,
+        identityKey: `x:${tweetId}`,
+        title,
         author: handle,
         language: null,
-        publishedAt: tweetDate ?? new Date(),
-        bodyText: "",
-        bodyStatus: "ok",
+        publishedAt,
+        bodyText: text,
+        bodyStatus: linksXArticle(text) ? "pending" : "ok",
         xPost: {
-          tweetId: id,
+          tweetId,
           authorName: source.name || handle,
           handle,
           avatarUrl: null,
-          text: "",
+          text,
           lang: null,
           replyTo: null,
-          media: [],
+          media,
           quoted: null,
         },
-        media: [],
+        media,
         raw: {},
       });
     }
+
   }
+
+  // Sort candidates newest first
+  candidates.sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
 
   return {
     candidates,

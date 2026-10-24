@@ -2,6 +2,25 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-24] — 🐦 X (Twitter) 採集引擎升級為 SSR GraphQL 全量解析 & 主題資料庫自啟動同步
+
+### 🐦 X (Twitter) 採集引擎升級與正則缺陷徹底修復
+- **定位並修復 `orca_build` 等 X 帳號採集遺漏根因**：
+  - **舊版正則與 Markdown 缺陷**：舊有採集透過 2md 的純文字 Markdown 模式，推文的時間戳與狀態網址在轉換過程中被剝離；而 `x.ts` 的區塊篩選依賴 `https://x.com/.../status/(\d+)` 或 `media/(\d{15,22})`，但推文配圖多為英數雜湊檔名（如 `media/HVVxZF-bgAArUjg`，非純數字），純文字推文更無數字特徵，導致所有無影片縮圖的推文被全部判定無效拋棄，僅有極少數命中影片的舊推文入庫，進而因游標推進導致後續推文徹底停止採集。
+- **全新雙軌擷取架構 (SSR GraphQL + Resilient Markdown Fallback)**：
+  - **首選軌道：SSR GraphQL 串流原生解析**：新增 `readPageAsHtml` 搭配 `X-Respond-With: html`，直接自 Twitter SSR 注入的 `$R[...]` 腳本中解析 `profile_user_originals_timeline` / `timeline_response` 的 GraphQL 資料結構。
+  - **零損失提取**：完整擷取全量推文文字（支援長推文 `note_tweet` 全文）、高畫質相簿與影片清單、精確毫秒發布時間戳、讚數/轉發數/閱讀數，並自動略過置頂推文（`TimelinePinEntry`）。
+  - **容錯備援軌道**：若頁面未帶 SSR JSON，自動切換 Markdown 備援解析，放寬狀態網址匹配支援相對路徑 `/status/(\d+)` 與 ID 對位分配機制。
+- **信源輸入 URL 防呆與自動清理 (Input Sanitization)**：
+  - `CreateSchema` 與 `extractHandle` 全面支援貼入完整個人頁網址（如 `https://x.com/orca_build/`、`https://twitter.com/orca_build`）或帶有 `@` 之字串，自動提取為合法純淨之帳號 handle。
+  - 新增單元測試 [`tests/source-id.test.ts`](tests/source-id.test.ts) 驗證各類 URL、handle 與正則匹配。
+
+### 🔄 主題資料庫自啟動熱同步 (Startup Topics Auto-Sync)
+- **容器啟動自動熱同步**：
+  - 在 `apps/api/src/main.ts` 服務啟動流程中加入 `seedTopics()`，確保每當 CI/CD 或 Watchtower 部署新版 Docker 映像檔並重啟服務時，Postgres `topics` 資料表即刻與 `industry/topics.json` 同步（自動補齊新主題與關聯），解決過往必須手動執行 `setup` 容器才能寫入資料庫的盲區。
+- **主題首頁文案與中繼資訊優化**：
+  - 更新 `/topics` 頁面 Meta 說明與標題，移除過去寫死「38 個方向」與「按主題看 AI」等舊文案，調整為涵蓋資訊安全、系統架構、程式語言與開發工具等全領域的「按技術與主題瀏覽」。
+
 ## [2026-10-24] — 🛡️ 全資訊世界資安與 Hacker News 級底層工程主題體系全面升級 & Mermaid 圖表原生渲染
 
 ### 📊 Mermaid 流程圖與架構圖動態渲染引擎 (On-Demand Mermaid Hydration)

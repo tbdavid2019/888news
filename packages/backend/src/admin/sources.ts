@@ -155,7 +155,14 @@ export const CreateSchema = z
     id: z
       .string()
       .trim()
-      .transform((v) => v.replace(/^@/, "").toLowerCase())
+      .transform((v) => {
+        let val = v.trim();
+        const urlMatch = /(?:^|https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/@?([A-Za-z0-9_]{1,30})/i.exec(val);
+        if (urlMatch && urlMatch[1]) {
+          val = urlMatch[1];
+        }
+        return val.replace(/^@/, "").replace(/\/+$/, "").toLowerCase();
+      })
       .pipe(
         z
           .string()

@@ -48,11 +48,16 @@ export default function NewSource() {
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <Card title="信源定義">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="ID" hint="小寫字母、數字、連字號與底線（_，支援如 _mohansolo 等開頭底線），若為 X 帳號建議直接輸入 handle（如 elonmusk 或 _mohansolo）">
+            <Field label="ID" hint="小寫字母、數字、連字號與底線（_，支援如 _mohansolo 等開頭底線），若為 X 帳號建議直接輸入 handle 或網址（如 elonmusk 或 https://x.com/orca_build）">
               <Input
                 value={form.id}
                 onChange={(e) => {
-                  const newId = e.target.value.trim().replace(/^@/, "").toLowerCase();
+                  let raw = e.target.value.trim();
+                  const urlMatch = /(?:^|https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/@?([A-Za-z0-9_]{1,30})/i.exec(raw);
+                  if (urlMatch && urlMatch[1]) {
+                    raw = urlMatch[1];
+                  }
+                  const newId = raw.replace(/^@/, "").replace(/\/+$/, "").toLowerCase();
                   setForm((prev) => ({ ...prev, id: newId }));
                   if (form.kind === "x_search") {
                     try {
