@@ -240,7 +240,7 @@ export async function collectXShard(key: string, sourceIds: string[]): Promise<{
   const members = (
     await sql<SourceRow[]>`
       SELECT id, name, kind, config, tier, participation_mode, first_party, interval_minutes, enabled, cursor, fail_count
-      FROM sources WHERE id IN ${sql(sourceIds)}`
+      FROM sources WHERE id IN ${sql(sourceIds)} ORDER BY id COLLATE "C"`
   ).filter((m) => m.enabled && shardHandle(m));
   if (members.length === 0) return { key, status: "skipped", accounts: 0, found: 0, created: 0 };
 

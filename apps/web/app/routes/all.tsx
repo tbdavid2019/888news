@@ -20,12 +20,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   const channel = isChannelKey(channelParam) ? channelParam : "all";
   const category = categoryParam && isCategoryKey(categoryParam) ? categoryParam : null;
   const tag = url.searchParams.get("tag")?.trim() || null;
+  const topic = url.searchParams.get("topic")?.trim() || null;
   const q = url.searchParams.get("q")?.trim().slice(0, 200) || null;
   const tab = url.searchParams.get("tab") === "relevance" ? "relevance" : null;
   // Legacy deep-paging parameters (deep, anchorAt) still open a normal page.
   const page = Math.min(Math.max(Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1, 1), 50);
   const data = await loadOr404<PoolResponse>(
-    `/api/site/pool${queryString({ channel: channel === "all" ? null : channel, category, tag, q, tab, page: page > 1 ? page : null })}`,
+    `/api/site/pool${queryString({ channel: channel === "all" ? null : channel, category, tag, topic, q, tab, page: page > 1 ? page : null })}`,
     { request, signal: request.signal, busyRedirect: "/all/search-busy" },
   );
   return { data };
@@ -39,7 +40,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
   return pageMeta({
     title: q ? `搜尋：${q}` : "全部動態",
     description: `${SITE.name} 收錄的全部動態，可按類別與標籤篩選，支援中英文搜尋。`,
-    path: listPath("/all", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, q, tab: f?.tab === "relevance" ? "relevance" : null, page: page > 1 ? page : null }),
+    path: listPath("/all", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, topic: f?.topic, q, tab: f?.tab === "relevance" ? "relevance" : null, page: page > 1 ? page : null }),
     noindex: !!q,
   });
 }
@@ -65,7 +66,7 @@ export default function AllPage() {
   const navigation = useNavigation();
   const f = data.filters;
   const busy = navigation.state === "loading" && navigation.location?.pathname === "/all";
-  const keep = { channel: f.channel === "all" ? null : f.channel, category: f.category };
+  const keep = { channel: f.channel === "all" ? null : f.channel, category: f.category, tag: f.tag, topic: f.topic ?? null };
   const searchTabHref = (tab: "time" | "relevance") => {
     const sp = new URLSearchParams(params);
     sp.delete("page");

@@ -1,22 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Form, Link, useNavigation, useSearchParams } from "react-router";
-import { CATEGORY_KEYS, type CategoryKey, type ChannelKey } from "@aihot/contracts/taxonomy";
+import { type CategoryKey, type ChannelKey } from "@aihot/contracts/taxonomy";
+import { SITE } from "@aihot/industry/site";
 import { IconClose, IconSearch } from "../../components/icons";
 import { PillTabs } from "../../components/ui/Tabs";
 import { useI18n, type TranslationKey } from "../../lib/i18n";
-
-/** Same page with some query parameters changed (paging state dropped). */
-export function hrefWith(base: string, params: URLSearchParams, patch: Record<string, string | null>) {
-  const sp = new URLSearchParams(params);
-  for (const [k, v] of Object.entries(patch)) {
-    if (v === null || v === "") sp.delete(k);
-    else sp.set(k, v);
-  }
-  sp.delete("page");
-  sp.delete("cursor");
-  const s = sp.toString();
-  return s ? `${base}?${s}` : base;
-}
+import { categoryFilters } from "./category-filters";
 
 /**
  * The feed's one filter row (精選 and 全部動態 alike): 全部, 一手, then the categories. One choice at a
@@ -27,16 +16,13 @@ export function CategoryTabs({ base, category, channel = "all", layoutId, size =
   const [params] = useSearchParams();
   const { t } = useI18n();
 
-  const items = [
-    { key: "all", label: t("category.all"), to: hrefWith(base, params, { category: null, channel: null }) },
-    { key: "firstParty", label: t("category.firstParty"), to: hrefWith(base, params, { category: null, channel: "firstParty" }) },
-    ...CATEGORY_KEYS.map((k) => ({
-      key: k,
-      label: t(`category.${k}` as TranslationKey),
-      to: hrefWith(base, params, { category: k, channel: null }),
-    })),
-  ];
-  const active = channel === "firstParty" ? "firstParty" : (category ?? "all");
+  const { items: links, active } = categoryFilters(base, params, category, channel, SITE.homeTopicShortcut);
+  const items = links.map((link) => ({
+    ...link,
+    label: link.key === "topic" && SITE.homeTopicShortcut
+      ? t(SITE.homeTopicShortcut.labelKey)
+      : t(`category.${link.key}` as TranslationKey),
+  }));
   return <PillTabs items={items} active={active} layoutId={layoutId} label={t("feed.filter_label")} size={size} className={className} />;
 }
 

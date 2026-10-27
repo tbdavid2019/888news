@@ -6,7 +6,6 @@ import { isCategoryKey, isChannelKey } from "@aihot/contracts/taxonomy";
 import { loadOr404, queryString, releaseBoundCache } from "../lib/api.server";
 import { listPath, organizationLd, pageMeta } from "../lib/seo";
 import { Wordmark } from "../components/Logo";
-import { HomeTopicShortcut } from "../components/HomeTopicShortcut";
 import { Timeline } from "../features/feed/Timeline";
 import { HotTopics } from "../features/feed/HotTopics";
 import { CategoryTabs, SearchField, SearchIconLink } from "../features/feed/Filters";
@@ -23,17 +22,18 @@ export async function loader({ request }: Route.LoaderArgs) {
   const channel = isChannelKey(channelParam) ? channelParam : "all";
   const category = categoryParam && isCategoryKey(categoryParam) ? categoryParam : null;
   const tag = url.searchParams.get("tag")?.trim() || null;
+  const topic = url.searchParams.get("topic")?.trim() || null;
   const upstream = new Headers();
   const data = await loadOr404<TimelineResponse>(
-    `/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag })}`,
+    `/api/site/timeline${queryString({ channel: channel === "all" ? null : channel, category, tag, topic })}`,
     { request, responseHeaders: upstream, signal: request.signal }
   );
-  return withHeaders({ data, filters: { channel, category, tag, topic: null } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
+  return withHeaders({ data, filters: { channel, category, tag, topic } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const f = loaderData?.filters;
-  const path = listPath("/", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag });
+  const path = listPath("/", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, topic: f?.topic });
   return pageMeta({ path, jsonLd: path === "/" ? organizationLd() : undefined });
 }
 
@@ -79,8 +79,7 @@ export default function Home() {
         <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">{title}</h1>
         <div className="mb-5 mt-4 flex items-center justify-between gap-4">
           <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat-desk" className="min-w-0" />
-          <HomeTopicShortcut shortcut={SITE.homeTopicShortcut} label={SITE.homeTopicShortcut ? t(SITE.homeTopicShortcut.labelKey) : ""} className="chip h-9 shrink-0 px-2.5 text-[14px] text-ink-3 lg:h-10 lg:px-3" />
-          <SearchField variant="track" keep={{ category: filters.category }} />
+          <SearchField variant="track" keep={{ channel: filters.channel === "all" ? null : filters.channel, category: filters.category, tag: filters.tag, topic: filters.topic }} />
         </div>
       </div>
 
@@ -89,7 +88,6 @@ export default function Home() {
       <h2 className="mt-6 text-[20px] font-bold text-ink lg:hidden">{filters.tag ? title : t("nav.featured")}</h2>
       <div className="-mx-4 mt-3 flex items-center gap-2 pl-4 pr-2 lg:hidden">
         <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat-mobile" size="sm" className="min-w-0 flex-1" />
-        <HomeTopicShortcut shortcut={SITE.homeTopicShortcut} label={SITE.homeTopicShortcut ? t(SITE.homeTopicShortcut.labelKey) : ""} className="chip h-9 shrink-0 px-2.5 text-[14px] text-ink-3 lg:h-10 lg:px-3" />
         <SearchIconLink />
       </div>
 

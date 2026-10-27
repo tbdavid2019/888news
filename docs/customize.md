@@ -17,7 +17,7 @@
 - `name`：站名。导航、标题、分享图、RSS、MCP、后台都用它。
 - `subject`：行业词。页面上“AI 日报”“全部 AI 动态”会变成“法律日报”“全部法律动态”。
 - `homeTitle`、`description`、`tagline`：首页标题、一句话介绍、侧边栏小字。
-- `homeTopicShortcut`：首页快捷主题入口；设为 `null` 可关闭，`slug` 对应 `industry/topics.json` 的主题，`labelKey` 对应介面翻译键。
+- `homeTopicShortcut`：精选与全部动态筛选列的主题入口；设为 `null` 可关闭，`slug` 对应 `industry/topics.json` 的主题，`labelKey` 对应介面翻译键。
 - `mcpPrefix`：MCP 工具名前缀，比如 `lawhot` 会得到 `lawhot_get_latest`。有人接入以后不要再改。
 - `crawlerName`：抓取信源时报的名字，别用别人的站名。
 - `ABOUT`：关于页的大标题、四个环节的说明、作者块（可选）、版权说明。
