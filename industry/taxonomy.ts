@@ -10,7 +10,7 @@
 export const CATEGORIES = [
   { key: "ai-models", label: "模型", section: "模型發布/更新", guide: "新模型、模型版本、權重開放、模型能力與價格變化的發布與評測結果" },
   { key: "ai-products", label: "產品", section: "產品發布/更新", guide: "AI 產品、功能、應用、工具、API 與平台的發布和更新" },
-  { key: "industry", label: "產業", section: "產業動態", guide: "公司經營、融資併購、人事、合作、訴訟、監管與政策、市場與基礎設施" },
+  { key: "industry", label: "產業", section: "產業動態", guide: "公司經營、融資併購、人事、合作、訴訟、監管與政策、市場與基礎設施，也包含資安事件、漏洞修補與隱私影響" },
   { key: "paper", label: "論文", section: "論文研究", guide: "研究論文、技術報告、基準與資料集" },
   { key: "tip", label: "教學", section: "技巧與觀點", guide: "教學、實務經驗、使用技巧、提示詞與工具用法、深度技術解析" },
   { key: "opinion", label: "觀點", section: "技巧與觀點", guide: "人物觀點、評論、分析、訪談、現象與趨勢討論" },
@@ -30,6 +30,16 @@ export const CATEGORY_TAGS = [
   "非AI/通用工具", "其他",
 ] as const;
 
+/** Stable primary-tag fallback for each public category key. */
+export const CATEGORY_TAG_BY_KEY: Readonly<Record<(typeof CATEGORIES)[number]["key"], (typeof CATEGORY_TAGS)[number]>> = {
+  "ai-models": "模型發布",
+  "ai-products": "產品更新",
+  industry: "產業動態",
+  paper: "論文/研究",
+  tip: "教學/實務",
+  opinion: "專家觀點",
+};
+
 /** 可選的主題標籤（台灣正體科技術語）。 */
 export const TOPIC_TAGS = [
   "Agent", "程式開發", "推理", "多模態", "語音", "視訊/影片", "圖像生成", "RAG", "邊緣端/裝置端", "資料/訓練", "搜尋", "部署/工程", "開源生態", "具身智能/機器人", "MCP/工具調用",
@@ -48,7 +58,7 @@ export const TAG_SYNONYMS: Readonly<Record<string, string>> = {
   // 政策 / 法規
   "政策/监管": "政策/法規", "政策/監管": "政策/法規", "政策": "政策/法規", "监管": "政策/法規", "監管": "政策/法規", "法规": "政策/法規", "法規": "政策/法規",
   // 安全 / 對齊
-  "安全/对齐": "安全/對齊", "安全": "安全/對齊", "对齐": "安全/對齊", "對齊": "安全/對齊",
+  "安全/对齐": "安全/對齊", "对齐": "安全/對齊", "對齊": "安全/對齊",
   // 論文 / 研究
   "论文/研究": "論文/研究", "论文": "論文/研究", "論文": "論文/研究", "研究": "論文/研究", "paper": "論文/研究", "papers": "論文/研究",
   // 開源專案

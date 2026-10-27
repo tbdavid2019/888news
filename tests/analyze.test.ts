@@ -8,13 +8,16 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { closeDb, sql } from "@aihot/backend/db";
+import { config } from "@aihot/backend/config";
 import { upsertMaterial } from "@aihot/backend/content/materials";
-import { analyzeArticle, SCORE_SYSTEM, tierThreshold } from "@aihot/backend/editorial/analyze";
+import { ANALYZE_PROMPT_VERSION, analyzeArticle, PROMPT_VERSIONS, SCORE_SYSTEM, tierThreshold } from "@aihot/backend/editorial/analyze";
 import { queueProcessing } from "@aihot/backend/jobs/content";
 import { QUEUES, stopBoss } from "@aihot/backend/jobs/queue";
 import { compactAnswerFirstSummary, enforceIdentity, parseTranslateOutput, PREFILTER_SYSTEM } from "@aihot/backend/editorial/writing";
 import { promptText } from "@aihot/backend/editorial/prompts";
 import { SITE } from "@aihot/industry/site";
+import { normalizeTags } from "@aihot/backend/editorial/vocabulary";
+import { resetClefState } from "../packages/backend/src/providers/jev.ts";
 
 const T = tag();
 const SOURCE = `test-analyze-${T}`;
@@ -23,12 +26,12 @@ const X_SOURCE = `test-analyze-x-${T}`;
 type Step = "prefilter" | "score" | "understand" | "summarize" | "structure";
 interface Req { step: Step; marker: string; system: string; user: string; body: Record<string, any> }
 const requests: Req[] = [];
-const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "VAGUE", "THIN", "SENSITIVE", "推文"];
-const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [70, 70], SENSITIVE: [80, 80], 推文: [40, 40], BARE: [30, 34], VAGUE: [60, 62] };
+const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "VAGUE", "THIN", "SENSITIVE", "INFOSEC", "INFOSLOW", "CLEFSEC", "SECGUIDE", "推文"];
+const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [70, 70], SENSITIVE: [80, 80], INFOSEC: [84, 78], INFOSLOW: [30, 32], CLEFSEC: [84, 78], SECGUIDE: [30, 32], 推文: [40, 40], BARE: [30, 34], VAGUE: [60, 62] };
 
 const stepOf = (system: string, user: string): Step =>
-  system.includes("宽召回的AI相关性预筛") ? "prefilter" : system.includes("事件注意力评分器") ? "score"
-  : system.includes("内容理解编辑") ? "understand" : system.includes("资料结构化助手") ? "structure"
+  system === PREFILTER_SYSTEM ? "prefilter" : system.includes("事件注意力评分器") ? "score"
+  : system.includes("内容理解编辑") ? "understand" : system.includes("結構化助手") ? "structure"
   : user.includes("title_zh") ? "summarize" : (() => { throw new Error("unknown request"); })();
 
 // One stub stands in for DashScope (prefilter, structure), Zhipu (score, understand) and DeepSeek (summarize).
@@ -38,22 +41,40 @@ const provider = await stub((_hit, req) => {
   const last = body.messages[body.messages.length - 1]!.content;
   const user = typeof last === "string" ? last : JSON.stringify(last);
   const step = stepOf(system, user);
-  const marker = MARKERS.find((m) => user.includes(m)) ?? "";
+  const marker = [...MARKERS].sort((a, b) => b.length - a.length).find((m) => user.includes(m)) ?? "";
   requests.push({ step, marker, system, user, body });
   const answer = (content: unknown) => ({ id: `stub-${requests.length}`, model: "stub", choices: [{ message: { content: typeof content === "string" ? content : JSON.stringify(content) } }], usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 } });
   if (step === "prefilter") return answer({ label: marker === "OFFTOPIC" || marker === "BARE" ? "BLOCK" : marker === "VAGUE" ? "UNKNOWN" : "PASS", reason: "测试" });
   if (step === "score") return answer({ attentionScore: scoreAnswers[marker]!.shift() });
   if (step === "understand") {
     if (marker === "SENSITIVE") return new Reply(400, { contentFilter: [{ level: 1, role: "user" }], error: { code: "1301", message: "系统检测到输入或生成内容可能包含不安全或敏感内容" } });
+    if (marker === "INFOSEC" || marker === "CLEFSEC") return answer({ itemType: "industry_event", authorRole: "observer", tags: ["產業動態", "資訊安全"], editorialJudgment: "OpenSSH 的受影響版本與修補資訊可協助管理者判斷升級時程。", titleZh: "OpenSSH 修補未驗證遠端程式碼執行漏洞", summaryZh: "OpenSSH 9.8 至 9.9 存在未驗證 RCE；研究者公開 PoC，專案釋出 9.9.1 修補版並提供設定緩解。" });
     return answer({ itemType: "model_release", authorRole: "principal", tags: ["模型发布", "开源", "Agent", "不存在的标签"], editorialJudgment: `理由 ${marker}`, titleZh: `理解标题 ${marker}`, summaryZh: `理解摘要 ${marker}。第二句补充一个关键数字。` });
   }
-  if (step === "structure") return answer({ category: "ai-models", tags: ["模型发布", "推理"], subjects: ["anthropic", "unknown-co"], fact: { title: `事实 ${marker}`, subject: "某公司", action: "发布", object: "模型", occurredAt: null } });
+  if (step === "structure") return answer(marker === "INFOSEC" || marker === "INFOSLOW" || marker === "CLEFSEC" || marker === "SECGUIDE"
+    ? { category: marker === "SECGUIDE" ? "tip" : "industry", tags: marker === "INFOSLOW" || marker === "SECGUIDE" ? ["資訊安全"] : ["產業動態", "資訊安全"], subjects: [], fact: { title: "OpenSSH 修補 RCE", subject: "OpenSSH", action: "修補", object: "RCE 漏洞", occurredAt: null } }
+    : { category: "ai-models", tags: ["模型发布", "推理"], subjects: ["anthropic", "unknown-co"], fact: { title: `事实 ${marker}`, subject: "某公司", action: "发布", object: "模型", occurredAt: null } });
   return answer(`title_zh: 翻译标题 ${marker}\nsummary_zh: 翻译摘要 ${marker}。第二句补充影响。`);
 });
 for (const env of ["DASHSCOPE_BASE_URL", "ZHIPU_BASE_URL", "DEEPSEEK_BASE_URL"]) process.env[env] = `${provider.url}/v1`;
 for (const env of ["DASHSCOPE_API_KEY", "ZHIPU_API_KEY", "DEEPSEEK_API_KEY"]) process.env[env] = "test-key";
 // AIHOT's own assignment of models to steps (the open-source default is one model for all of them).
 Object.assign(process.env, { PREFILTER_MODEL: "qwen3.7-flash", SCORE_MODEL: "glm-5.3-flash-selection", UNDERSTAND_MODEL: "glm-5.3-flash", SUMMARIZE_MODEL: "deepseek-flash", STRUCTURE_MODEL: "qwen3.8-flash" });
+
+const clefRequests: Record<string, any>[] = [];
+const clefProvider = await stub((_hit, req) => {
+  const input = JSON.parse(req.body);
+  clefRequests.push(input);
+  return {
+    model: "clef-flash", answers: {
+      relevance: { type: "choice", choice: "PASS", confidence: 0.96, probabilities: { PASS: 0.96, BLOCK: 0.02, UNKNOWN: 0.02 } },
+      score: { type: "score", score: 3, confidence: 0.95 },
+      category: { type: "choice", choice: "industry", confidence: 0.95 },
+      itemType: { type: "choice", choice: "industry_event", confidence: 0.95 },
+      authorRole: { type: "choice", choice: "observer", confidence: 0.95 },
+    }, usage: { input_tokens: 100, output_tokens: 0 },
+  };
+});
 
 before(async () => {
   await sql`INSERT INTO sources (id, name, kind, tier, participation_mode, next_fetch_at) VALUES
@@ -62,6 +83,7 @@ before(async () => {
 });
 after(async () => {
   await provider.close();
+  await clefProvider.close();
   await stopBoss();
   await closeDb();
 });
@@ -88,7 +110,24 @@ test("every prompt in the pack renders, and the site's name replaces AIHOT's", (
     const text = promptText(file.slice(0, -3), values);
     assert.ok(text.length > 20 && !/\{\{/.test(text), file);
   }
-  assert.ok(PREFILTER_SYSTEM.startsWith(`为${SITE.name}做宽召回的AI相关性预筛`));
+  assert.ok(PREFILTER_SYSTEM.startsWith(`为${SITE.name}做科技领域宽召回预筛`));
+  assert.match(PREFILTER_SYSTEM, /重大 CVE\/0-day\/RCE/);
+  for (const prompt of [
+    promptText("story-digest", { siteName: SITE.name }),
+    promptText("report-daily-lead", { siteName: SITE.name }),
+    promptText("report-period", { siteName: SITE.name, kindName: "週報", overviewLength: "300" }),
+  ]) {
+    assert.match(prompt, /已確認遭利用、研究者驗證與推測/);
+    assert.match(prompt, /AI 發現漏洞.*只按來源證據表述/);
+  }
+});
+
+test("tag normalization separates infosec from explicit AI safety and preserves both", () => {
+  assert.deepEqual(normalizeTags(["安全"]), ["其他"]);
+  assert.deepEqual(normalizeTags(["產業動態", "安全"]), ["產業動態"]);
+  assert.deepEqual(normalizeTags(["資訊安全"]), ["其他", "資訊安全"]);
+  assert.deepEqual(normalizeTags(["安全/對齊"]), ["安全/對齊"]);
+  assert.deepEqual(normalizeTags(["資訊安全", "安全/對齊"]), ["安全/對齊", "資訊安全"]);
 });
 
 test("a selected item: prefilter, two scores, the content understanding and the structure", async () => {
@@ -110,6 +149,83 @@ test("a selected item: prefilter, two scores, the content understanding and the 
   assert.ok(understand.system.includes("【摘要答案前置规则") && understand.system.includes("【标题自洽规则"));
   const prefilter = requests.find((q) => q.marker === "CLEAR" && q.step === "prefilter")!;
   assert.ok(JSON.parse(prefilter.user).includes("【材料质量】"), "the material context, sent as a JSON string");
+});
+
+test("an evidence-based infosec item reaches both scores, summary and the distinct infosec tag", async () => {
+  const id = await article("INFOSEC", {
+    title: `OpenSSH CVE-2026-12345 allows unauthenticated RCE ${T}`,
+    bodyText: `INFOSEC: OpenSSH 9.8 through 9.9 has a remotely exploitable RCE before authentication. Researchers published a proof of concept; the project released OpenSSH 9.9.1 and a configuration mitigation. ${T}`,
+  });
+  const res = await analyzeArticle(id);
+  assert.deepEqual([res!.output!.selected, res!.output!.score], [true, 81]);
+  assert.deepEqual(calls("INFOSEC").sort(), ["prefilter", "score", "score", "structure", "understand"]);
+  const r = await row(id);
+  assert.deepEqual([r.title_zh, r.category, r.tags], ["OpenSSH 修補未驗證遠端程式碼執行漏洞", "industry", ["產業動態", "資訊安全"]]);
+  assert.equal(r.output.writer, "understand");
+
+  const prefilter = requests.find((q) => q.marker === "INFOSEC" && q.step === "prefilter")!;
+  assert.match(prefilter.system, /每个列出的科技领域都可独立收录，不要求与 AI 相关/);
+  assert.match(prefilter.user, /CVE-2026-12345/);
+  const score = requests.find((q) => q.marker === "INFOSEC" && q.step === "score")!;
+  assert.match(score.system, /實際攻擊證據/);
+  assert.match(score.system, /重大漏洞修补或已利用漏洞的紧急缓解依实际资安影响正常评分/);
+  const understand = requests.find((q) => q.marker === "INFOSEC" && q.step === "understand")!;
+  assert.match(understand.system, /受影響產品與版本/);
+  assert.match(understand.system, /研究 PoC/);
+  assert.match(understand.system, /「資訊安全」/);
+  assert.match(understand.system, /「安全\/對齊」/);
+  assert.equal(r.output.writerModel, "glm-5.3-flash");
+  const [analysis] = await sql<{ prompt_version: string }[]>`SELECT prompt_version FROM analyses WHERE article_id = ${id} ORDER BY id DESC LIMIT 1`;
+  assert.equal(analysis!.prompt_version, ANALYZE_PROMPT_VERSION);
+  const [prefilterReceipt] = await sql<{ request: { promptVersion: string } }[]>`SELECT request FROM receipts WHERE id = ${res!.receiptIds[0]}`;
+  assert.equal(prefilterReceipt!.request.promptVersion, PROMPT_VERSIONS.prefilter);
+
+  const lowId = await article("INFOSLOW", {
+    title: `OpenSSH routine documentation refresh ${T}`,
+    bodyText: `INFOSLOW: OpenSSH refreshed a documentation page with no vulnerability, behavior or version changes. ${T}`,
+  });
+  const low = await analyzeArticle(lowId);
+  assert.deepEqual([low!.output!.selected, low!.output!.score, (await row(lowId)).output.writer], [false, 31, "summarize"]);
+  assert.deepEqual((await row(lowId)).tags, ["產業動態", "資訊安全"], "the explicit structure category supplies the missing category tag");
+  const fallback = requests.find((q) => q.marker === "INFOSLOW" && q.step === "summarize")!;
+  assert.match(fallback.user, /【資安摘要規則】/);
+  assert.match(fallback.user, /已知攻擊／研究 PoC／理論推測/);
+});
+
+test("a pure infosec article passes CLEF and reaches scoring, summary and infosec tagging", async () => {
+  config.allowPrivateNetworkFetch = true; // This case calls only the localhost CLEF stub.
+  process.env.CLEF_ENABLED = "true";
+  process.env.CLEF_BASE_URL = clefProvider.url;
+  process.env.CLEF_FALLBACK_BASE_URL = "";
+  resetClefState();
+  try {
+    const id = await article("CLEFSEC", {
+      title: `OpenSSH CVE-2026-12345 permits unauthenticated remote code execution ${T}`,
+      bodyText: `CLEFSEC: OpenSSH 9.8 through 9.9 permits unauthenticated remote code execution. Researchers published a proof of concept. The project released version 9.9.1 to fix the vulnerability. ${T}`,
+    });
+    const result = await analyzeArticle(id);
+    const r = await row(id);
+    assert.deepEqual([result!.output!.selected, result!.output!.relevance, r.output.prefilter.label, r.output.writer], [true, "pass", "PASS", "understand"]);
+    assert.equal(r.output.prefilter.rawGrade, 3);
+    assert.deepEqual(calls("CLEFSEC").sort(), ["score", "score", "structure", "understand"]);
+    assert.deepEqual([r.category, r.tags], ["industry", ["產業動態", "資訊安全"]]);
+    assert.equal(r.title_zh, "OpenSSH 修補未驗證遠端程式碼執行漏洞");
+    assert.ok(clefRequests.some((request) => request.questions.relevance));
+    assert.ok(clefRequests.some((request) => JSON.stringify(request).includes("CVE-2026-12345")));
+  } finally {
+    process.env.CLEF_ENABLED = "false";
+    resetClefState();
+  }
+});
+
+test("structure maps a missing security-topic category tag from its explicit non-industry category", async () => {
+  const id = await article("SECGUIDE", {
+    title: `OpenSSH hardening guide ${T}`,
+    bodyText: `SECGUIDE: Administrators can disable password authentication and limit SSH access to approved keys. This defensive configuration guide includes command examples. ${T}`,
+  });
+  const result = await analyzeArticle(id);
+  const r = await row(id);
+  assert.deepEqual([result!.output!.selected, r.category, r.tags, r.output.writer], [false, "tip", ["教學/實務", "資訊安全"], "summarize"]);
 });
 
 test("a near-selected item is written like a selected one; below the floor it is translated", async () => {

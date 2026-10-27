@@ -27,7 +27,7 @@ import {
   needsShortTweetTranslation, parseTranslateOutput, PREFILTER_SYSTEM, prefilterUser, translateInputOf, UNDERSTAND_SYSTEM, understandUser,
   type IdentityGuard,
 } from "./writing.ts";
-import { CATEGORY_BY_ITEM_TYPE, CATEGORY_GUIDE, CATEGORY_TAGS, ENTITIES, ENTITY_TAGS, ITEM_TYPES, normalizeTags, TOPIC_TAGS } from "./vocabulary.ts";
+import { CATEGORY_BY_ITEM_TYPE, CATEGORY_GUIDE, CATEGORY_TAG_BY_KEY, CATEGORY_TAGS, ENTITIES, ENTITY_TAGS, ITEM_TYPES, normalizeTags, TOPIC_TAGS } from "./vocabulary.ts";
 import { promptText, promptVersion } from "./prompts.ts";
 
 export { buildMaterial, loadAnalyzeInput, type AnalyzeInputArticle };
@@ -310,7 +310,9 @@ async function runStructure(
   });
   const subjects = [...new Set(res.data.subjects.map((s) => s.trim().toLowerCase()).filter((s) => s in ENTITIES))];
   const validCategory = res.data.category ?? (hints?.category && (CATEGORY_KEYS as readonly string[]).includes(hints.category) ? (hints.category as typeof CATEGORY_KEYS[number]) : null);
-  return { model: res.model, category: validCategory, tags: normalizeTags(res.data.tags), subjects, fact: res.data.fact, receiptId: res.receiptId, reused: res.reused };
+  const categoryTag = validCategory ? CATEGORY_TAG_BY_KEY[validCategory] : null;
+  const typeCategory = hints?.itemType ? CATEGORY_BY_ITEM_TYPE[hints.itemType] : null;
+  return { model: res.model, category: validCategory, tags: normalizeTags(res.data.tags, { fallbackCategory: categoryTag ?? typeCategory ?? undefined }), subjects, fact: res.data.fact, receiptId: res.receiptId, reused: res.reused };
 }
 
 /** The content understanding; null when the model's content filter declines the material. */

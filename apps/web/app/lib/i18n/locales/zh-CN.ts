@@ -24,6 +24,7 @@ export const zhCN: Record<TranslationKey, string> = {
   "nav.skip_to_content": "跳到正文",
   "nav.new_update": "有新的更新",
   "nav.back_to_top": "回到顶部",
+  "nav.infosec": "资安",
   "category.all": "全部",
   "category.firstParty": "一手",
   "category.ai-models": "模型",

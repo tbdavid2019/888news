@@ -10,6 +10,8 @@ export const SITE = {
    * 改成“法律”“HR”“黄金”之类，页面上就会变成“法律日报”“法律动态”。
    */
   subject: "AI",
+  /** Optional topic shortcut shown beside the home feed filters. */
+  homeTopicShortcut: { slug: "infosec", labelKey: "nav.infosec" } as { slug: string; labelKey: "nav.infosec" } | null,
   /** 首页的完整标题（浏览器标签、搜索结果）。 */
   homeTitle: "888news — AI 科技動態 · 每日精選與情報",
   /** 一句话介绍：搜索引擎、分享卡片、RSS、llms.txt 会用。 */

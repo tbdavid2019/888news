@@ -8,6 +8,7 @@ import { after, before, test } from "node:test";
 import { sql, closeDb } from "@aihot/backend/db";
 import { getBoss, stopBoss } from "@aihot/backend/jobs/queue";
 import { upsertMaterial } from "@aihot/backend/content/materials";
+import { PREFILTER_SYSTEM } from "@aihot/backend/editorial/writing";
 
 const T = tag();
 const SOURCE = `test-analyze-stop-${T}`;
@@ -25,8 +26,8 @@ let active: {
 const provider = await stub(async (_hit, request) => {
   const body = JSON.parse(request.body);
   const system = String(body.messages[0]?.content ?? "");
-  const step: Step = system.includes("宽召回的AI相关性预筛") ? "prefilter" : system.includes("事件注意力评分器") ? "score"
-    : system.includes("资料结构化助手") ? "structure" : "understand";
+  const step: Step = system === PREFILTER_SYSTEM ? "prefilter" : system.includes("事件注意力评分器") ? "score"
+    : system.includes("結構化助手") ? "structure" : "understand";
   active.calls.push(step);
   const count = active.calls.filter(s => s === step).length;
   if (step === "score" && count === 1) {

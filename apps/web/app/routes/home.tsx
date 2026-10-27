@@ -6,6 +6,7 @@ import { isCategoryKey, isChannelKey } from "@aihot/contracts/taxonomy";
 import { loadOr404, queryString, releaseBoundCache } from "../lib/api.server";
 import { listPath, organizationLd, pageMeta } from "../lib/seo";
 import { Wordmark } from "../components/Logo";
+import { HomeTopicShortcut } from "../components/HomeTopicShortcut";
 import { Timeline } from "../features/feed/Timeline";
 import { HotTopics } from "../features/feed/HotTopics";
 import { CategoryTabs, SearchField, SearchIconLink } from "../features/feed/Filters";
@@ -78,6 +79,7 @@ export default function Home() {
         <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">{title}</h1>
         <div className="mb-5 mt-4 flex items-center justify-between gap-4">
           <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat-desk" className="min-w-0" />
+          <HomeTopicShortcut shortcut={SITE.homeTopicShortcut} label={SITE.homeTopicShortcut ? t(SITE.homeTopicShortcut.labelKey) : ""} className="chip h-9 shrink-0 px-2.5 text-[14px] text-ink-3 lg:h-10 lg:px-3" />
           <SearchField variant="track" keep={{ category: filters.category }} />
         </div>
       </div>
@@ -87,6 +89,7 @@ export default function Home() {
       <h2 className="mt-6 text-[20px] font-bold text-ink lg:hidden">{filters.tag ? title : t("nav.featured")}</h2>
       <div className="-mx-4 mt-3 flex items-center gap-2 pl-4 pr-2 lg:hidden">
         <CategoryTabs base="/" category={filters.category} channel={filters.channel} layoutId="home-cat-mobile" size="sm" className="min-w-0 flex-1" />
+        <HomeTopicShortcut shortcut={SITE.homeTopicShortcut} label={SITE.homeTopicShortcut ? t(SITE.homeTopicShortcut.labelKey) : ""} className="chip h-9 shrink-0 px-2.5 text-[14px] text-ink-3 lg:h-10 lg:px-3" />
         <SearchIconLink />
       </div>
 

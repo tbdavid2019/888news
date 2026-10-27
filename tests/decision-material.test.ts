@@ -23,7 +23,7 @@ test("CLEF gate uses native grade, including the previous rounded boundary", () 
   assert.equal(belowDecisionCutoff(2.1, 70, 68), false);
 });
 
-test("CLEF evidence keeps opening and ranks by AI relevance", () => {
+test("CLEF evidence keeps opening and ranks by technology relevance", () => {
   const evidence = decisionEvidence("opening context", [
     { text: "unrelated navigation", relevance: 0.01 },
     { text: "concrete AI workflow", relevance: 0.95 },

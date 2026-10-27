@@ -26,6 +26,7 @@ export type TranslationKey =
   | "nav.skip_to_content"
   | "nav.new_update"
   | "nav.back_to_top"
+  | "nav.infosec"
   | "category.all"
   | "category.firstParty"
   | "category.ai-models"

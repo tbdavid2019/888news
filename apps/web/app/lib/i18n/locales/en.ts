@@ -24,6 +24,7 @@ export const en: Record<TranslationKey, string> = {
   "nav.skip_to_content": "Skip to content",
   "nav.new_update": "New updates available",
   "nav.back_to_top": "Back to top",
+  "nav.infosec": "Security",
   "category.all": "All",
   "category.firstParty": "Official",
   "category.ai-models": "Models",

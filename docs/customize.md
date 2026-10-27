@@ -17,6 +17,7 @@
 - `name`：站名。导航、标题、分享图、RSS、MCP、后台都用它。
 - `subject`：行业词。页面上“AI 日报”“全部 AI 动态”会变成“法律日报”“全部法律动态”。
 - `homeTitle`、`description`、`tagline`：首页标题、一句话介绍、侧边栏小字。
+- `homeTopicShortcut`：首页快捷主题入口；设为 `null` 可关闭，`slug` 对应 `industry/topics.json` 的主题，`labelKey` 对应介面翻译键。
 - `mcpPrefix`：MCP 工具名前缀，比如 `lawhot` 会得到 `lawhot_get_latest`。有人接入以后不要再改。
 - `crawlerName`：抓取信源时报的名字，别用别人的站名。
 - `ABOUT`：关于页的大标题、四个环节的说明、作者块（可选）、版权说明。
@@ -28,6 +29,7 @@
 
 - `CATEGORIES`：首页和“全部动态”的筛选类别。`key` 会出现在网址和接口里（`/all?category=`、`/feed/category/<key>.xml`），上线后不要改；`label` 是显示名；`section` 是日报里的分节；`guide` 告诉模型怎么归类。
 - `CATEGORY_TAGS`、`TOPIC_TAGS`、`ENTITY_TAGS`：模型打标签时只能从这里选。第一个标签必须是“分类标签”。
+- `CATEGORY_TAG_BY_KEY`：每个分类 key 对应一个合法分类标签；新增或调整 `CATEGORIES` 时同步维护此映射。
 - `ENTITIES`：行业里的主要公司或机构，用于“公司”类主题页。`IDENTITY_LEXICON`、`PUBLISHER_DOMAINS` 用来防止模型在标题摘要里写进原文没提到的公司，别的行业没有这个需要可以清空。
 - `ITEM_TYPES`：内容类型，和评分提示词里的权重表对应，改了要一起改提示词。
 - `topics.json`：主题目录（`/topics`）。分三组：`company`（公司与机构）、`field`（方向）、`genre`（内容形态）。每个主题用 `tags` 或 `entityId` 决定收哪些内容。`slug` 上线后不要改。

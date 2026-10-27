@@ -192,7 +192,7 @@ export async function callClefSystemOne(
         purpose: opts.purpose,
         subject: opts.subject,
         identity: { model, state, questions },
-        requestSummary: { model, stateSnippet: state.slice(0, 200), questionKeys: Object.keys(questions) },
+        requestSummary: { model, promptVersion: CLEF_SELECTION_VERSION, stateSnippet: state.slice(0, 200), questionKeys: Object.keys(questions) },
         attemptTag: opts.attemptTag,
       },
       async () => {
@@ -436,7 +436,7 @@ export async function callJevSystemOne(
       purpose: opts.purpose,
       subject: opts.subject,
       identity: { model, state, questions },
-      requestSummary: { model, stateSnippet: state.slice(0, 200), questionKeys: Object.keys(questions) },
+      requestSummary: { model, promptVersion: CLEF_SELECTION_VERSION, stateSnippet: state.slice(0, 200), questionKeys: Object.keys(questions) },
       attemptTag: opts.attemptTag,
     },
     async () => {

@@ -6,6 +6,8 @@
 
 {{> rules-self-contained-title}}
 
+{{> rules-infosec-summary}}
+
 {{> rules-domain}}
 
 {{> rules-anti-hallucination}}

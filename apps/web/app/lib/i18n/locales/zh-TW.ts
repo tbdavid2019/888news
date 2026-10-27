@@ -24,6 +24,7 @@ export const zhTW: Record<TranslationKey, string> = {
   "nav.skip_to_content": "跳到正文",
   "nav.new_update": "有新的更新",
   "nav.back_to_top": "回到頂部",
+  "nav.infosec": "資安",
   "category.all": "全部",
   "category.firstParty": "第一手",
   "category.ai-models": "模型",
