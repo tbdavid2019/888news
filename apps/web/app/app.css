@@ -89,6 +89,7 @@
      and a 21:9 screen one of about 2.7:1. 236px is the sidebar and the main area's padding. */
   --page-max-wide: max(1200px, calc(270dvh - 236px));
   --page-max-reading: max(1100px, calc(200dvh - 236px));
+  --font-size-cjk-floor: 16px;
   color-scheme: light;
   --bg: #fff0cc;
   --bg-sunk: #fae7b5;
@@ -652,4 +653,48 @@
 }
 @keyframes cr-pulse {
   50% { box-shadow: 0 0 0 7px color-mix(in srgb, currentColor 6%, transparent); }
+}
+
+/* Chinese interface text shares the established 16px / 12pt floor across components. */
+:is(html[lang="zh-TW"], html[lang="zh-CN"]) :is(
+  [class~="text-xs"], [class~="text-sm"],
+  [class*="text-[10px]"], [class*="text-[10.5px]"],
+  [class*="text-[11px]"], [class*="text-[11.5px]"],
+  [class*="text-[12px]"], [class*="text-[12.5px]"],
+  [class*="text-[13px]"], [class*="text-[13.5px]"],
+  [class*="text-[14px]"], [class*="text-[14.5px]"],
+  [class*="text-[15px]"], [class*="text-[15.5px]"]
+):not(.num):not(.mono):not(.font-mono):not(code):not(kbd):not([aria-hidden="true"]) {
+  font-size: var(--font-size-cjk-floor);
+}
+
+:is(html[lang="zh-TW"], html[lang="zh-CN"]) :is(
+  [class~="text-xs"], [class~="text-sm"],
+  [class*="text-[10px]"], [class*="text-[10.5px]"],
+  [class*="text-[11px]"], [class*="text-[11.5px]"],
+  [class*="text-[12px]"], [class*="text-[12.5px]"],
+  [class*="text-[13px]"], [class*="text-[13.5px]"],
+  [class*="text-[14px]"], [class*="text-[14.5px]"],
+  [class*="text-[15px]"], [class*="text-[15.5px]"]
+):is([class~="leading-none"], [class~="leading-tight"], [class~="leading-4"],
+  [class*="leading-[16px]"], [class*="leading-[17px]"], [class*="leading-[18px]"],
+  [class*="leading-[20px]"], [class*="leading-[21px]"]):not(.num):not(.mono):not(.font-mono):not(code):not(kbd):not([aria-hidden="true"]) {
+  line-height: 1.4;
+}
+
+:is(html[lang="zh-TW"], html[lang="zh-CN"]) :is(
+  .chip, .prose figcaption, .prose table, .prose-compact table
+) {
+  font-size: var(--font-size-cjk-floor);
+}
+
+:where(html[lang="zh-TW"], html[lang="zh-CN"]) .prose-compact {
+  font-size: var(--font-size-cjk-floor);
+}
+
+:is(html[lang="zh-TW"], html[lang="zh-CN"]) [class*="h-[18px]"]:is([class*="text-[11px]"]) {
+  height: auto;
+  min-height: 26px;
+  padding-block: 2px;
+  line-height: 1.3;
 }

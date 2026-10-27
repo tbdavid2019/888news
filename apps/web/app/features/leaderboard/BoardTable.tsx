@@ -162,7 +162,7 @@ export function BoardTable({ entries, board }: { entries: LbBoardEntry[]; board:
                 title="共識指數把支援原排名的證據差異換算為 0—100，不是正確率。"
                 className={`inline-flex items-center gap-1 whitespace-nowrap transition-colors hover:text-ink ${sort === "rank" ? "text-accent" : ""}`}
               >
-                共識指數 <span className="inline-flex size-3.5 items-center justify-center rounded-full border border-current text-[9px] leading-none">i</span>
+                共識指數 <span aria-hidden="true" className="inline-flex size-3.5 items-center justify-center rounded-full border border-current text-[9px] leading-none">i</span>
               </button>
             </th>
           </tr>
