@@ -16,6 +16,12 @@ const REF = path.join(REPO_ROOT, "reference");
 const ASSETS = path.join(REPO_ROOT, "assets");
 const BRAND = path.join(REPO_ROOT, "industry/brand");
 
+function resolveUnder(root: string, file: string): string | null {
+  const safeRoot = path.resolve(root);
+  const target = path.resolve(safeRoot, file);
+  return target.startsWith(`${safeRoot}${path.sep}`) ? target : null;
+}
+
 const TYPES: Record<string, string> = {
   ".json": "application/json; charset=UTF-8",
   ".txt": "text/plain; charset=UTF-8",
@@ -256,8 +262,11 @@ export function registerStatic(app: FastifyInstance) {
     for (const dir of ["model-providers", "leaderboard-sources"]) {
       app.get(`/${dir}/:file`, (req, reply) => {
         const file = (req.params as { file: string }).file;
-        if (!/^[a-z0-9-]+\.(svg|png)$/.test(file)) return reply.code(404).send();
-        return sendFile(req, reply, path.join(ASSETS, dir, file), { cacheControl: "public, max-age=604800" });
+        const name = path.basename(file);
+        if (name !== file || !/^[a-z0-9-]+\.(svg|png)$/.test(name)) return reply.code(404).send();
+        const target = resolveUnder(path.join(ASSETS, dir), name);
+        if (!target) return reply.code(404).send();
+        return sendFile(req, reply, target, { cacheControl: "public, max-age=604800" });
       });
     }
   }
@@ -269,11 +278,9 @@ export function registerStatic(app: FastifyInstance) {
     if (name !== file || !/^[\w-]+\.(png|jpg|jpeg|webp)$/.test(name)) return reply.code(404).send();
     const hashed = /-[0-9a-f]{8}\./.test(name);
     const cacheControl = hashed ? "public, max-age=31536000, immutable" : "public, max-age=3600";
-    const uploadRoot = path.resolve(config.dataDir, "uploads");
-    const uploaded = path.resolve(uploadRoot, name);
-    const shippedRoot = path.resolve(BRAND, "contact");
-    const shipped = path.resolve(shippedRoot, name);
-    if (path.dirname(uploaded) !== uploadRoot || path.dirname(shipped) !== shippedRoot) return reply.code(404).send();
+    const uploaded = resolveUnder(path.join(config.dataDir, "uploads"), name);
+    const shipped = resolveUnder(path.join(BRAND, "contact"), name);
+    if (!uploaded || !shipped) return reply.code(404).send();
     const target = (await stat(uploaded).then(() => true, () => false)) ? uploaded : shipped;
     return sendFile(req, reply, target, { cacheControl });
   });
