@@ -1,5 +1,6 @@
 import { FEATURES } from "@aihot/industry/features";
 import Fastify, { type FastifyInstance } from "fastify";
+import rateLimit from "@fastify/rate-limit";
 import { randomUUID } from "node:crypto";
 import { OAUTH_PROBE_PATHS, resolveRedirect } from "@aihot/contracts/http-policy";
 import { sql } from "@aihot/backend/db";
@@ -27,6 +28,8 @@ export async function buildApp(): Promise<FastifyInstance> {
     bodyLimit: 10 * 1024 * 1024,
     routerOptions: { ignoreTrailingSlash: false, maxParamLength: 300 },
   });
+
+  await app.register(rateLimit, { global: true, max: 1000, timeWindow: "1 minute" });
 
   app.addHook("onRequest", async (req) => {
     req.requestId = req.id;
@@ -88,8 +91,12 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   app.setErrorHandler((error, req, reply) => {
-    req.log.error({ err: error }, "unhandled");
     const status = (error as { statusCode?: number }).statusCode ?? 500;
+    if (status === 429) {
+      const retryAfter = Number(reply.getHeader("retry-after")) || 60;
+      return sendProblem(req, reply, { status: 429, code: "rate_limited", detail: "Too many requests. Try again shortly.", retryAfter });
+    }
+    req.log.error({ err: error }, "unhandled");
     if (status === 400 || status === 413 || status === 415) {
       return sendProblem(req, reply, { status: status === 400 ? 400 : status, code: "invalid_request", detail: "The request could not be processed." });
     }

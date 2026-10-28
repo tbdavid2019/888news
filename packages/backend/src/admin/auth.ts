@@ -1,7 +1,7 @@
 // Admin identity: the admin password (ADMIN_PASSWORD), or optionally Feishu OAuth with an allowlist of
 // union_ids / emails; opaque sessions stored hashed, and an audit trail for every manual change.
 // Development may impersonate an admin with DEV_AUTH_ROLE=admin; production refuses to start with it.
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import { config, credential } from "../config.ts";
 import { sql } from "../db.ts";
 import { sha256 } from "../lib/ids.ts";
@@ -139,13 +139,21 @@ export async function completeLogin(code: string, state: string, stateCookie: st
 
 /** The single password admin: one row, found by its reserved address. */
 const PASSWORD_ADMIN = "admin@local";
+function derivePassword(value: string, salt: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scrypt(value, salt, 64, (error, key) => error ? reject(error) : resolve(key));
+  });
+}
 
 /** Password sign-in: a constant-time comparison of digests, so the length leaks nothing either. */
 export async function passwordLogin(password: string, returnTo: string, userAgent: string | undefined) {
   const expected = config.adminPassword;
   if (!expected || expected.length < 12) throw new LoginRejected("还没有设置管理员密码（环境变量 ADMIN_PASSWORD，至少 12 位）");
-  const given = createHmac("sha256", "admin-password").update(password).digest();
-  const wanted = createHmac("sha256", "admin-password").update(expected).digest();
+  const salt = "888news-admin-password-v1";
+  const [given, wanted] = await Promise.all([
+    derivePassword(password, salt),
+    derivePassword(expected, salt),
+  ]);
   if (!timingSafeEqual(given, wanted)) throw new LoginRejected("密码不对");
   const [user] = await sql<{ id: number }[]>`
     INSERT INTO admin_users (email, display_name, last_login_at) VALUES (${PASSWORD_ADMIN}, '管理员', now())

@@ -72,7 +72,7 @@ export function registerAdmin(app: FastifyInstance) {
   app.get("/api/admin/feedback", adminHandler(async (req) => listFeedback({ status: q(req).status, q: q(req).q, page: page(req) })));
   app.patch("/api/admin/feedback/:id", adminHandler(async (req, reply, admin) => orNotFound(req, reply, await updateFeedback(Number(param(req, "id")), body(req) as never, actorOf(admin)))));
   app.post("/api/admin/feedback/:id/erase", adminHandler(async (req, reply, admin) => orNotFound(req, reply, await eraseFeedback(Number(param(req, "id")), String(body(req).reason ?? ""), actorOf(admin)))));
-  app.get("/api/admin/feedback/:id/screenshot", adminHandler(async (req, reply) => {
+  app.get("/api/admin/feedback/:id/screenshot", { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, adminHandler(async (req, reply) => {
     const file = await feedbackScreenshot(Number(param(req, "id")));
     const data = file ? await readFile(file).catch(() => null) : null;
     if (!data) return notFound(req, reply);

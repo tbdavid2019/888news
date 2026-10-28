@@ -454,8 +454,16 @@ export async function syncPodcastFeeds(
             const guidHash = createHash("sha1").update(ep.guid || ep.link || ep.title).digest("hex").slice(0, 16);
             const epId = `${c.id}-${guidHash}`;
             const validAudioUrl = ep.audioUrl && ep.audioUrl.trim().length > 0 ? ep.audioUrl.trim() : null;
-            const isVideo = ep.link?.includes("youtube.com") || successfulUrl?.includes("youtube.com");
-            const youtubeUrl = isVideo ? ep.link : null;
+            const isYouTubeUrl = (value: string | null | undefined) => {
+              if (!value) return false;
+              try {
+                const host = new URL(value).hostname.toLowerCase();
+                return host === "youtube.com" || host.endsWith(".youtube.com");
+              } catch {
+                return false;
+              }
+            };
+            const youtubeUrl = isYouTubeUrl(ep.link) ? ep.link : null;
 
             // Check if this episode already exists in database (e.g. from BigGo or previous RSS fetch)
             const existing = await sql<{ id: string; audio_url: string | null; body_html: string | null }[]>`

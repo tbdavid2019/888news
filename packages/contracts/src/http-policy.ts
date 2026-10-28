@@ -77,7 +77,7 @@ export function resolveRedirect(pathname: string, search: string): RedirectDecis
         ? pathname.startsWith(rule.path)
         : pathname === rule.path || pathname.startsWith(`${rule.path}/`);
       if (!inTree) continue;
-      location = rule.location ? rule.location.replace("*", pathname.slice(rule.path.length)) : null;
+      location = rule.location ? rule.location.replaceAll("*", pathname.slice(rule.path.length)) : null;
     } else {
       const m = new RegExp(rule.path).exec(pathname);
       if (!m) continue;

@@ -1,3 +1,5 @@
+import { load } from "cheerio";
+
 export function collapseWhitespace(s: string): string {
   return s.replace(/\s+/g, " ").trim();
 }
@@ -8,20 +10,16 @@ export function truncate(s: string, max: number, ellipsis = "…"): string {
   return chars.slice(0, Math.max(0, max - ellipsis.length)).join("").trimEnd() + ellipsis;
 }
 
+export function htmlText(html: string): string {
+  const $ = load(html);
+  $("script, style, noscript").remove();
+  $("br").replaceWith("\n");
+  $("p, div, li, h1, h2, h3, h4, h5, h6, blockquote, pre, tr").append("\n");
+  return $.root().text();
+}
+
 export function stripTags(html: string): string {
-  return collapseWhitespace(
-    html
-      .replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, " ")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/(p|div|li|h[1-6]|blockquote|pre|tr)>/gi, "\n")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;|&apos;/g, "'"),
-  );
+  return collapseWhitespace(htmlText(html));
 }
 
 export function escapeXml(s: string): string {

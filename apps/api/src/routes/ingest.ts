@@ -12,7 +12,11 @@ const PLACEHOLDER = /^(|changeme|change-me|placeholder|xxx+|todo|test|dev|your[-
 function authorized(req: FastifyRequest): boolean {
   const expected = credential("auth", "INGEST_TOKEN") ?? "";
   if (PLACEHOLDER.test(expected) || expected.length < 16) return false;
-  const given = /^Bearer\s+(.+)$/i.exec(req.headers.authorization ?? "")?.[1]?.trim() ?? "";
+  const header = req.headers.authorization ?? "";
+  const separator = header.indexOf(" ");
+  const given = separator > 0 && header.slice(0, separator).toLowerCase() === "bearer"
+    ? header.slice(separator + 1).trim()
+    : "";
   const a = Buffer.from(given);
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);

@@ -1,5 +1,5 @@
-// Creates .env from .env.example with fresh random secrets and an admin password, and prints the password
-// once. Refuses to overwrite an existing .env.   node scripts/init-env.ts [--llm-key <key>]
+// Creates .env from .env.example with fresh random secrets and an admin password.
+// Refuses to overwrite an existing .env.   node scripts/init-env.ts [--llm-key <key>]
 import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
@@ -18,5 +18,5 @@ const text = readFileSync(".env.example", "utf8")
   .replace(/^LLM_API_KEY=$/m, `LLM_API_KEY=${llmKey}`);
 writeFileSync(".env", text, { mode: 0o600 });
 console.log("已生成 .env。");
-console.log(`管理员密码：${password}（也写在 .env 的 ADMIN_PASSWORD 里）`);
+console.log("管理员密码已写入 .env 的 ADMIN_PASSWORD。");
 if (!llmKey) console.log("还差一步：在 .env 里填上 LLM_API_KEY（以及 LLM_BASE_URL、LLM_MODEL，支持 OpenAI / Groq / Gemini / DeepSeek 等兼容接口）。");
