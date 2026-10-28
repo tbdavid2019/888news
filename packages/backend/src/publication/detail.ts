@@ -8,6 +8,7 @@ import { ITEM_COLUMNS, ITEM_FROM, selectedCondition, toItemSummary, xView, type 
 import { itemUrl } from "./links.ts";
 import { hasItemPage } from "./rules.ts";
 import { SITE } from "@aihot/industry/site";
+import { stripTags } from "../lib/text.ts";
 
 interface DetailRow extends ItemRow {
   body_html: string | null;
@@ -28,7 +29,7 @@ function withOutline(html: string): { html: string; outline: OutlineEntry[] } {
   const out = html.replace(/<h([2-4])(?: id="sec-\d+")?>([\s\S]*?)<\/h\1>/gi, (_m, level: string, inner: string) => {
     n += 1;
     const id = `sec-${n}`;
-    const text = inner.replace(/<[^>]+>/g, "").trim();
+    const text = stripTags(inner);
     if (text) outline.push({ id, text: text.slice(0, 80), level: Number(level) });
     return `<h${level} id="${id}">${inner}</h${level}>`;
   });
@@ -175,7 +176,7 @@ function cellToMarkdown(cell: any): string {
       }
     }
   }
-  return md.trim().replace(/\|/g, "\\|").replace(/\n+/g, " ");
+  return md.trim().replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/\n+/g, " ");
 }
 
 const turndown = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced", bulletListMarker: "-" });

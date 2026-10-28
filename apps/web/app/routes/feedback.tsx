@@ -69,6 +69,15 @@ function FeedbackAside() {
 const MAX_IMAGE = 5 * 1024 * 1024;
 const MAX_TEXT = 2000;
 
+function safePreviewUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value);
+    return url.protocol === "blob:" ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export default function FeedbackPage() {
   const { t } = useI18n();
   const [params] = useSearchParams();
@@ -77,6 +86,7 @@ export default function FeedbackPage() {
   const [state, setState] = useState<{ kind: "idle" | "sending" | "done" | "error"; message?: string; id?: number }>({ kind: "idle" });
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewUrl = shot ? safePreviewUrl(shot.url) : undefined;
 
   useEffect(() => {
     const saved = readDraft();
@@ -212,7 +222,7 @@ export default function FeedbackPage() {
             </span>
             {shot ? (
               <div className="flex items-center gap-4 well rounded-card p-3">
-                <img src={shot.url} alt={t("feedback.screenshot_label")} className="h-16 w-24 shrink-0 rounded-control border border-line bg-surface object-cover" />
+                {previewUrl ? <img src={previewUrl} alt={t("feedback.screenshot_label")} className="h-16 w-24 shrink-0 rounded-control border border-line bg-surface object-cover" /> : null}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] font-medium text-ink-2">{shot.file.name}</div>
                   <div className="mono mt-0.5 text-[11.5px] text-ink-4">{(shot.file.size / 1024 / 1024).toFixed(2)} MB</div>

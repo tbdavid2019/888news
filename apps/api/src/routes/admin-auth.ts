@@ -42,6 +42,7 @@ function tooManyAttempts(ip: string): boolean {
 }
 
 const loginPage = (returnTo: string, error?: string) => `/admin/login?${new URLSearchParams({ return: safeReturn(returnTo), ...(error ? { error } : {}) })}`;
+const authRateLimit = (max: number) => ({ config: { rateLimit: { max, timeWindow: "1 minute" } } });
 
 export type AdminHandler = (req: FastifyRequest, reply: FastifyReply, admin: AdminPrincipal) => Promise<unknown>;
 
@@ -79,14 +80,14 @@ export function registerAdminAuth(app: FastifyInstance) {
   });
 
   // The web admin sends a signed-out visitor here with ?return=; the sign-in page lives in the web app.
-  app.get("/api/auth/login", async (req, reply) => {
+  app.get("/api/auth/login", authRateLimit(60), async (req, reply) => {
     const returnTo = String((req.query as Record<string, string>).return ?? "/admin");
     return reply.header("Cache-Control", "no-store").redirect(loginPage(returnTo), 302);
   });
 
-  app.get("/api/auth/options", async (_req, reply) => reply.header("Cache-Control", "no-store").send({ password: !!config.adminPassword, feishu: feishuLoginConfigured() }));
+  app.get("/api/auth/options", authRateLimit(60), async (_req, reply) => reply.header("Cache-Control", "no-store").send({ password: !!config.adminPassword, feishu: feishuLoginConfigured() }));
 
-  app.post("/api/auth/password", async (req, reply) => {
+  app.post("/api/auth/password", authRateLimit(10), async (req, reply) => {
     const b = (req.body ?? {}) as Record<string, string>;
     const returnTo = String(b.return ?? "/admin");
     reply.header("Cache-Control", "no-store");
@@ -102,7 +103,7 @@ export function registerAdminAuth(app: FastifyInstance) {
   });
 
   // Optional Feishu sign-in (FEISHU_LOGIN_APP_ID / FEISHU_LOGIN_APP_SECRET and an allowlist).
-  app.get("/api/auth/feishu", async (req, reply) => {
+  app.get("/api/auth/feishu", authRateLimit(30), async (req, reply) => {
     const returnTo = String((req.query as Record<string, string>).return ?? "/admin");
     if (!feishuLoginConfigured()) return reply.redirect(loginPage(returnTo), 302);
     const { url, stateCookie } = loginRedirect(returnTo);
@@ -111,7 +112,7 @@ export function registerAdminAuth(app: FastifyInstance) {
   });
 
   // The callback registered in the Feishu open platform: the state cookie comes back here.
-  app.get("/api/auth/callback", async (req, reply) => {
+  app.get("/api/auth/callback", authRateLimit(30), async (req, reply) => {
     const q = req.query as Record<string, string>;
     reply.header("Cache-Control", "no-store");
     try {

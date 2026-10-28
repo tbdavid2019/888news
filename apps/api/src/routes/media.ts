@@ -5,7 +5,7 @@ import { verifyProxyRequest } from "@aihot/backend/media/imgproxy";
 import { looseQuery } from "../http/respond.ts";
 
 export function registerMedia(app: FastifyInstance) {
-  app.get("/api/img-proxy", async (req, reply) => {
+  app.get("/api/img-proxy", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (req, reply) => {
     const q = looseQuery(req);
     const verdict = verifyProxyRequest({ u: q.u, mode: q.mode, exp: q.exp, sig: q.sig });
     // A caching proxy (nginx auth_request) can check every request with this HEAD sub-request before it reads its image cache (keyed

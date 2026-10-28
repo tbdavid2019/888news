@@ -263,13 +263,18 @@ export function registerStatic(app: FastifyInstance) {
   }
 
   // Contact codes on the about page: uploaded in the admin (content-hashed names), or shipped in the pack.
-  app.get("/contact/:file", async (req, reply) => {
+  app.get("/contact/:file", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (req, reply) => {
     const file = (req.params as { file: string }).file;
-    if (!/^[\w.-]+\.(png|jpg|jpeg|webp)$/.test(file)) return reply.code(404).send();
-    const hashed = /-[0-9a-f]{8}\./.test(file);
+    const name = path.basename(file);
+    if (name !== file || !/^[\w-]+\.(png|jpg|jpeg|webp)$/.test(name)) return reply.code(404).send();
+    const hashed = /-[0-9a-f]{8}\./.test(name);
     const cacheControl = hashed ? "public, max-age=31536000, immutable" : "public, max-age=3600";
-    const uploaded = path.join(config.dataDir, "uploads", file);
-    const target = (await stat(uploaded).then(() => true, () => false)) ? uploaded : path.join(BRAND, "contact", file);
+    const uploadRoot = path.resolve(config.dataDir, "uploads");
+    const uploaded = path.resolve(uploadRoot, name);
+    const shippedRoot = path.resolve(BRAND, "contact");
+    const shipped = path.resolve(shippedRoot, name);
+    if (path.dirname(uploaded) !== uploadRoot || path.dirname(shipped) !== shippedRoot) return reply.code(404).send();
+    const target = (await stat(uploaded).then(() => true, () => false)) ? uploaded : shipped;
     return sendFile(req, reply, target, { cacheControl });
   });
 }

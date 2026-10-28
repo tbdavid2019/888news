@@ -56,7 +56,10 @@ export async function unbanSource(sourceHash: string, actor: string) {
 function screenshotPath(key: string | null): string | null {
   if (!key?.startsWith("local:")) return null;
   const name = key.slice("local:".length);
-  return /^[\w.-]+$/.test(name) ? path.join(config.dataDir, "feedback-screenshots", name) : null;
+  if (!/^[a-f0-9]{24}\.(png|jpeg|webp|gif)$/.test(name)) return null;
+  const directory = path.resolve(config.dataDir, "feedback-screenshots");
+  const file = path.resolve(directory, name);
+  return path.dirname(file) === directory ? file : null;
 }
 
 export async function feedbackScreenshot(id: number): Promise<string | null> {
