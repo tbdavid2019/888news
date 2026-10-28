@@ -69,6 +69,15 @@ function FeedbackAside() {
 const MAX_IMAGE = 5 * 1024 * 1024;
 const MAX_TEXT = 2000;
 
+function safePreviewUrl(value: string): string | undefined {
+  try {
+    const url = new URL(value);
+    return url.protocol === "blob:" ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export default function FeedbackPage() {
   const { t } = useI18n();
   const [params] = useSearchParams();
@@ -77,7 +86,7 @@ export default function FeedbackPage() {
   const [state, setState] = useState<{ kind: "idle" | "sending" | "done" | "error"; message?: string; id?: number }>({ kind: "idle" });
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const previewUrl = shot?.url.startsWith("blob:") ? shot.url : undefined;
+  const previewUrl = shot ? safePreviewUrl(shot.url) : undefined;
 
   useEffect(() => {
     const saved = readDraft();

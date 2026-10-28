@@ -3,6 +3,7 @@ import { credential } from "../config.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { collapseWhitespace, stripTags } from "../lib/text.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
+import { load } from "cheerio";
 
 export function getPath(obj: unknown, path: string): unknown {
   if (!path) return obj;
@@ -96,8 +97,9 @@ function embeddedJson(html: string, source: SourceRow): unknown {
   }
   // html_json_key: scan JSON script blocks (e.g. __NEXT_DATA__) for the key.
   const key = String(source.config.jsonKey);
-  for (const m of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)) {
-    const body = m[1]!.trim();
+  const $ = load(html);
+  for (const script of $("script").toArray()) {
+    const body = $(script).text().trim();
     // Flight payloads carry the key escaped inside a string (\"items\").
     if (!body.includes(`"${key}"`) && !body.includes(`\\"${key}\\"`)) continue;
     const candidates = [body, body.replace(/^[^{[]*/, "").replace(/;?\s*$/, "")];

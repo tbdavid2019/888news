@@ -25,7 +25,11 @@ Continue with Apple Continue with Google
   assert.ok(!cleaned.startsWith("]("));
   assert.ok(!cleaned.includes("detects scam emails [@DirtyTesLa]"));
   assert.ok(cleaned.startsWith("Grok"));
-  assert.ok(cleaned.includes("https://example.invalid/bot/E3_qOY1VUJWZMh2inUvwT"));
+  const preservedUrl = [...cleaned.matchAll(/\]\((https?:\/\/[^)]+)\)/g)]
+    .map((match) => new URL(match[1]!))
+    .find((url) => url.hostname === "example.invalid");
+  assert.equal(preservedUrl?.hostname, "example.invalid");
+  assert.equal(preservedUrl?.pathname, "/bot/E3_qOY1VUJWZMh2inUvwT");
 });
 
 test("tweetTextToHtml converts markdown links and @mentions into HTML", () => {
