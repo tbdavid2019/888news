@@ -3,21 +3,30 @@
 import { useLoaderData } from "react-router";
 import type { Route } from "./+types/admin-login";
 import { SITE } from "@aihot/industry/site";
-import { apiGet } from "../lib/api.server";
+import { apiGet } from "../lib/api.server.ts";
 import { Wordmark } from "../components/Logo";
 import { buttonClass } from "../components/ui/Controls";
+import { Turnstile } from "../components/ui/Turnstile.tsx";
 
 const ERRORS: Record<string, string> = {
   wrong: "密碼不對，再試一次。",
   unset: "還沒有設定管理員密碼：在 .env 裡設定 ADMIN_PASSWORD（至少 12 位），重啟後再登入。",
   "too-many": "嘗試次數太多，請 15 分鐘後再試。",
+  turnstile: "人機安全驗證失敗或逾期，請再試一次。",
 };
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const returnTo = url.searchParams.get("return") ?? "/admin";
-  const options = await apiGet<{ password: boolean; feishu: boolean }>("/api/auth/options", { signal: request.signal }).catch(() => ({ password: true, feishu: false }));
-  return { returnTo: returnTo.startsWith("/admin") ? returnTo : "/admin", error: url.searchParams.get("error"), ...options };
+  const [options, captcha] = await Promise.all([
+    apiGet<{ password: boolean; feishu: boolean }>("/api/auth/options", { signal: request.signal }).catch(() => ({ password: true, feishu: false })),
+    apiGet<{ siteKey: string; dwellToken: string; enabled: boolean }>("/api/site/captcha-token?action=admin_login", { signal: request.signal }).catch(() => ({
+      siteKey: "0x4AAAAAAEvqf7unH6MrhIv2",
+      dwellToken: "",
+      enabled: true,
+    })),
+  ]);
+  return { returnTo: returnTo.startsWith("/admin") ? returnTo : "/admin", error: url.searchParams.get("error"), captcha, ...options };
 }
 
 export const meta: Route.MetaFunction = () => [{ title: `登入 · ${SITE.name} 後台` }, { name: "robots", content: "noindex, nofollow" }];
@@ -25,7 +34,7 @@ export const meta: Route.MetaFunction = () => [{ title: `登入 · ${SITE.name} 
 export const headers: Route.HeadersFunction = () => ({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" });
 
 export default function AdminLogin() {
-  const { returnTo, error, password, feishu } = useLoaderData<typeof loader>();
+  const { returnTo, error, password, feishu, captcha } = useLoaderData<typeof loader>();
   const message = error ? (ERRORS[error] ?? ERRORS.wrong) : !password ? ERRORS.unset : null;
   return (
     <div className="flex min-h-dvh items-center justify-center bg-bg px-4">
@@ -48,6 +57,13 @@ export default function AdminLogin() {
             autoFocus
             className="mt-2 h-10 w-full rounded-full border border-line-strong bg-surface px-4 text-[14px] text-ink outline-none transition-colors focus:border-accent"
           />
+          {captcha?.enabled && (
+            <Turnstile
+              siteKey={captcha.siteKey}
+              action="admin_login"
+              dwellToken={captcha.dwellToken}
+            />
+          )}
           {message && (
             <p role="alert" className="mt-3 text-[12.5px] leading-relaxed text-hot">
               {message}

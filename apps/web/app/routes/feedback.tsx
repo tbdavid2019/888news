@@ -1,6 +1,9 @@
 import { SITE } from "@aihot/industry/site";
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useLoaderData, useSearchParams } from "react-router";
+import type { Route } from "./+types/feedback";
+import { apiGet } from "../lib/api.server.ts";
+import { Turnstile } from "../components/ui/Turnstile.tsx";
 import { Presence } from "../components/ui/Presence";
 import { pageMeta } from "../lib/seo";
 import { KEYS } from "../lib/local-state";
@@ -12,6 +15,15 @@ import { useI18n } from "../lib/i18n";
 /** Shared caches may keep this page for five minutes. */
 export function headers() {
   return { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" };
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const captcha = await apiGet<{ siteKey: string; dwellToken: string; enabled: boolean }>("/api/site/captcha-token?action=feedback", { signal: request.signal }).catch(() => ({
+    siteKey: "0x4AAAAAAEvqf7unH6MrhIv2",
+    dwellToken: "",
+    enabled: true,
+  }));
+  return { captcha };
 }
 
 export function meta() {
@@ -80,11 +92,14 @@ function safePreviewUrl(value: string): string | undefined {
 
 export default function FeedbackPage() {
   const { t } = useI18n();
+  const { captcha } = useLoaderData<typeof loader>();
   const [params] = useSearchParams();
   const [draft, setDraft] = useState<Draft>({ content: "", email: "", pageUrl: params.get("from") ?? "" });
   const [shot, setShot] = useState<{ file: File; url: string } | null>(null);
   const [state, setState] = useState<{ kind: "idle" | "sending" | "done" | "error"; message?: string; id?: number }>({ kind: "idle" });
   const [dragging, setDragging] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileDegraded, setTurnstileDegraded] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const previewUrl = shot ? safePreviewUrl(shot.url) : undefined;
 
@@ -125,11 +140,13 @@ export default function FeedbackPage() {
     if (draft.content.trim().length < 2) return setState({ kind: "error", message: t("feedback.err_empty") });
     setState({ kind: "sending" });
     try {
-      const form = new FormData();
+      const form = new FormData(e.currentTarget as HTMLFormElement);
       form.set("content", draft.content);
       form.set("email", draft.email);
       form.set("pageUrl", draft.pageUrl);
       if (shot) form.set("screenshot", shot.file);
+      if (turnstileToken) form.set("cf-turnstile-response", turnstileToken);
+      if (captcha.dwellToken) form.set("_dwell_token", captcha.dwellToken);
       const res = await fetch("/api/site/feedback", { method: "POST", body: form });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) return setState({ kind: "error", message: body.detail ?? t("feedback.err_submit") });
@@ -163,7 +180,7 @@ export default function FeedbackPage() {
 
   const field = "w-full rounded-card bg-bg-sunk text-ink outline-none ring-1 ring-inset ring-line-soft transition-[background-color,box-shadow] placeholder:text-ink-4 hover:ring-line-strong focus:bg-surface focus:shadow-[0_0_0_3px_var(--accent-soft)] focus:ring-accent dark:bg-bg-muted/60 dark:focus:bg-surface";
   const label = "mb-2 block text-[13px] font-semibold text-ink";
-  const canSend = draft.content.trim().length >= 2 && state.kind !== "sending";
+  const canSend = draft.content.trim().length >= 2 && state.kind !== "sending" && (!captcha.enabled || !!turnstileToken || turnstileDegraded);
   return (
     <ReadingLayout aside={<FeedbackAside />}>
       <header>
@@ -248,6 +265,16 @@ export default function FeedbackPage() {
             )}
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
           </div>
+
+          {captcha.enabled && (
+            <Turnstile
+              siteKey={captcha.siteKey}
+              action="feedback"
+              dwellToken={captcha.dwellToken}
+              onVerify={(tok) => setTurnstileToken(tok)}
+              onError={() => setTurnstileDegraded(true)}
+            />
+          )}
 
           <Presence show={state.kind === "error"} enter="anim-notice-in" exit="anim-fade-out" duration={160}>
             <p role="alert" className="rounded-tile bg-hot-soft px-3.5 py-2.5 text-[13px] text-hot">

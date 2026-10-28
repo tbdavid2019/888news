@@ -18,6 +18,7 @@ import {
   STATE_COOKIE,
   type AdminPrincipal,
 } from "@aihot/backend/admin/auth";
+import { verifyTurnstile } from "@aihot/backend/security/turnstile";
 import { sendProblem } from "../http/respond.ts";
 
 /** Cookies are Secure whenever the site is served over HTTPS. */
@@ -90,8 +91,25 @@ export function registerAdminAuth(app: FastifyInstance) {
   app.post("/api/auth/password", authRateLimit(10), async (req, reply) => {
     const b = (req.body ?? {}) as Record<string, string>;
     const returnTo = String(b.return ?? "/admin");
+    const ip = String(req.headers["x-real-ip"] ?? req.ip ?? "");
     reply.header("Cache-Control", "no-store");
-    if (tooManyAttempts(String(req.ip))) return reply.redirect(loginPage(returnTo, "too-many"), 303);
+    if (tooManyAttempts(ip)) return reply.redirect(loginPage(returnTo, "too-many"), 303);
+
+    // Turnstile bot verification with fallback and anti-spoofing
+    const turnstileToken = b["cf-turnstile-response"] || b.turnstile_token || null;
+    const honeypot = b._hp_verification || null;
+    const dwellToken = b._dwell_token || null;
+    const check = await verifyTurnstile({
+      token: turnstileToken,
+      clientIp: ip,
+      action: "admin_login",
+      honeypot,
+      dwellToken,
+    });
+    if (!check.ok) {
+      return reply.redirect(loginPage(returnTo, "turnstile"), 303);
+    }
+
     try {
       const { token, returnTo: target } = await passwordLogin(String(b.password ?? ""), returnTo, req.headers["user-agent"]);
       reply.header("Set-Cookie", cookie(SESSION_COOKIE, token, SESSION_DAYS * 86400, secure()));

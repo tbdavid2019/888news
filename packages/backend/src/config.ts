@@ -60,6 +60,10 @@ export const config = {
   adminPassword: env.ADMIN_PASSWORD || null,
   adminUnionIds: (env.ADMIN_FEISHU_UNION_IDS || "").split(",").map((v) => v.trim()).filter(Boolean),
   adminEmails: (env.ADMIN_EMAILS || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean),
+  turnstileSiteKey: env.TURNSTILE_SITE_KEY || "0x4AAAAAAEvqf7unH6MrhIv2",
+  turnstileSecretKey: env.TURNSTILE_SECRET_KEY || null,
+  turnstileEnabled: bool("TURNSTILE_ENABLED", true),
+  turnstileHostnames: (env.TURNSTILE_HOSTNAMES || "news2.david888.com,david888.com,localhost,127.0.0.1").split(",").map((v) => v.trim()).filter(Boolean),
 };
 
 export type CredentialGroup = "models" | "collectors" | "integrations" | "auth";
@@ -84,6 +88,10 @@ export function credentials(group: CredentialGroup): Record<string, string> {
 export function credential(group: CredentialGroup, name: string): string | null {
   const value = env[name] ?? credentials(group)[name];
   return value && value.trim() !== "" ? value : null;
+}
+
+export function getTurnstileSecret(): string | null {
+  return config.turnstileSecretKey || credential("auth", "TURNSTILE_SECRET_KEY") || null;
 }
 
 const PLACEHOLDER = /^(changeme|placeholder|dummy|test|xxx+|your[-_ ].*|<.*>)$/i;

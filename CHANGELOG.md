@@ -2,7 +2,21 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
-## [2026-10-27] — 中文介面統一字級
+## [2026-10-28] — 🛡️ Cloudflare Turnstile 人機安全驗證整合與容災 Fallback 防偽加固 (Turnstile Bot Protection & Anti-Spoofing Fallback)
+
+### 🛡️ 核心功能亮點與安全防禦架構
+- **Cloudflare Turnstile 原生無感人機驗證整合**：
+  - 於公開意見反饋表單 (`/feedback`) 與後台管理員登入 (`/admin-login`) 整合 Cloudflare Turnstile Managed Challenge，全方位抵禦暴力破解、字典攻擊與垃圾機器人填單。
+- **高可用容災 Fallback 機制 (Fail-Open with Secondary Armor)**：
+  - 當 Cloudflare 官方 API 發生全域中斷、連線超時（> 4s）或網路分區時，系統自動啟動服務降級備援流程，確保正當使用者仍可順暢提交反饋與登入，避免因第三方服務故障造成全站停擺。
+- **防範前端刻意假造與繞過機制 (Anti-Spoofing Protection)**：
+  - **伺服器端健康狀態熔斷偵測 (Circuit Breaker & Health Probe)**：前端無法單純透過送出空 Token 或偽造參數聲稱 Turnstile 故障；後端自主透過探針檢測 Cloudflare 服務活性，若 Cloudflare 正常運作，偽造故障之請求將被一律拒絕 (HTTP 400)。
+  - **HMAC 簽名停留時間防禦 (Cryptographic Dwell-Time Proof)**：頁面載入時簽發具時間戳與操作簽名的防偽 Token，表單提交需滿足最低人類互動時長 (>= 1.5 秒) 且在有效期內 (< 2 小時)，完全杜絕腳本秒速大量發包。
+  - **隱形蜜罐陷阱 (Honeypot Trap)**：表單內建螢幕與無障礙友善之不可見蜜罐欄位，自動填表爬蟲一旦觸碰立即封鎖。
+  - **備援模式嚴格 IP 限流 (Fallback Rate Limiting)**：降級狀態下對同一 IP 套用每 10 分鐘 3 次的極限保護，防止洪水攻擊。
+- **測試覆蓋與相依元件安全盤點**：
+  - 新增 `tests/turnstile.test.ts` 涵蓋完整 11 項單元測試（包含正常驗證、挑戰失敗、蜜罐攔截、逾時容災、主動探針防偽造、HMAC 防竄改與頻率限制）。
+  - 完成全專案 CVE 安全審計，Python（`pip-audit`）與 Node.js（`npm audit`）均維持 0 安全漏洞。
 
 - 中文介面的小字級統一提高至 16px 起；保留標題層級，數字與程式碼維持適合密集閱讀的尺寸，並替窄字級標籤調整行高與元件高度。
 

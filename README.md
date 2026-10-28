@@ -197,6 +197,10 @@ docker compose up -d --build
 | **`JEV_FALLBACK_API_KEYS`** | Jev 第二把、第三把備用金鑰 | 選填，402 額度用盡自動無縫輪換 |
 | **`SCORE_BY_DECISION_ENGINE`** | 是否完全跳過 Groq 評分（方案 B 開關） | `false`（預設方案 A：Clef 擋雜訊，Groq 精確定分） |
 | **`READER_BASE_URL`** | 動態反爬網頁渲染器 | `https://2md.aiurl.tw` |
+| **`TURNSTILE_ENABLED`** | 啟用 Cloudflare Turnstile 人機驗證與防偽防護 | `true` |
+| **`TURNSTILE_SITE_KEY`** | Cloudflare Turnstile Site Key (前端公開) | `0x4AAAAAAEvqf7unH6MrhIv2` |
+| **`TURNSTILE_SECRET_KEY`** | Cloudflare Turnstile Secret Key (後端保密) | 自行填寫 |
+| `TURNSTILE_HOSTNAMES` | 允許通過驗證的前端網域名稱清單 (逗號分隔) | `news2.david888.com,david888.com,localhost,127.0.0.1` |
 | **`SLACK_WEBHOOK_URL`** | Slack 告警與反饋通知 Webhook URL | 選填 |
 | **`DISCORD_WEBHOOK_URL`** | Discord 告警與反饋通知 Webhook URL | 選填 |
 | **`TELEGRAM_BOT_TOKEN`** | Telegram Bot API Token | 選填 |

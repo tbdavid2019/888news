@@ -1,10 +1,18 @@
 import type { FastifyInstance } from "fastify";
 import { FeedbackRejected, submitFeedback, type FeedbackInput } from "@aihot/backend/operations/feedback";
+import { verifyTurnstile } from "@aihot/backend/security/turnstile";
 import { sendProblem } from "../http/respond.ts";
 
 type FeedbackBody = Pick<FeedbackInput, "content" | "email" | "pageUrl" | "screenshot">;
 
-async function readBody(raw: unknown, contentType: string): Promise<FeedbackBody> {
+interface ParsedFeedback {
+  feedback: FeedbackBody;
+  turnstileToken: string | null;
+  honeypot: string | null;
+  dwellToken: string | null;
+}
+
+async function readBody(raw: unknown, contentType: string): Promise<ParsedFeedback> {
   if (Buffer.isBuffer(raw)) {
     let form: FormData;
     try {
@@ -20,15 +28,28 @@ async function readBody(raw: unknown, contentType: string): Promise<FeedbackBody
     const file = form.get("screenshot");
     if (file !== null && !(file instanceof File)) throw new FeedbackRejected(400, "invalid_request", "截图上传格式不正确。");
     return {
-      content: text("content") ?? "", email: text("email"), pageUrl: text("pageUrl"),
-      screenshot: file ? { mime: file.type, data: Buffer.from(await file.arrayBuffer()) } : null,
+      feedback: {
+        content: text("content") ?? "", email: text("email"), pageUrl: text("pageUrl"),
+        screenshot: file ? { mime: file.type, data: Buffer.from(await file.arrayBuffer()) } : null,
+      },
+      turnstileToken: text("cf-turnstile-response") || text("turnstile_token") || null,
+      honeypot: text("_hp_verification") || null,
+      dwellToken: text("_dwell_token") || null,
     };
   }
   // Keep already-open browser tabs working during a release: their JSON/base64 requests still work.
-  const body = (raw ?? {}) as { content?: string; email?: string; pageUrl?: string; screenshot?: { mime?: string; data?: string } };
+  const body = (raw ?? {}) as {
+    content?: string; email?: string; pageUrl?: string; screenshot?: { mime?: string; data?: string };
+    "cf-turnstile-response"?: string; turnstile_token?: string; _hp_verification?: string; _dwell_token?: string;
+  };
   return {
-    content: String(body.content ?? ""), email: body.email ?? null, pageUrl: body.pageUrl ?? null,
-    screenshot: body.screenshot?.data && body.screenshot.mime ? { mime: body.screenshot.mime, data: Buffer.from(body.screenshot.data, "base64") } : null,
+    feedback: {
+      content: String(body.content ?? ""), email: body.email ?? null, pageUrl: body.pageUrl ?? null,
+      screenshot: body.screenshot?.data && body.screenshot.mime ? { mime: body.screenshot.mime, data: Buffer.from(body.screenshot.data, "base64") } : null,
+    },
+    turnstileToken: body["cf-turnstile-response"] || body.turnstile_token || null,
+    honeypot: body._hp_verification || null,
+    dwellToken: body._dwell_token || null,
   };
 }
 
@@ -37,9 +58,22 @@ export function registerFeedback(app: FastifyInstance) {
   app.addContentTypeParser("multipart/form-data", { parseAs: "buffer" }, (_req, body, done) => done(null, body));
   app.post("/api/site/feedback", { bodyLimit: 12 * 1024 * 1024 }, async (req, reply) => {
     try {
-      const body = await readBody(req.body, String(req.headers["content-type"] ?? ""));
+      const parsed = await readBody(req.body, String(req.headers["content-type"] ?? ""));
       const ip = String(req.headers["x-real-ip"] ?? req.ip ?? "");
-      const result = await submitFeedback({ ...body, ip, userAgent: String(req.headers["user-agent"] ?? "") });
+
+      // Verify Turnstile bot protection with fallback and anti-spoofing
+      const check = await verifyTurnstile({
+        token: parsed.turnstileToken,
+        clientIp: ip,
+        action: "feedback",
+        honeypot: parsed.honeypot,
+        dwellToken: parsed.dwellToken,
+      });
+      if (!check.ok) {
+        return sendProblem(req, reply, { status: check.status, code: check.code, detail: check.message });
+      }
+
+      const result = await submitFeedback({ ...parsed.feedback, ip, userAgent: String(req.headers["user-agent"] ?? "") });
       return reply.header("Cache-Control", "no-store").code(201).send(result);
     } catch (error) {
       if (error instanceof FeedbackRejected) return sendProblem(req, reply, { status: error.status, code: error.code, detail: error.message, retryAfter: error.retryAfter });

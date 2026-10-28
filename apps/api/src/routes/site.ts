@@ -23,6 +23,8 @@ import { listReports, loadReport, reportNavigation, loadReportNavigation, loadRe
 import { loadSiteCodexResetPage, loadSiteCodexResetDay } from "@aihot/backend/publication/monitor";
 import { codexResetVersion } from "@aihot/backend/monitor/read";
 import { cached } from "@aihot/backend/lib/cache";
+import { config } from "@aihot/backend/config";
+import { generateDwellToken } from "@aihot/backend/security/turnstile";
 import { looseQuery, sendJsonWithEtag, sendProblem } from "../http/respond.ts";
 
 type Handler = (req: FastifyRequest, reply: FastifyReply) => Promise<unknown>;
@@ -80,8 +82,21 @@ export async function parseFilters(q: Record<string, string>): Promise<FilterPar
 }
 
 export function registerSite(app: FastifyInstance) {
+  app.get("/api/site/captcha-token", siteHandler(async (req, reply) => {
+    const q = looseQuery(req);
+    const action = String(q.action || "general").slice(0, 32);
+    const dwellToken = generateDwellToken(action);
+    reply.header("Cache-Control", "no-store");
+    return {
+      siteKey: config.turnstileSiteKey,
+      enabled: config.turnstileEnabled,
+      dwellToken,
+      action,
+    };
+  }));
+
   app.get("/api/site/meta", siteHandler(async (req, reply) => {
-    return sendJsonWithEtag(req, reply, siteMeta(), { etagPrefix: "meta", cacheControl: "public, max-age=60, s-maxage=60" });
+    return sendJsonWithEtag(req, reply, { ...siteMeta(), turnstileSiteKey: config.turnstileSiteKey }, { etagPrefix: "meta", cacheControl: "public, max-age=60, s-maxage=60" });
   }));
 
   if (FEATURES.codexResetMonitor) registerCodexReset(app);
