@@ -19,7 +19,7 @@ export async function loader({ request }: { request: Request }) {
 export function meta() {
   return pageMeta({
     title: withSubject("熱點榜"),
-    description: "過去 48 小時 AI 圈討論最多的 10 個事件：熱度指數、趨勢與組成熱度的公開來源。",
+    description: "過去 48 小時科技與資訊圈討論最多的 10 個事件：熱度指數、趨勢與組成熱度的公開來源。",
     path: "/hot",
     image: "/og/pages/hot.png",
   });
@@ -239,7 +239,7 @@ export default function HotPage() {
             即時熱度
           </div>
           <h1 className="mt-1.5 text-[24px] font-bold leading-[1.3] tracking-[-0.01em] text-ink lg:text-[26px]">{withSubject("熱點榜")}</h1>
-          <p className="mt-1.5 text-[13.5px] text-ink-3">過去 {hot.windowHours} 小時，AI 圈討論最多的 {hot.entries.length || 10} 件事</p>
+          <p className="mt-1.5 text-[13.5px] text-ink-3">過去 {hot.windowHours} 小時，資訊圈討論最多的 {hot.entries.length || 10} 件事</p>
         </div>
         {hot.computedAt && (
           <p className="text-[12px] text-ink-4">

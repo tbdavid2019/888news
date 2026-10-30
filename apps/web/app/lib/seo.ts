@@ -2,6 +2,10 @@
 // and wording come from the industry pack (industry/site.ts); its address from SITE_URL.
 import type { MetaDescriptor } from "react-router";
 import { SITE } from "@aihot/industry/site";
+import type { Locale } from "./i18n/types.ts";
+import { zhTW } from "./i18n/locales/zh-TW.ts";
+import { zhCN } from "./i18n/locales/zh-CN.ts";
+import { en } from "./i18n/locales/en.ts";
 
 /**
  * The site's address: SITE_URL while rendering on the server (what crawlers and share previews read),
@@ -15,6 +19,38 @@ export function siteUrl(): string {
 export const HOME_TITLE = SITE.homeTitle;
 export const SITE_DESCRIPTION = SITE.description;
 
+export interface LocalizedSiteMeta {
+  title: string;
+  tagline: string;
+  description: string;
+  ogLocale: string;
+}
+
+export function getLocalizedSiteMeta(locale?: string | null): LocalizedSiteMeta {
+  if (locale === "en") {
+    return {
+      title: en["site.title"],
+      tagline: en["site.tagline"],
+      description: en["site.description"],
+      ogLocale: "en_US",
+    };
+  }
+  if (locale === "zh-CN") {
+    return {
+      title: zhCN["site.title"],
+      tagline: zhCN["site.tagline"],
+      description: zhCN["site.description"],
+      ogLocale: "zh_CN",
+    };
+  }
+  return {
+    title: zhTW["site.title"] || SITE.homeTitle,
+    tagline: zhTW["site.tagline"] || SITE.tagline,
+    description: zhTW["site.description"] || SITE.description,
+    ogLocale: "zh_TW",
+  };
+}
+
 export interface PageMetaInput {
   title?: string | null;
   /** Use `title` verbatim as the document title (no " · <site>" suffix). */
@@ -26,6 +62,24 @@ export interface PageMetaInput {
   nofollow?: boolean;
   type?: "website" | "article";
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
+  locale?: Locale | null;
+  matches?: Array<{ id?: string; loaderData?: unknown; data?: unknown } | undefined> | unknown;
+}
+
+export function resolveLocale(input: PageMetaInput): Locale {
+  if (input.locale) return input.locale;
+  if (Array.isArray(input.matches)) {
+    const rootMatch = (input.matches as Array<{ id?: string; loaderData?: unknown; data?: unknown } | undefined>).find(
+      (m) => m?.id === "root"
+    );
+    const rootData = (rootMatch?.loaderData ?? rootMatch?.data) as { locale?: Locale } | undefined;
+    if (rootData?.locale) return rootData.locale;
+  }
+  if (typeof document !== "undefined" && document.documentElement.lang) {
+    const lang = document.documentElement.lang;
+    if (lang === "en" || lang === "zh-CN" || lang === "zh-TW") return lang;
+  }
+  return "zh-TW";
 }
 
 /**
@@ -47,29 +101,34 @@ export function titled(title: string): string {
 
 export function pageMeta(input: PageMetaInput): MetaDescriptor[] {
   const base = siteUrl();
-  const title = input.title ? (input.rawTitle ? input.title : titled(input.title)) : HOME_TITLE;
-  const description = input.description ?? SITE_DESCRIPTION;
+  const loc = resolveLocale(input);
+  const site = getLocalizedSiteMeta(loc);
+  const homeTitle = site.title;
+  const siteDescription = site.description;
+
+  const title = input.title ? (input.rawTitle ? input.title : titled(input.title)) : homeTitle;
+  const description = input.description ?? siteDescription;
   const url = `${base}${input.path}`;
   const image = input.image ? (input.image.startsWith("http") ? input.image : `${base}${input.image}`) : `${base}/og/site.png`;
-  const imageAlt = input.title ? `${input.title} - ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
+  const imageAlt = input.title ? `${input.title} - ${SITE.name}` : `${SITE.name} — ${site.tagline}`;
   const tags: MetaDescriptor[] = [
     { title },
     { name: "description", content: description },
     { tagName: "link", rel: "canonical", href: url },
     { property: "og:site_name", content: SITE.name },
     { property: "og:type", content: input.type ?? "website" },
-    { property: "og:title", content: input.title ?? HOME_TITLE },
+    { property: "og:title", content: input.title ?? homeTitle },
     { property: "og:description", content: description },
     { property: "og:url", content: url },
     { property: "og:image", content: image },
     { property: "og:image:alt", content: imageAlt },
     { property: "og:image:width", content: "1200" },
     { property: "og:image:height", content: "630" },
-    { property: "og:locale", content: SITE.locale.replace("-", "_") },
+    { property: "og:locale", content: site.ogLocale },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:site", content: "@888news" },
     { name: "twitter:creator", content: "@888news" },
-    { name: "twitter:title", content: input.title ?? HOME_TITLE },
+    { name: "twitter:title", content: input.title ?? homeTitle },
     { name: "twitter:description", content: description },
     { name: "twitter:image", content: image },
     { name: "twitter:image:alt", content: imageAlt },

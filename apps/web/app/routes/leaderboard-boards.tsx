@@ -29,7 +29,7 @@ export default function LeaderboardFrame() {
       <header className="hidden flex-col gap-3 pb-4 pt-1 sm:flex-row sm:items-end sm:justify-between lg:flex">
         <div>
           <div className="mono text-[11px] font-semibold tracking-[0.16em] text-accent">{SITE.name.toUpperCase()} LEADERBOARD</div>
-          <h1 className="mt-1.5 text-[24px] font-semibold leading-[1.3] text-ink">AI 模型排行榜</h1>
+          <h1 className="mt-1.5 text-[24px] font-semibold leading-[1.3] text-ink">模型評測排行榜</h1>
         </div>
         <div className="flex gap-2">
           <Link viewTransition to="/leaderboard/sources" className={chip}>

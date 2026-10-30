@@ -192,7 +192,7 @@ export default function StoryPage() {
   }, [story.timeline, filter, order]);
   const newest = story.timeline.reduce<StoryReportView | null>((a, b) => (!a || Date.parse(b.publishedAt) > Date.parse(a.publishedAt) ? b : a), null);
   const overview = story.digest
-    ? { label: "AI 綜述", text: story.digest, note: story.digestUpdatedAt ? `AI 根據報導生成 · ${relativeTime(story.digestUpdatedAt, locale)}更新` : "AI 根據報導生成" }
+    ? { label: "重點綜述", text: story.digest, note: story.digestUpdatedAt ? `根據報導自動生成 · ${relativeTime(story.digestUpdatedAt, locale)}更新` : "根據報導自動生成" }
     : story.summary
       ? { label: "事實說明", text: story.summary, note: null }
       : story.excerpt

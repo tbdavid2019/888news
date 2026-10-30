@@ -57,6 +57,7 @@ export function triggerPwaInstallModal(): void {
  * 3. Listens for manual trigger event `888news:open-pwa-modal`.
  */
 export function PwaAutoPrompt() {
+  const { locale } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
@@ -174,10 +175,10 @@ export function PwaAutoPrompt() {
             />
             <div>
               <h3 id="pwa-install-title" className="font-bold text-ink text-[17px] leading-tight">
-                安裝 888news App
+                {locale === "en" ? "Install 888news App" : "安裝 888news App"}
               </h3>
               <p className="text-[12.5px] text-ink-3 mt-0.5">
-                加到主畫面 · 獨立全螢幕流暢閱讀
+                {locale === "en" ? "Add to Home Screen · Distraction-free Reading" : "加到主畫面 · 獨立全螢幕流暢閱讀"}
               </p>
             </div>
           </div>
@@ -194,18 +195,18 @@ export function PwaAutoPrompt() {
         <div className="grid grid-cols-3 gap-2 py-1 text-center">
           <div className="rounded-xl bg-bg-sunk/70 p-2.5 border border-line/40">
             <div className="text-[14px]">⚡️</div>
-            <div className="text-[11.5px] font-semibold text-ink mt-1">秒速開啟</div>
-            <div className="text-[10.5px] text-ink-4">離線快取</div>
+            <div className="text-[11.5px] font-semibold text-ink mt-1">{locale === "en" ? "Instant" : "秒速開啟"}</div>
+            <div className="text-[10.5px] text-ink-4">{locale === "en" ? "Offline Cache" : "離線快取"}</div>
           </div>
           <div className="rounded-xl bg-bg-sunk/70 p-2.5 border border-line/40">
             <div className="text-[14px]">📱</div>
-            <div className="text-[11.5px] font-semibold text-ink mt-1">全螢幕體驗</div>
-            <div className="text-[10.5px] text-ink-4">無網址列</div>
+            <div className="text-[11.5px] font-semibold text-ink mt-1">{locale === "en" ? "Fullscreen" : "全螢幕體驗"}</div>
+            <div className="text-[10.5px] text-ink-4">{locale === "en" ? "App Mode" : "無網址列"}</div>
           </div>
           <div className="rounded-xl bg-bg-sunk/70 p-2.5 border border-line/40">
             <div className="text-[14px]">🔔</div>
-            <div className="text-[11.5px] font-semibold text-ink mt-1">AI 動態</div>
-            <div className="text-[10.5px] text-ink-4">即時科技快訊</div>
+            <div className="text-[11.5px] font-semibold text-ink mt-1">{locale === "en" ? "Live Feed" : "即時動態"}</div>
+            <div className="text-[10.5px] text-ink-4">{locale === "en" ? "Tech Briefs" : "精選情報快訊"}</div>
           </div>
         </div>
 

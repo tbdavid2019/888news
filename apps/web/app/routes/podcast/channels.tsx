@@ -23,7 +23,7 @@ export async function loader({ request }: { request: Request }): Promise<LoaderD
 export function meta() {
   return pageMeta({
     title: "Podcast 頻道目錄",
-    description: "探索收錄之全球 100 個頂級科技、AI 與財經 Podcast 頻道，建立專屬追蹤清單。",
+    description: "探索收錄之全球 100 個頂級科技、趨勢與商業 Podcast 頻道，建立專屬追蹤清單。",
     path: "/podcast/channels",
   });
 }

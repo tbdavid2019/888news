@@ -405,7 +405,7 @@ export default function ItemPage() {
                     {item.originalTitle || item.title}
                   </h4>
                   <p className="text-[14.5px] text-ink-3 leading-relaxed">
-                    本文為 888news AI 精選之重點導讀。若需閱讀作者完整原文、技術細節與官方討論，請前往原始網站。
+                    本文為 888news 精選之重點導讀。若需閱讀作者完整原文、技術細節與官方討論，請前往原始網站。
                   </p>
                 </div>
                 <a

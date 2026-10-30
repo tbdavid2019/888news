@@ -45,7 +45,7 @@ export async function loader({ request }: { request: Request }): Promise<LoaderD
 export function meta() {
   return pageMeta({
     title: "推薦 Podcast 單集",
-    description: `精選全球頂級科技、AI 與財經 Podcast 單集，AI 核心摘要與即時商業行情聯動。`,
+    description: `精選全球頂級科技、趨勢與商業 Podcast 單集，深度精華摘要與即時商業行情聯動。`,
     path: "/podcast/recommend",
   });
 }
@@ -82,7 +82,7 @@ export default function PodcastRecommendPage() {
               Podcast 智庫推薦
             </h1>
             <p className="mt-1.5 text-[16px] leading-relaxed text-ink-3">
-              收錄全球頂級科技、AI 與財經頻道，AI 精華摘要與上市公司即時行情聯動
+              收錄全球頂級科技、趨勢與商業頻道，深度精華摘要與上市公司即時行情聯動
             </p>
           </div>
 

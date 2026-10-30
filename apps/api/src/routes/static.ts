@@ -76,7 +76,7 @@ function robotsTxt(): string {
 
 function manifest() {
   return {
-    name: `${SITE.name} — ${SITE.tagline}`,
+    name: `${SITE.name} - ${SITE.tagline}`,
     short_name: SITE.name,
     description: SITE.description,
     lang: SITE.locale,

@@ -31,10 +31,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   return withHeaders({ data, filters: { channel, category, tag, topic } }, { headers: releaseBoundCache(data.refreshAt, 60, Date.now(), upstream) });
 }
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ matches, loaderData }: Route.MetaArgs) {
   const f = loaderData?.filters;
   const path = listPath("/", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, topic: f?.topic });
-  return pageMeta({ path, jsonLd: path === "/" ? organizationLd() : undefined });
+  return pageMeta({ path, matches, jsonLd: path === "/" ? organizationLd() : undefined });
 }
 
 export function headers({ loaderHeaders }: Route.HeadersArgs) {

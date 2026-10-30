@@ -6,18 +6,17 @@ export const SITE = {
   /** 站名：导航、页面标题、分享图、RSS、MCP、后台都用它。 */
   name: "888news",
   /**
-   * 行业词：拼进默认说法里，比如“AI 日报”“AI 动态”。
-   * 改成“法律”“HR”“黄金”之类，页面上就会变成“法律日报”“法律动态”。
+   * 行业词：拼进默认说法里，比如“科技日报”“科技动态”。
    */
-  subject: "AI",
+  subject: "",
   /** Optional topic shortcut shown beside the home feed filters. */
   homeTopicShortcut: { slug: "infosec", labelKey: "nav.infosec" } as { slug: string; labelKey: "nav.infosec" } | null,
   /** 首页的完整标题（浏览器标签、搜索结果）。 */
-  homeTitle: "888news — AI 科技動態 · 每日精選與情報",
+  homeTitle: "888news - 資訊圈的日報週報月報",
   /** 一句话介绍：搜索引擎、分享卡片、RSS、llms.txt 会用。 */
-  description: "888news 自動追蹤全球上百個頂尖科技與 AI 信源，涵蓋 OpenAI、Google、Anthropic、Meta 等最新動態。透過 AI 模型即時摘要、品質評分與多源報導歸組，過濾行銷噪音，每日清晨精準呈獻高價值科技情報與前沿深度觀察。",
+  description: "888news 自動追蹤全球上百個頂尖科技與資訊信源，涵蓋重要科技動態、前沿觀察與專業報導。透過即時摘要、品質評分與多源報導歸組，過濾行銷噪音，每日清晨精準呈獻高價值科技情報與深度觀察。",
   /** 首页左上角和侧边栏下面的一行小字。 */
-  tagline: "值得關注的 AI 科技動態",
+  tagline: "資訊圈的日報週報月報",
   /** 界面语言（HTML lang、og:locale）。 */
   locale: "zh-TW",
   /** 默认域名，只在没设置 SITE_URL 时使用。 */
@@ -56,7 +55,7 @@ export const ABOUT = {
   steps: {
     collect: "官方部落格、科技媒體、X（Twitter）帳號與各類 RSS 訂閱源都在追蹤；活躍信源每 15 分鐘抓取一次。",
     store: "即時保存所有抓取內容，同一事件的多篇報導自動歸組；熱點榜即基於各方聲量即時計算。",
-    select: "AI 模型先行過濾行業相關性與實質資訊，自動生成中文標題、摘要與推薦理由；過濾行銷農場文與重複轉發。",
+    select: "專業模型先行過濾行業相關性與實質資訊，自動生成中文標題、摘要與推薦理由；過濾行銷農場文與重複轉發。",
     publish: "每日 08:00 出版日報，週一出版週報，每月 1 日出版月報；亦支援即時推播至 Slack、Discord 與 Telegram。",
   },
   /**
@@ -75,7 +74,8 @@ export const ABOUT = {
   copyright: `${SITE.name} 是聚合摘要和阅读索引，原文版权归各来源所有。如果你是来源方，希望更正、下架或调整展示方式，可以通过`,
 } as const;
 
-/** “AI 日报”这类说法：行业词和名词之间，英文词加空格，中文词不加。 */
+/** “日報”這類說法：行業詞和名詞之間，英文詞加空格，中文詞不加；行業詞為空時直接回傳名詞。 */
 export function withSubject(noun: string): string {
+  if (!SITE.subject) return noun;
   return /[A-Za-z0-9]$/.test(SITE.subject) ? `${SITE.subject} ${noun}` : `${SITE.subject}${noun}`;
 }

@@ -4,6 +4,9 @@ export const SUPPORTED_LOCALES: Locale[] = ["zh-TW", "en", "zh-CN"];
 export const DEFAULT_LOCALE: Locale = "en"; // Default fallback if no match
 
 export type TranslationKey =
+  | "site.title"
+  | "site.tagline"
+  | "site.description"
   | "nav.section.content"
   | "nav.section.models"
   | "nav.section.more"
