@@ -483,6 +483,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-aws-whatsnew",
+      "name": "AWS What's New",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://aws.amazon.com/about-aws/whats-new/recent/feed/"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "雲端基礎設施",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-bair",
       "name": "Berkeley AI Research",
       "kind": "rss",
@@ -499,6 +519,26 @@
       "interval_minutes": 60,
       "tags": [
         "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-chipsandcheese",
+      "name": "Chips and Cheese",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://chipsandcheese.com/feed/"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "晶片與硬體",
+        "處理器架構",
+        "深度實測"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -603,6 +643,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-devto",
+      "name": "Dev.to Top Tech",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://dev.to/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "開發者社群",
+        "實務教學",
+        "開源生態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-embrace-the-red",
       "name": "Embrace The Red (AI Security)",
       "kind": "rss",
@@ -679,6 +739,26 @@
       "interval_minutes": 60,
       "tags": [
         "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-github-eng",
+      "name": "GitHub Engineering",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.blog/engineering/feed/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "系統架構",
+        "大規模工程"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -791,6 +871,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-krebsonsecurity",
+      "name": "Krebs on Security",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://krebsonsecurity.com/feed/"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資訊安全",
+        "網路犯罪",
+        "調查報導"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-latent-space",
       "name": "Latent Space",
       "kind": "rss",
@@ -827,6 +927,66 @@
         "專家觀點",
         "深度架構",
         "技術綜述"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-marktechpost",
+      "name": "MarkTechPost",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.marktechpost.com/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體報導",
+        "模型評測",
+        "前沿研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-menlo",
+      "name": "Menlo Ventures Insights",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://menlovc.com/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "創投觀察",
+        "企業級AI",
+        "產業動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-meta-eng",
+      "name": "Meta Engineering",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://engineering.fb.com/feed/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "分散式系統",
+        "開源生態"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -998,6 +1158,46 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-project-zero",
+      "name": "Google Project Zero",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://googleprojectzero.blogspot.com/feeds/posts/default"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資訊安全",
+        "零日漏洞",
+        "漏洞挖掘"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-publickey",
+      "name": "Publickey (日系頂級架構誌)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.publickey1.jp/atom.xml"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "系統架構",
+        "軟體工程",
+        "海外視野"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-pytorch",
       "name": "PyTorch Blog",
       "kind": "rss",
@@ -1013,6 +1213,66 @@
         "官方",
         "開源專案",
         "深度學習框架"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-replit",
+      "name": "Replit Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.replit.com/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "開發工具",
+        "Agent實務"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-schneier",
+      "name": "Schneier on Security",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.schneier.com/feed/atom/"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資訊安全",
+        "密碼學",
+        "安全哲學"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-sequoia",
+      "name": "Sequoia Capital Stories",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.sequoiacap.com/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "創投觀察",
+        "商業數據",
+        "產業動態"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -1053,6 +1313,46 @@
       "tags": [
         "開源生態",
         "科技要聞"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-supabase",
+      "name": "Supabase Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://supabase.com/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "資料庫",
+        "開源生態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-talos",
+      "name": "Cisco Talos Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.talosintelligence.com/rss/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資訊安全",
+        "威脅情資",
+        "官方研究"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -1116,6 +1416,46 @@
       "interval_minutes": 60,
       "tags": [
         "媒體"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-thehackernews",
+      "name": "The Hacker News",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://feeds.feedburner.com/TheHackersNews"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資訊安全",
+        "漏洞速報",
+        "零日漏洞"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-thenewstack",
+      "name": "The New Stack",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://thenewstack.io/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "系統架構",
+        "開發工具",
+        "雲端原生"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -1277,6 +1617,3498 @@
       ],
       "site_fulltext": true,
       "syndicate_fulltext": true
+    },
+    {
+      "id": "x-_akhaliq",
+      "name": "AK (@_akhaliq)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:_akhaliq -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "論文/研究",
+        "開源專案",
+        "每日精選"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-a16z",
+      "name": "a16z (@a16z)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:a16z -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "科技創投",
+        "產業報告"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-addyosmani",
+      "name": "Addy Osmani (@addyosmani)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:addyosmani -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "前端工程",
+        "架構優化"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-adocomplete",
+      "name": "Ado Kukic (@adocomplete)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:adocomplete -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-aiatmeta",
+      "name": "AI at Meta (@AIatMeta)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:AIatMeta -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-alexandr_wang",
+      "name": "Alexandr Wang (@alexandr_wang)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:alexandr_wang -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Scale AI",
+        "官方",
+        "資料工程"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-alexeheath",
+      "name": "Alex Heath (@alexeheath)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:alexeheath -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "The Verge",
+        "獨家爆料",
+        "商業內幕"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-alibaba_qwen",
+      "name": "Qwen (@Alibaba_Qwen)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Alibaba_Qwen -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "中國模型",
+        "官方",
+        "開源專案"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-animaanandkumar",
+      "name": "Anima Anandkumar (@AnimaAnandkumar)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:AnimaAnandkumar -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Caltech",
+        "學術前沿",
+        "科學運算"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-anthropicai",
+      "name": "Anthropic (@AnthropicAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:AnthropicAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Anthropic",
+        "官方",
+        "安全對齊"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-antirez",
+      "name": "Salvatore Sanfilippo (@antirez)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:antirez -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Redis",
+        "底層工程",
+        "架構哲學"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-antlingagi",
+      "name": "Ant Ling (@AntLingAGI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:AntLingAGI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "中國模型",
+        "官方",
+        "多模態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-aravsrinivas",
+      "name": "Aravind Srinivas (@AravSrinivas)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:AravSrinivas -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Perplexity",
+        "官方",
+        "AI搜尋"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-arcprize",
+      "name": "ARC Prize (@arcprize)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:arcprize -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-arena",
+      "name": "LMSYS Arena (@arena)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:arena -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "評測/基準",
+        "模型榜單"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-arizeai",
+      "name": "Arize AI (@ArizeAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ArizeAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "模型評估",
+        "可觀測性"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-artificialanlys",
+      "name": "Artificial Analysis (@ArtificialAnlys)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ArtificialAnlys -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "評測/基準",
+        "延遲定價"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-assemblyai",
+      "name": "AssemblyAI (@AssemblyAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:AssemblyAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "語音模型",
+        "語音理解"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-baidu_inc",
+      "name": "百度 Baidu (@Baidu_Inc)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Baidu_Inc -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-baseten",
+      "name": "Baseten (@baseten)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:baseten -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "模型部署",
+        "基礎設施"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-bcherny",
+      "name": "Boris Cherny (@bcherny)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:bcherny -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-bhorowitz",
+      "name": "Ben Horowitz (@bhorowitz)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:bhorowitz -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "a16z",
+        "管理哲學",
+        "科技創投"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-bilawalsidhu",
+      "name": "Bilawal Sidhu (@bilawalsidhu)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:bilawalsidhu -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "空間運算",
+        "3D與視覺",
+        "多模態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-bindureddy",
+      "name": "Bindu Reddy (@bindureddy)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:bindureddy -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "商業數據",
+        "產業觀察"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-blackforestlabs",
+      "name": "Black Forest Labs (@BlackForestLabs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:BlackForestLabs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "FLUX模型",
+        "開源圖像"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-bleepincomputer",
+      "name": "BleepingComputer (@BleepinComputer)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:BleepinComputer -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資安",
+        "勒索軟體",
+        "重大漏洞"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-briankrebs",
+      "name": "Brian Krebs (@briankrebs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:briankrebs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資安",
+        "調查報導",
+        "網路犯罪"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-browserbase",
+      "name": "Browserbase (@browserbase)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:browserbase -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "無頭瀏覽器",
+        "Agent自動化"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-caseynewton",
+      "name": "Casey Newton (@CaseyNewton)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:CaseyNewton -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Platformer",
+        "科技政策",
+        "矽谷內幕"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-cb_doge",
+      "name": "cb_doge (@cb_doge)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:cb_doge -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-cerebras",
+      "name": "Cerebras Systems (@cerebras)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:cerebras -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "晶圓級晶片",
+        "高速推理"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-chatgpt",
+      "name": "ChatGPT (@ChatGPT)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ChatGPT -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-chatgptapp",
+      "name": "ChatGPT (@ChatGPTapp)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ChatGPTapp -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-claudeai",
+      "name": "Claude (@claudeai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:claudeai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-clementdelangue",
+      "name": "Clément Delangue (@ClementDelangue)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ClementDelangue -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Hugging Face",
+        "官方",
+        "開源生態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-cloudflaredev",
+      "name": "Cloudflare Developers (@CloudflareDev)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:CloudflareDev -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-codeiumdev",
+      "name": "Codeium (@codeiumdev)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:codeiumdev -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "程式開發",
+        "企業方案"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-cohere",
+      "name": "Cohere (@cohere)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:cohere -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "企業級模型",
+        "RAG技術"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-cursor_ai",
+      "name": "Cursor (@cursor_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:cursor_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "AI編輯器",
+        "程式開發"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-dan_abramov",
+      "name": "Dan Abramov (@dan_abramov)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:dan_abramov -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "軟體工程",
+        "前端架構",
+        "深度觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-deedydas",
+      "name": "Deedy Das (@deedydas)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:deedydas -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "科技求職",
+        "矽谷觀察",
+        "產業數據"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-deepgram",
+      "name": "Deepgram (@deepgram)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:deepgram -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "語音辨識",
+        "端到端語音"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-dhh",
+      "name": "DHH (@dhh)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:dhh -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "雲端去中心化",
+        "軟體哲學",
+        "Rails"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-drjimfan",
+      "name": "Jim Fan (@drjimfan)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:drjimfan -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "NVIDIA",
+        "具身智能",
+        "世界模型"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-e2b_dev",
+      "name": "E2B (@e2b_dev)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:e2b_dev -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "Agent沙盒",
+        "程式執行"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-eladgil",
+      "name": "Elad Gil (@EladGil)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:EladGil -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "創投觀察",
+        "商業數據",
+        "產業趨勢"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-elevenlabs",
+      "name": "ElevenLabs (@ElevenLabs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ElevenLabs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-elevenlabsio",
+      "name": "ElevenLabs (@elevenlabsio)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:elevenlabsio -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "語音合成",
+        "多模態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-emilkowalski_",
+      "name": "Emil Kowalski (@emilkowalski_)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:emilkowalski_ -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "前端設計",
+        "UI/UX",
+        "動效工藝"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-ericnewcomer",
+      "name": "Eric Newcomer (@EricNewcomer)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:EricNewcomer -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "VC內幕",
+        "融資估值",
+        "獨家訪談"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-ericzakariasson",
+      "name": "Eric Zakariasson (@ericzakariasson)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ericzakariasson -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-exaailabs",
+      "name": "Exa (@ExaAILabs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ExaAILabs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "神經搜尋",
+        "網路檢索"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-fal",
+      "name": "fal (@fal)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:fal -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-fal_ai",
+      "name": "fal (@fal_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:fal_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "生成式媒體",
+        "開發者平台"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-fchollet",
+      "name": "François Chollet (@fchollet)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:fchollet -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "ARC Prize",
+        "推理能力"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-finkd",
+      "name": "Mark Zuckerberg (@finkd)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:finkd -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-fireworksai",
+      "name": "Fireworks AI (@fireworksai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:fireworksai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "推論引擎",
+        "超低延遲"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-fr0gger_",
+      "name": "Thomas Roccia (@fr0gger_)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:fr0gger_ -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "微軟資安",
+        "惡意程式",
+        "威脅情資"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-garrytan",
+      "name": "Garry Tan (@garrytan)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:garrytan -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Y Combinator",
+        "官方",
+        "新創趨勢"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-garymarcus",
+      "name": "Gary Marcus (@GaryMarcus)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:GaryMarcus -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "批判思考",
+        "模型幻覺",
+        "產業反思"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-geminiapp",
+      "name": "Google Gemini (@GeminiApp)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:GeminiApp -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "官方",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-google",
+      "name": "Google (@Google)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Google -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-googleai",
+      "name": "Google AI (@GoogleAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:GoogleAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-googleaidevs",
+      "name": "Google AI Developers (@googleaidevs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:googleaidevs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "官方",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-googledeepmind",
+      "name": "Google DeepMind Official (@GoogleDeepMind)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:GoogleDeepMind -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "官方",
+        "前沿研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-gossithedog",
+      "name": "Kevin Beaumont (@GossiTheDog)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:GossiTheDog -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資安",
+        "威脅情報",
+        "端點防禦"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-groqinc",
+      "name": "Groq (@GroqInc)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:GroqInc -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "LPU晶片",
+        "超低延遲"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-haoailab",
+      "name": "UCSD Hao AI Lab (@haoailab)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:haoailab -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-hardmaru",
+      "name": "David Ha (@hardmaru)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:hardmaru -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Sakana AI",
+        "前沿研究",
+        "演化計算"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-hendrycks",
+      "name": "Dan Hendrycks (@hendrycks)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:hendrycks -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "安全對齊",
+        "AI安全",
+        "評測基準"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-huggingface",
+      "name": "Hugging Face Official (@huggingface)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:huggingface -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "開源模型",
+        "社群生態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-hwchase17",
+      "name": "Harrison Chase (@hwchase17)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:hwchase17 -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "開發工具",
+        "LangChain"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-id_aa_carmack",
+      "name": "John Carmack (@ID_AA_Carmack)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ID_AA_Carmack -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "AGI研發",
+        "硬核架構"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-indigox",
+      "name": "indigo (@indigox)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:indigox -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-jensenhuang",
+      "name": "Jensen Huang (@JensenHuang)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:JensenHuang -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-karminski3",
+      "name": "karminski (@karminski3)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:karminski3 -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-kentcdodds",
+      "name": "Kent C. Dodds (@kentcdodds)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:kentcdodds -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "全端架構",
+        "測試工程",
+        "開發實踐"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-khazix0918",
+      "name": "卡兹克 (@Khazix0918)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Khazix0918 -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-kimi_moonshot",
+      "name": "Kimi.ai (@Kimi_Moonshot)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Kimi_Moonshot -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-kling_ai",
+      "name": "Kling AI (@Kling_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Kling_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "中國模型",
+        "官方",
+        "視訊生成"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-krea_ai",
+      "name": "Krea AI (@krea_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:krea_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-langchainai",
+      "name": "LangChain (@LangChainAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:LangChainAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "開發工具",
+        "Agent框架"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-langfuse",
+      "name": "Langfuse (@Langfuse)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Langfuse -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "LLM可觀測性",
+        "開源生態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-leerob",
+      "name": "Lee Robinson (@leerob)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:leerob -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Web工程",
+        "架構實務",
+        "開發體驗"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-levelsio",
+      "name": "Pieter Levels (@levelsio)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:levelsio -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "獨立開發",
+        "AI產品實作",
+        "商業變現"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-linusekenstam",
+      "name": "Linus Ekenstam (@LinusEkenstam)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:LinusEkenstam -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "多模態",
+        "設計工具",
+        "產品評測"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-lisasu",
+      "name": "Lisa Su (@LisaSu)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:LisaSu -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "AMD",
+        "官方",
+        "晶片與算力"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-lumalabsai",
+      "name": "Luma AI (@LumaLabsAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:LumaLabsAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "視訊生成",
+        "3D重建"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-lydiahallie",
+      "name": "Lydia Hallie (@lydiahallie)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:lydiahallie -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Anthropic",
+        "Claude Code",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-marcandreessen",
+      "name": "Marc Andreessen (@MarcAndreessen)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:MarcAndreessen -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "a16z",
+        "科技宏觀",
+        "產業哲學"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-meituan_longcat",
+      "name": "美团 LongCat (@Meituan_LongCat)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Meituan_LongCat -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-meshyai",
+      "name": "Meshy (@MeshyAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:MeshyAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-midjourney",
+      "name": "Midjourney (@Midjourney)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Midjourney -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "影像生成",
+        "模型發布"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-minimax_ai",
+      "name": "MiniMax (@MiniMax_AI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:MiniMax_AI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "中國模型",
+        "官方",
+        "多模態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-mistralai",
+      "name": "Mistral AI (@MistralAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:MistralAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "開源專案",
+        "模型發布"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-mntruell",
+      "name": "Michael Truell (@mntruell)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:mntruell -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-modelscope2022",
+      "name": "ModelScope 魔搭 (@ModelScope2022)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ModelScope2022 -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-msftresearch",
+      "name": "Microsoft Research (@MSFTResearch)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:MSFTResearch -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Microsoft",
+        "官方",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-mustafasuleyman",
+      "name": "Mustafa Suleyman (@mustafasuleyman)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:mustafasuleyman -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-natfriedman",
+      "name": "Nat Friedman (@natfriedman)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:natfriedman -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "創投觀察",
+        "AI生態",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-notebooklm",
+      "name": "Gemini Notebook (@NotebookLM)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:NotebookLM -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-nvidia",
+      "name": "NVIDIA (@nvidia)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:nvidia -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-nvidiaai",
+      "name": "NVIDIA AI (@NVIDIAAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:NVIDIAAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-nvidiadev",
+      "name": "NVIDIA Developers (@NVIDIADev)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:NVIDIADev -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "NVIDIA",
+        "官方",
+        "CUDA算力"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-officiallogank",
+      "name": "Logan Kilpatrick (@OfficialLoganK)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OfficialLoganK -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-ollama",
+      "name": "Ollama Official (@ollama)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ollama -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "本地推理",
+        "端側AI"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-omarsar0",
+      "name": "Elvis Saravia (@omarsar0)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:omarsar0 -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "前沿論文",
+        "提示工程"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-openai",
+      "name": "OpenAI (@OpenAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OpenAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-openaidevs",
+      "name": "OpenAI Developers (@OpenAIDevs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OpenAIDevs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-openainewsroom",
+      "name": "OpenAI Newsroom (@OpenAINewsroom)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OpenAINewsroom -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-openbmb",
+      "name": "OpenBMB (@OpenBMB)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OpenBMB -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "中國模型",
+        "官方",
+        "端側模型"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-openrouter",
+      "name": "OpenRouter (@OpenRouter)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OpenRouter -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-orange_8361",
+      "name": "Orange Tsai (@orange_8361)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:orange_8361 -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "DEVCORE",
+        "資安",
+        "RCE專家"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-oriolvinyalsml",
+      "name": "Oriol Vinyals (@OriolVinyalsML)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OriolVinyalsML -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google DeepMind",
+        "前沿研究",
+        "Gemini架構"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-paulg",
+      "name": "Paul Graham (@paulg)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:paulg -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "創業思維",
+        "商業觀察",
+        "科技思考"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-perplexity_ai",
+      "name": "Perplexity (@perplexity_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:perplexity_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "產品更新",
+        "AI搜尋"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-pixverse_",
+      "name": "PixVerse (@PixVerse_)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:PixVerse_ -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-plinytheprompter",
+      "name": "Pliny the Prompter (@PlinyThePrompter)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:PlinyThePrompter -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資訊安全",
+        "Prompt Injection",
+        "模型逃逸"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-pmarca",
+      "name": "Marc Andreessen (@pmarca)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:pmarca -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-polynoamial",
+      "name": "Noam Brown (@polynoamial)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:polynoamial -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-poteto",
+      "name": "Lauren Tan (@poteto)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:poteto -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-pytorch",
+      "name": "PyTorch Official (@PyTorch)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:PyTorch -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "深度學習框架",
+        "開源專案"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-rauchg",
+      "name": "Guillermo Rauch (@rauchg)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:rauchg -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Vercel",
+        "官方",
+        "全端架構"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-replit",
+      "name": "Replit (@replit)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:replit -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "雲端開發",
+        "Agent程式"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-rohanpaul_ai",
+      "name": "Rohan Paul (@rohanpaul_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:rohanpaul_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "論文/研究",
+        "開源專案",
+        "實務教學"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-runwayml",
+      "name": "Runway (@runwayml)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:runwayml -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "視訊生成",
+        "多模態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-sainingxie",
+      "name": "谢赛宁 (@sainingxie)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:sainingxie -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-saitowu",
+      "name": "Saito 硬地骇客 (@SaitoWu)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SaitoWu -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-sakanaailabs",
+      "name": "Sakana AI (@SakanaAILabs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SakanaAILabs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-saranormous",
+      "name": "Sarah Guo (@saranormous)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:saranormous -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "創投觀察",
+        "AI基礎設施",
+        "商業化"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-satyanadella",
+      "name": "Satya Nadella (@satyanadella)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:satyanadella -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Microsoft",
+        "官方",
+        "產業動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-scale_ai",
+      "name": "Scale AI (@Scale_AI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Scale_AI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "資料工程",
+        "企業級AI"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-schneierblog",
+      "name": "Bruce Schneier (@schneierblog)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:schneierblog -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資安",
+        "密碼學",
+        "隱私權"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-sebraschka",
+      "name": "Sebastian Raschka (@SebRaschka)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SebRaschka -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "前沿研究",
+        "模型訓練",
+        "深度架構"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-semianalysis_",
+      "name": "SemiAnalysis (@SemiAnalysis_)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SemiAnalysis_ -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "晶片與算力",
+        "晶圓製造",
+        "硬核供應鏈"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-sensetime_ai",
+      "name": "商汤 SenseTime (@SenseTime_AI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SenseTime_AI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-sequoia",
+      "name": "Sequoia Capital (@sequoia)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:sequoia -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "科技創投",
+        "產業報告"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-shadcn",
+      "name": "shadcn (@shadcn)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:shadcn -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "前端設計",
+        "UI元件"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-sherwinwu",
+      "name": "Sherwin Wu (@sherwinwu)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:sherwinwu -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-siliconflowai",
+      "name": "SiliconFlow (@SiliconFlowAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SiliconFlowAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "晶片與算力",
+        "模型推理"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-simonw",
+      "name": "Simon Willison (@simonw)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:simonw -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "資訊安全",
+        "Prompt Injection"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-stabilityai",
+      "name": "Stability AI (@StabilityAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:StabilityAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "生成影像",
+        "開源模型"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-stepfun_ai",
+      "name": "阶跃星辰 StepFun (@StepFun_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:StepFun_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-sundarpichai",
+      "name": "Sundar Pichai (@sundarpichai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:sundarpichai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-suno",
+      "name": "Suno (@suno)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:suno -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-swiftonsecurity",
+      "name": "SwiftOnSecurity (@SwiftOnSecurity)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SwiftOnSecurity -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "系統安全",
+        "Sysadmin",
+        "威脅防禦"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-swyx",
+      "name": "swyx (@swyx)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:swyx -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "AI工程",
+        "開發者生態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-t3dotgg",
+      "name": "Theo Browne (@t3dotgg)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:t3dotgg -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "軟體架構",
+        "前端生態",
+        "實務評析"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-tavilyai",
+      "name": "Tavily AI (@tavilyai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:tavilyai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "AI搜尋API",
+        "Agent檢索"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-taviso",
+      "name": "Tavis Ormandy (@taviso)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:taviso -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google Project Zero",
+        "資安",
+        "漏洞挖掘"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-tencenthunyuan",
+      "name": "腾讯混元 (@TencentHunyuan)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:TencentHunyuan -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-testingcatalog",
+      "name": "TestingCatalog (@testingcatalog)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:testingcatalog -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "產品更新",
+        "未發布內測",
+        "功能洩漏"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-thehackersnews",
+      "name": "The Hacker News (@TheHackersNews)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:TheHackersNews -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資安",
+        "漏洞即時通報"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-thexpin",
+      "name": "X.PIN (@thexpin)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:thexpin -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-thinkymachines",
+      "name": "Thinking Machines (@thinkymachines)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:thinkymachines -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-thsottiaux",
+      "name": "Tibo Sottiaux (@thsottiaux)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:thsottiaux -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "OpenAI",
+        "產品更新",
+        "Codex"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-togethercompute",
+      "name": "Together AI (@togethercompute)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:togethercompute -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "開源雲端",
+        "推論加速"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-unslothai",
+      "name": "Unsloth AI (@UnslothAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:UnslothAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "開源專案",
+        "模型微調",
+        "系統優化"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-v0",
+      "name": "v0 by Vercel (@v0)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:v0 -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Vercel",
+        "官方",
+        "前端生成"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-viggleai",
+      "name": "Viggle AI (@ViggleAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ViggleAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-vllm_project",
+      "name": "vLLM Project (@vllm_project)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:vllm_project -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "推理加速",
+        "開源專案"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-weights_biases",
+      "name": "Weights & Biases (@weights_biases)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:weights_biases -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "模型監控",
+        "MLOps"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-wesbos",
+      "name": "Wes Bos (@wesbos)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:wesbos -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "全端開發",
+        "教學實務",
+        "開源工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-windsurf_ai",
+      "name": "Windsurf (@windsurf_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:windsurf_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "AI編輯器",
+        "程式開發"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-workbuddy_ai",
+      "name": "Tencent WorkBuddy (@WorkBuddy_AI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:WorkBuddy_AI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-xai",
+      "name": "SpaceX Super Intelligence (@xai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:xai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-xiaomimimo",
+      "name": "小米 MiMo (@XiaomiMiMo)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:XiaomiMiMo -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-ycombinator",
+      "name": "Y Combinator (@ycombinator)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ycombinator -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "新創育成",
+        "前沿趨勢"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-zai_org",
+      "name": "智谱 Z.ai (@Zai_org)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Zai_org -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
     },
     {
       "id": "ylecun",
