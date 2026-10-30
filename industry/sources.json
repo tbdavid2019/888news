@@ -42,6 +42,27 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "claudedevs",
+      "name": "Claude Developers (@ClaudeDevs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ClaudeDevs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Anthropic",
+        "官方",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "cloudflare-blog",
       "name": "cloudflare blog",
       "kind": "rss",
@@ -98,6 +119,26 @@
         "Anthropic",
         "安全/對齊",
         "專家觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "deepseek-ai",
+      "name": "DeepSeek (@deepseek_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:deepseek_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "deepseek",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "模型發布"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -202,25 +243,6 @@
       "syndicate_fulltext": false
     },
     {
-      "id": "hackernews100",
-      "name": "hackernews100",
-      "kind": "rss",
-      "config": {
-        "feedUrl": "https://hnrss.org/frontpage?points=100"
-      },
-      "tier": "T2",
-      "first_party": false,
-      "owner_entity_id": null,
-      "participation_mode": "editorial",
-      "interval_minutes": 30,
-      "tags": [
-        "技術討論",
-        "社群"
-      ],
-      "site_fulltext": true,
-      "syndicate_fulltext": true
-    },
-    {
       "id": "hackernews-official",
       "name": "Hacker News (官方 RSS)",
       "kind": "rss",
@@ -238,6 +260,25 @@
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
+    },
+    {
+      "id": "hackernews100",
+      "name": "hackernews100",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://hnrss.org/frontpage?points=100"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "技術討論",
+        "社群"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": true
     },
     {
       "id": "ilyasut",
@@ -340,6 +381,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "opencode-x",
+      "name": "OpenCode (@opencode)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:opencode -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "開源專案",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "openrouter-blog",
       "name": "openrouter blog",
       "kind": "rss",
@@ -357,6 +418,26 @@
       ],
       "site_fulltext": true,
       "syndicate_fulltext": true
+    },
+    {
+      "id": "rss-apple-ml",
+      "name": "Apple Machine Learning Research",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://machinelearning.apple.com/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "apple",
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方",
+        "晶片與硬體",
+        "前沿研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
     },
     {
       "id": "rss-ars-technica-ai",
@@ -418,6 +499,165 @@
       "interval_minutes": 60,
       "tags": [
         "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-claude-code-releases",
+      "name": "Claude Code Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/anthropics/claude-code/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "Anthropic",
+        "官方",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-cve-high",
+      "name": "CVE-high",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://cvefeed.io/rssfeed/severity/high.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資安",
+        "官方",
+        "CVE"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-cve-news",
+      "name": "CVE news",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://thecyberthrone.in/category/cve-news/feed/"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資安",
+        "漏洞分析"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-david888-daily",
+      "name": "DAVID888 Daily 每日放送",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://podcast.david888.com/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "Podcast",
+        "科技要聞"
+      ],
+      "site_fulltext": true,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-deepseek-releases",
+      "name": "DeepSeek V3 Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/deepseek-ai/DeepSeek-V3/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "deepseek",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "開源專案",
+        "模型發布"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-embrace-the-red",
+      "name": "Embrace The Red (AI Security)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://embracethered.com/blog/index.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "資安",
+        "Prompt Injection",
+        "攻擊防禦"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-epoch-ai",
+      "name": "Epoch AI Updates",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://epochai.org/atom.xml"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "研究趨勢",
+        "算力預測",
+        "模型基準"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gary-marcus",
+      "name": "Gary Marcus (The Road to AI We Can Trust)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://garymarcus.substack.com/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "專家觀點",
+        "批判思考",
+        "安全對齊"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -531,6 +771,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-interconnects",
+      "name": "Nathan Lambert (Interconnects)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.interconnects.ai/feed"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "專家觀點",
+        "模型訓練",
+        "RLHF"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-latent-space",
       "name": "Latent Space",
       "kind": "rss",
@@ -547,6 +807,26 @@
       "interval_minutes": 60,
       "tags": [
         "個人"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-lilian-weng",
+      "name": "Lilian Weng (Lil'Log)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://lilianweng.github.io/index.xml"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "專家觀點",
+        "深度架構",
+        "技術綜述"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -616,6 +896,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-modal",
+      "name": "Modal Engineering Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://modal.com/blog/atom.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方",
+        "雲端與邊緣",
+        "系統架構"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-nvidia-blog",
       "name": "NVIDIA Blog",
       "kind": "rss",
@@ -632,6 +932,26 @@
       "interval_minutes": 60,
       "tags": [
         "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-one-useful-thing",
+      "name": "Ethan Mollick (One Useful Thing)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.oneusefulthing.org/feed"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "專家觀點",
+        "實務工作流",
+        "生產力"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -658,6 +978,46 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-openrouter-announcements",
+      "name": "OpenRouter Announcements",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://openrouter.ai/announcements/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "模型發布",
+        "算力定價"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-pytorch",
+      "name": "PyTorch Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://pytorch.org/blog/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "官方",
+        "開源專案",
+        "深度學習框架"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-simon-willison",
       "name": "Simon Willison",
       "kind": "rss",
@@ -674,6 +1034,25 @@
       "interval_minutes": 60,
       "tags": [
         "個人"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-solidot",
+      "name": "Solidot",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.solidot.org/index.rss"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "開源生態",
+        "科技要聞"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -742,6 +1121,46 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-tom-tunguz",
+      "name": "Tomasz Tunguz Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://tomtunguz.com/index.xml"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 180,
+      "tags": [
+        "商業數據",
+        "算力經濟",
+        "產業觀察"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-vllm",
+      "name": "vLLM Official Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://vllm.ai/blog/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 120,
+      "tags": [
+        "開源專案",
+        "架構與算力",
+        "系統優化"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "sama",
       "name": "Sam Altman (@sama)",
       "kind": "x_search",
@@ -777,6 +1196,25 @@
       "tags": [
         "專家觀點",
         "教學/實務"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "thehypedotnews",
+      "name": "The Hype (@thehypedotnews)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:thehypedotnews -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "社群熱點"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
