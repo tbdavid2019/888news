@@ -214,6 +214,7 @@ export interface LlmSettings {
   primary: LlmChannelConfig;
   fallback1: LlmChannelConfig;
   fallback2: LlmChannelConfig;
+  fallback3: LlmChannelConfig;
   waitingCount: number;
 }
 
@@ -228,7 +229,7 @@ export async function getLlmSettings(): Promise<LlmSettings> {
 
   const primaryKey = dbConfig.llmApiKey || credential("models", "LLM_API_KEY") || process.env.LLM_API_KEY || null;
   const primaryBase = dbConfig.llmBaseUrl || credential("models", "LLM_BASE_URL") || process.env.LLM_BASE_URL || "https://api.openai.com/v1";
-  const primaryModel = dbConfig.llmModel || process.env.LLM_MODEL || "gpt-4o-mini";
+  const primaryModel = dbConfig.llmModel || process.env.LLM_MODEL || "gpt-6-luna";
 
   const fb1Key = dbConfig.llmFallback1ApiKey || credential("models", "LLM_FALLBACK_1_API_KEY") || process.env.LLM_FALLBACK_1_API_KEY || null;
   const fb1Base = dbConfig.llmFallback1BaseUrl || credential("models", "LLM_FALLBACK_1_BASE_URL") || process.env.LLM_FALLBACK_1_BASE_URL || "";
@@ -237,6 +238,10 @@ export async function getLlmSettings(): Promise<LlmSettings> {
   const fb2Key = dbConfig.llmFallback2ApiKey || credential("models", "LLM_FALLBACK_2_API_KEY") || process.env.LLM_FALLBACK_2_API_KEY || null;
   const fb2Base = dbConfig.llmFallback2BaseUrl || credential("models", "LLM_FALLBACK_2_BASE_URL") || process.env.LLM_FALLBACK_2_BASE_URL || "";
   const fb2Model = dbConfig.llmFallback2Model || process.env.LLM_FALLBACK_2_MODEL || "";
+
+  const fb3Key = dbConfig.llmFallback3ApiKey || credential("models", "LLM_FALLBACK_3_API_KEY") || process.env.LLM_FALLBACK_3_API_KEY || credential("models", "OPENAI_API_KEY") || process.env.OPENAI_API_KEY || null;
+  const fb3Base = dbConfig.llmFallback3BaseUrl || credential("models", "LLM_FALLBACK_3_BASE_URL") || process.env.LLM_FALLBACK_3_BASE_URL || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+  const fb3Model = dbConfig.llmFallback3Model || process.env.LLM_FALLBACK_3_MODEL || "gpt-6-luna";
 
   let waitingCount = 0;
   try {
@@ -266,6 +271,13 @@ export async function getLlmSettings(): Promise<LlmSettings> {
       isConfigured: Boolean(fb2Key && fb2Model),
       source: dbConfig.llmFallback2ApiKey ? "db" : fb2Key ? "env" : "none",
     },
+    fallback3: {
+      baseUrl: fb3Base,
+      model: fb3Model,
+      apiKeyMasked: mask(fb3Key),
+      isConfigured: Boolean(fb3Key && fb3Model),
+      source: dbConfig.llmFallback3ApiKey ? "db" : fb3Key ? "env" : "none",
+    },
     waitingCount,
   };
 }
@@ -281,6 +293,9 @@ export async function saveLlmSettings(
     llmFallback2BaseUrl?: string;
     llmFallback2ApiKey?: string;
     llmFallback2Model?: string;
+    llmFallback3BaseUrl?: string;
+    llmFallback3ApiKey?: string;
+    llmFallback3Model?: string;
   },
   reason: string,
   actor: string,

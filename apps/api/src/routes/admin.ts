@@ -123,12 +123,15 @@ export function registerAdmin(app: FastifyInstance) {
       llmFallback2BaseUrl?: string;
       llmFallback2ApiKey?: string;
       llmFallback2Model?: string;
+      llmFallback3BaseUrl?: string;
+      llmFallback3ApiKey?: string;
+      llmFallback3Model?: string;
       reason?: string;
     }>(req);
     return saveLlmSettings(b, b.reason || "更新 LLM 配置", actorOf(admin));
   }));
   app.post("/api/admin/settings/llm/test", adminHandler(async (req) => {
-    const b = body<{ target: "default" | "fallback_1" | "fallback_2" }>(req);
+    const b = body<{ target: "default" | "fallback_1" | "fallback_2" | "fallback_3" }>(req);
     return testModelConnection(b.target);
   }));
   app.post("/api/admin/settings/llm/requeue", adminHandler(async () => {

@@ -11,6 +11,13 @@ import { credential } from "../config.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { paidRequest, ProviderRejectedError } from "./receipts.ts";
 import { dispatchAlert } from "../notify/dispatch.ts";
+import {
+  isOpenAIDecisionAvailable,
+  callOpenAIDecisions,
+  resetOpenAIDecisionCircuit,
+} from "./openai-decisions.ts";
+
+export { isOpenAIDecisionAvailable, callOpenAIDecisions, resetOpenAIDecisionCircuit };
 
 export const CLEF_SELECTION_VERSION = `clef-selection@fulltext-v1-${sha256(stableJson(CLEF_SELECTION_QUESTIONS)).slice(0, 10)}`;
 
@@ -514,18 +521,18 @@ export async function callJevSystemOne(
 }
 
 // ---------------------------------------------------------------------------
-// Unified Decision Engine (Clef Tier 0 -> Jev Tier 1)
+// Unified Decision Engine (Clef Tier 0 -> OpenAI Decisions Tier 1 -> Jev Tier 2)
 // ---------------------------------------------------------------------------
 
 export function isDecisionEngineAvailable(): boolean {
-  return isClefAvailable() || isJevAvailable();
+  return isClefAvailable() || isOpenAIDecisionAvailable() || isJevAvailable();
 }
 
 export const isJevOrClefAvailable = isDecisionEngineAvailable;
 
 export function parseDecisionResult(
   res: { response: JevResponse; receiptId: number; reused: boolean },
-  engine: "clef" | "jev"
+  engine: "clef" | "jev" | "openai"
 ) {
   const relAns = res.response.answers.relevance as JevChoiceAnswer | undefined;
   const scoreAns = res.response.answers.score as JevScoreAnswer | undefined;
@@ -556,7 +563,7 @@ export function parseDecisionResult(
     category,
     itemType,
     authorRole,
-    model: res.response.model || (engine === "clef" ? "clef-flash" : "jev-latest"),
+    model: res.response.model || (engine === "clef" ? "clef-flash" : engine === "openai" ? "gpt-6-luna" : "jev-latest"),
     engine,
     receiptId: res.receiptId,
     receiptIds: [res.receiptId],
@@ -576,7 +583,7 @@ export async function evaluateWithDecisionEngine(
   itemType: string | null;
   authorRole: "principal" | "observer" | "relayer" | null;
   model: string;
-  engine: "clef" | "jev";
+  engine: "clef" | "jev" | "openai";
   receiptId: number;
   receiptIds: number[];
   reused: boolean;
@@ -617,12 +624,28 @@ export async function evaluateWithDecisionEngine(
       return { ...parseDecisionResult(res, "clef"), receiptIds: [...fragmentReceiptIds, res.receiptId], reused: fragmentsReused && res.reused };
     } catch (clefErr) {
       console.warn(
-        `[DecisionEngine] Clef Tier 0 failed or timed out (${clefErr instanceof Error ? clefErr.message : String(clefErr)}), falling back to Jev Tier 1`
+        `[DecisionEngine] Clef Tier 0 failed or timed out (${clefErr instanceof Error ? clefErr.message : String(clefErr)}), falling back to OpenAI Decisions Tier 1`
       );
     }
   }
 
-  // 2. Try Tier 1: Jev (Cloud System One, fast & paid)
+  // 2. Try Tier 1: OpenAI Decisions API (Official OpenAI gpt-6-luna, prior to Jev)
+  if (isOpenAIDecisionAvailable()) {
+    try {
+      const res = await callOpenAIDecisions(text, questions, {
+        purpose: opts.purpose ?? "prefilter_article",
+        subject: opts.subject ?? "article:material",
+        attemptTag: opts.attemptTag,
+      });
+      return parseDecisionResult(res, "openai");
+    } catch (openaiErr) {
+      console.warn(
+        `[DecisionEngine] OpenAI Decisions API failed (${openaiErr instanceof Error ? openaiErr.message : String(openaiErr)}), falling back to Jev Tier 2`
+      );
+    }
+  }
+
+  // 3. Try Tier 2: Jev (Cloud System One, fast & paid)
   if (isJevAvailable()) {
     try {
       const res = await callJevSystemOne(text, questions, {
@@ -633,13 +656,13 @@ export async function evaluateWithDecisionEngine(
       return parseDecisionResult(res, "jev");
     } catch (jevErr) {
       console.warn(
-        `[DecisionEngine] Jev Tier 1 failed or exhausted (${jevErr instanceof Error ? jevErr.message : String(jevErr)}), falling back to LLM Tier 2`
+        `[DecisionEngine] Jev Tier 2 failed or exhausted (${jevErr instanceof Error ? jevErr.message : String(jevErr)}), falling back to LLM Tier 3`
       );
       throw jevErr;
     }
   }
 
-  throw new Error("No decision engine (Clef or Jev) available");
+  throw new Error("No decision engine (Clef, OpenAI, or Jev) available");
 }
 
 export const jevEvaluateMaterial = evaluateWithDecisionEngine;
@@ -662,7 +685,7 @@ export async function evaluatePairRelationWithDecisionEngine(
 ): Promise<{
   relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP";
   confidence: number;
-  engine: "clef" | "jev";
+  engine: "clef" | "jev" | "openai";
   receiptId: number;
   reused: boolean;
 }> {
@@ -693,7 +716,29 @@ export async function evaluatePairRelationWithDecisionEngine(
         reused: res.reused,
       };
     } catch (err) {
-      console.warn(`[DecisionEngine] Clef pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Jev Tier 1`);
+      console.warn(`[DecisionEngine] Clef pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to OpenAI Decisions Tier 1`);
+    }
+  }
+
+  if (isOpenAIDecisionAvailable()) {
+    try {
+      const res = await callOpenAIDecisions(state, questions, {
+        purpose: opts.purpose ?? "group_pair",
+        subject: opts.subject ?? "relation:pair",
+        attemptTag: opts.attemptTag,
+      });
+      const ans = res.response.answers.relation as JevChoiceAnswer | undefined;
+      const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
+      const relation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
+      return {
+        relation,
+        confidence: ans?.confidence ?? 0.8,
+        engine: "openai",
+        receiptId: res.receiptId,
+        reused: res.reused,
+      };
+    } catch (err) {
+      console.warn(`[DecisionEngine] OpenAI pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Jev Tier 2`);
     }
   }
 
@@ -715,7 +760,7 @@ export async function evaluatePairRelationWithDecisionEngine(
         reused: res.reused,
       };
     } catch (err) {
-      console.warn(`[DecisionEngine] Jev pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 2`);
+      console.warn(`[DecisionEngine] Jev pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 3`);
       throw err;
     }
   }
@@ -729,7 +774,7 @@ export async function evaluateBatchRelationWithDecisionEngine(
   opts: { purpose?: string; subject?: string; attemptTag?: string } = {}
 ): Promise<{
   decisions: Array<{ id: string; relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP"; confidence: number }>;
-  engine: "clef" | "jev";
+  engine: "clef" | "jev" | "openai";
   receiptId: number;
   reused: boolean;
 }> {
@@ -742,7 +787,7 @@ export async function evaluateBatchRelationWithDecisionEngine(
     };
   }
 
-  const parseBatch = (res: { response: JevResponse; receiptId: number; reused: boolean }, engine: "clef" | "jev") => {
+  const parseBatch = (res: { response: JevResponse; receiptId: number; reused: boolean }, engine: "clef" | "jev" | "openai") => {
     const decisions: Array<{ id: string; relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP"; confidence: number }> = [];
     for (const id of candidateIds) {
       const ans = res.response.answers[id] as JevChoiceAnswer | undefined;
@@ -766,7 +811,20 @@ export async function evaluateBatchRelationWithDecisionEngine(
       });
       return parseBatch(res, "clef");
     } catch (err) {
-      console.warn(`[DecisionEngine] Clef batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Jev Tier 1`);
+      console.warn(`[DecisionEngine] Clef batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to OpenAI Decisions Tier 1`);
+    }
+  }
+
+  if (isOpenAIDecisionAvailable()) {
+    try {
+      const res = await callOpenAIDecisions(stateText, questions, {
+        purpose: opts.purpose ?? "group_batch",
+        subject: opts.subject ?? "relation:batch",
+        attemptTag: opts.attemptTag,
+      });
+      return parseBatch(res, "openai");
+    } catch (err) {
+      console.warn(`[DecisionEngine] OpenAI batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Jev Tier 2`);
     }
   }
 
@@ -779,7 +837,7 @@ export async function evaluateBatchRelationWithDecisionEngine(
       });
       return parseBatch(res, "jev");
     } catch (err) {
-      console.warn(`[DecisionEngine] Jev batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 2`);
+      console.warn(`[DecisionEngine] Jev batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 3`);
       throw err;
     }
   }

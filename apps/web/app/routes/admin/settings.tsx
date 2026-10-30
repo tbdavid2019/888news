@@ -32,6 +32,7 @@ export interface LlmSettings {
   primary: LlmChannelConfig;
   fallback1: LlmChannelConfig;
   fallback2: LlmChannelConfig;
+  fallback3: LlmChannelConfig;
   waitingCount: number;
 }
 
@@ -62,9 +63,12 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
     llmFallback2BaseUrl: "",
     llmFallback2ApiKey: "",
     llmFallback2Model: "",
+    llmFallback3BaseUrl: "",
+    llmFallback3ApiKey: "",
+    llmFallback3Model: "",
   });
 
-  const handleTest = async (target: "default" | "fallback_1" | "fallback_2", name: string) => {
+  const handleTest = async (target: "default" | "fallback_1" | "fallback_2" | "fallback_3", name: string) => {
     const res = await run<{ ok: boolean; model?: string; error?: string }>(
       "POST",
       "/api/admin/settings/llm/test",
@@ -201,6 +205,36 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
             </Button>
           </div>
         </div>
+
+        {/* Fallback 3 (第四順位) */}
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-ink">備援 3 (Fallback 3 / 第四順位)</span>
+              {llm?.fallback3.isConfigured ? (
+                <Badge tone="ok">已啟用備援</Badge>
+              ) : (
+                <Badge tone="muted">未配置 (可選，預設支援 OpenAI luna 6)</Badge>
+              )}
+            </div>
+            <div className="mt-1 font-mono text-[12px] text-ink-3 break-all">
+              端點: {llm?.fallback3.baseUrl || "—"} · 模型: {llm?.fallback3.model || "—"} · API Key: {llm?.fallback3.apiKeyMasked || "—"}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              size="sm"
+              disabled={!llm?.fallback3.isConfigured}
+              busy={pending === "test-llm-fallback_3"}
+              onClick={() => handleTest("fallback_3", "備援 3")}
+            >
+              測試連線
+            </Button>
+            <Button size="sm" tone="secondary" onClick={() => setOpen(true)}>
+              修改
+            </Button>
+          </div>
+        </div>
       </div>
 
       <ReasonDialog
@@ -221,6 +255,9 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
           if (form.llmFallback2BaseUrl.trim()) payload.llmFallback2BaseUrl = form.llmFallback2BaseUrl.trim();
           if (form.llmFallback2ApiKey.trim()) payload.llmFallback2ApiKey = form.llmFallback2ApiKey.trim();
           if (form.llmFallback2Model.trim()) payload.llmFallback2Model = form.llmFallback2Model.trim();
+          if (form.llmFallback3BaseUrl.trim()) payload.llmFallback3BaseUrl = form.llmFallback3BaseUrl.trim();
+          if (form.llmFallback3ApiKey.trim()) payload.llmFallback3ApiKey = form.llmFallback3ApiKey.trim();
+          if (form.llmFallback3Model.trim()) payload.llmFallback3Model = form.llmFallback3Model.trim();
 
           const ok = await run(
             "PUT",
@@ -233,6 +270,7 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
               llmBaseUrl: "", llmApiKey: "", llmModel: "",
               llmFallback1BaseUrl: "", llmFallback1ApiKey: "", llmFallback1Model: "",
               llmFallback2BaseUrl: "", llmFallback2ApiKey: "", llmFallback2Model: "",
+              llmFallback3BaseUrl: "", llmFallback3ApiKey: "", llmFallback3Model: "",
             });
             return true;
           }
@@ -251,10 +289,10 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
                   onChange={(e) => setForm({ ...form, llmBaseUrl: e.target.value })}
                 />
               </Field>
-              <Field label="模型名稱 (Model)" hint="如 gpt-4o-mini、llama-3.3-70b-versatile">
+              <Field label="模型名稱 (Model)" hint="如 gpt-6-luna、llama-3.3-70b-versatile">
                 <Input
                   type="text"
-                  placeholder={llm?.primary.model || "gpt-4o-mini"}
+                  placeholder={llm?.primary.model || "gpt-6-luna"}
                   value={form.llmModel}
                   onChange={(e) => setForm({ ...form, llmModel: e.target.value })}
                 />
@@ -326,6 +364,36 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
                 placeholder={llm?.fallback2.apiKeyMasked || "AIza..."}
                 value={form.llmFallback2ApiKey}
                 onChange={(e) => setForm({ ...form, llmFallback2ApiKey: e.target.value })}
+              />
+            </Field>
+          </div>
+
+          <div className="rounded-control bg-bg-sunk p-3 space-y-3">
+            <div className="text-[13px] font-semibold text-ink">備援 3 (Fallback 3 / 第四順位，選填)</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Fallback 3 Base URL">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback3.baseUrl || "https://api.openai.com/v1"}
+                  value={form.llmFallback3BaseUrl}
+                  onChange={(e) => setForm({ ...form, llmFallback3BaseUrl: e.target.value })}
+                />
+              </Field>
+              <Field label="Fallback 3 Model">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback3.model || "gpt-6-luna"}
+                  value={form.llmFallback3Model}
+                  onChange={(e) => setForm({ ...form, llmFallback3Model: e.target.value })}
+                />
+              </Field>
+            </div>
+            <Field label="Fallback 3 API Key">
+              <Input
+                type="password"
+                placeholder={llm?.fallback3.apiKeyMasked || "sk-..."}
+                value={form.llmFallback3ApiKey}
+                onChange={(e) => setForm({ ...form, llmFallback3ApiKey: e.target.value })}
               />
             </Field>
           </div>

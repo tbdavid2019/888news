@@ -51,7 +51,7 @@ export const MODELS: Record<string, ModelSpec> = {
   // Read from the environment or DB settings at call time.
   default: {
     key: "default", service: "llm", baseUrlEnv: "LLM_BASE_URL", apiKeyEnv: "LLM_API_KEY",
-    get model() { return cachedDbLlmConfig?.llmModel ?? process.env.LLM_MODEL ?? "gpt-4o-mini"; },
+    get model() { return cachedDbLlmConfig?.llmModel ?? process.env.LLM_MODEL ?? "gpt-6-luna"; },
     get extra() { return extraFromEnv(process.env.LLM_EXTRA_JSON); },
     get jsonMode() { return process.env.LLM_JSON_MODE !== "false"; },
     get vision() { return process.env.LLM_VISION === "true"; },
@@ -116,8 +116,8 @@ export const MODELS: Record<string, ModelSpec> = {
     key: "gemini-2.5-pro", service: "gemini", model: "gemini-2.5-pro",
     baseUrlEnv: "GEMINI_BASE_URL", apiKeyEnv: "GEMINI_API_KEY", jsonMode: true,
   },
-  "openai-gpt-4o-mini": {
-    key: "openai-gpt-4o-mini", service: "openai", model: "gpt-4o-mini",
+  "openai-gpt-6-luna": {
+    key: "openai-gpt-6-luna", service: "openai", model: "gpt-6-luna",
     baseUrlEnv: "OPENAI_BASE_URL", apiKeyEnv: "OPENAI_API_KEY", jsonMode: true,
   },
   "openai-gpt-4o": {
@@ -133,6 +133,11 @@ export const MODELS: Record<string, ModelSpec> = {
   fallback_2: {
     key: "fallback_2", service: "fallback_2", baseUrlEnv: "LLM_FALLBACK_2_BASE_URL", apiKeyEnv: "LLM_FALLBACK_2_API_KEY",
     get model() { return cachedDbLlmConfig?.llmFallback2Model ?? process.env.LLM_FALLBACK_2_MODEL ?? ""; },
+    jsonMode: true,
+  },
+  fallback_3: {
+    key: "fallback_3", service: "fallback_3", baseUrlEnv: "LLM_FALLBACK_3_BASE_URL", apiKeyEnv: "LLM_FALLBACK_3_API_KEY",
+    get model() { return cachedDbLlmConfig?.llmFallback3Model ?? process.env.LLM_FALLBACK_3_MODEL ?? "gpt-6-luna"; },
     jsonMode: true,
   },
 };
@@ -226,17 +231,27 @@ export function getApiKey(spec: ModelSpec): string | null {
   return credential("models", spec.apiKeyEnv) ?? process.env[spec.apiKeyEnv] ?? null;
 }
 
-export async function isFallbackConfigured(key: "fallback_1" | "fallback_2"): Promise<boolean> {
+export async function isFallbackConfigured(key: "fallback_1" | "fallback_2" | "fallback_3"): Promise<boolean> {
   const spec = MODELS[key];
   if (!spec) return false;
   const dbConfig = await getDbLlmConfig();
+  if (key === "fallback_3") {
+    const apiKey =
+      dbConfig.llmFallback3ApiKey ||
+      credential("models", spec.apiKeyEnv) ||
+      process.env[spec.apiKeyEnv] ||
+      credential("models", "OPENAI_API_KEY") ||
+      process.env.OPENAI_API_KEY;
+    const model = dbConfig.llmFallback3Model || spec.model || "gpt-6-luna";
+    return Boolean(apiKey && model);
+  }
   const apiKey = (key === "fallback_1" ? dbConfig.llmFallback1ApiKey : dbConfig.llmFallback2ApiKey) || getApiKey(spec);
   const model = (key === "fallback_1" ? dbConfig.llmFallback1Model : dbConfig.llmFallback2Model) || spec.model;
   return Boolean(apiKey && model);
 }
 
 export async function testModelConnection(
-  target: "default" | "fallback_1" | "fallback_2",
+  target: "default" | "fallback_1" | "fallback_2" | "fallback_3",
 ): Promise<{ ok: boolean; model?: string; error?: string }> {
   const spec = MODELS[target];
   if (!spec) return { ok: false, error: `未知的模型項目: ${target}` };
@@ -249,7 +264,7 @@ export async function testModelConnection(
   if (target === "default") {
     baseUrl = dbConfig.llmBaseUrl || baseUrl || "https://api.openai.com/v1";
     apiKey = dbConfig.llmApiKey || apiKey;
-    modelName = dbConfig.llmModel || modelName || "gpt-4o-mini";
+    modelName = dbConfig.llmModel || modelName || "gpt-6-luna";
   } else if (target === "fallback_1") {
     baseUrl = dbConfig.llmFallback1BaseUrl || baseUrl;
     apiKey = dbConfig.llmFallback1ApiKey || apiKey;
@@ -258,6 +273,10 @@ export async function testModelConnection(
     baseUrl = dbConfig.llmFallback2BaseUrl || baseUrl;
     apiKey = dbConfig.llmFallback2ApiKey || apiKey;
     modelName = dbConfig.llmFallback2Model || modelName;
+  } else if (target === "fallback_3") {
+    baseUrl = dbConfig.llmFallback3BaseUrl || baseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    apiKey = dbConfig.llmFallback3ApiKey || apiKey || credential("models", "OPENAI_API_KEY") || process.env.OPENAI_API_KEY || null;
+    modelName = dbConfig.llmFallback3Model || modelName || "gpt-6-luna";
   }
 
   if (!apiKey) return { ok: false, error: "API Key 尚未配置" };
@@ -266,18 +285,19 @@ export async function testModelConnection(
 
   try {
     const url = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
+    const isLunaOrO = /luna|o1|o3/i.test(modelName);
+    const testBody: Record<string, unknown> = {
+      model: modelName,
+      messages: [{ role: "user", content: "Reply with pong" }],
+      ...(isLunaOrO ? { max_completion_tokens: 10 } : { max_tokens: 10, temperature: 0 }),
+    };
     const res = await fetch(url, {
       method: "POST",
       headers: {
         "content-type": "application/json",
         authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model: modelName,
-        messages: [{ role: "user", content: "Reply with pong" }],
-        max_tokens: 10,
-        temperature: 0,
-      }),
+      body: JSON.stringify(testBody),
       signal: AbortSignal.timeout(15_000),
     });
 
@@ -305,7 +325,7 @@ async function executeSingleModel<S extends z.ZodType>(
     if (dbConfig.llmApiKey) apiKey = dbConfig.llmApiKey;
     if (dbConfig.llmModel) modelName = dbConfig.llmModel;
     if (!baseUrl) baseUrl = "https://api.openai.com/v1";
-    if (!modelName) modelName = "gpt-4o-mini";
+    if (!modelName) modelName = "gpt-6-luna";
   } else if (spec.key === "fallback_1") {
     if (dbConfig.llmFallback1BaseUrl) baseUrl = dbConfig.llmFallback1BaseUrl;
     if (dbConfig.llmFallback1ApiKey) apiKey = dbConfig.llmFallback1ApiKey;
@@ -314,15 +334,24 @@ async function executeSingleModel<S extends z.ZodType>(
     if (dbConfig.llmFallback2BaseUrl) baseUrl = dbConfig.llmFallback2BaseUrl;
     if (dbConfig.llmFallback2ApiKey) apiKey = dbConfig.llmFallback2ApiKey;
     if (dbConfig.llmFallback2Model) modelName = dbConfig.llmFallback2Model;
+  } else if (spec.key === "fallback_3") {
+    if (dbConfig.llmFallback3BaseUrl) baseUrl = dbConfig.llmFallback3BaseUrl;
+    if (dbConfig.llmFallback3ApiKey) apiKey = dbConfig.llmFallback3ApiKey;
+    if (dbConfig.llmFallback3Model) modelName = dbConfig.llmFallback3Model;
+    if (!baseUrl) baseUrl = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    if (!apiKey) apiKey = credential("models", "OPENAI_API_KEY") || process.env.OPENAI_API_KEY || null;
+    if (!modelName) modelName = "gpt-6-luna";
   }
 
   if (!baseUrl || !apiKey || !modelName) {
     throw new Error(`Model ${spec.key} is not configured (${spec.baseUrlEnv}, ${spec.apiKeyEnv}${spec.key === "default" ? ", LLM_MODEL" : ""})`);
   }
 
-  const isReasoning = spec.key.endsWith("-think") || /r1|qwq|o1|o3|oss|reasoning/i.test(modelName);
+  const isLunaOrO = /luna|o1|o3/i.test(modelName);
+  const isReasoning = spec.key.endsWith("-think") || /r1|qwq|o1|o3|oss|reasoning|luna/i.test(modelName);
   // Reasoning models (e.g. gpt-oss-20b, deepseek-r1) need sufficient entropy (0.5-0.7) to avoid looping in <think>
-  const temperature = isReasoning && (opts.temperature === undefined || opts.temperature < 0.5) ? 0.6 : (opts.temperature ?? 0.2);
+  // Modern OpenAI models (gpt-6-luna, o1, o3) don't support custom temperatures other than 1
+  const temperature = isLunaOrO ? undefined : isReasoning && (opts.temperature === undefined || opts.temperature < 0.5) ? 0.6 : (opts.temperature ?? 0.2);
   const maxTokens = Math.max(opts.maxTokens ?? 2048, 2048) + (isReasoning ? 6144 : 0);
   const userText = typeof opts.user === "string" ? opts.user : JSON.stringify(opts.user);
   const body: Record<string, unknown> = {
@@ -333,8 +362,8 @@ async function executeSingleModel<S extends z.ZodType>(
       // Multimodal parts go through as parts; plain objects are sent as JSON text.
       { role: "user", content: typeof opts.user === "string" || Array.isArray(opts.user) ? opts.user : userText },
     ],
-    temperature,
-    max_tokens: maxTokens,
+    ...(temperature !== undefined ? { temperature } : {}),
+    ...(isLunaOrO ? { max_completion_tokens: maxTokens } : { max_tokens: maxTokens }),
     ...(spec.jsonMode && opts.json !== false ? { response_format: { type: "json_object" } } : {}),
     ...(isReasoning && /groq/i.test(baseUrl) ? { reasoning_format: "hidden" } : {}),
     ...(spec.extra ?? {}),
@@ -416,6 +445,7 @@ export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): P
   const candidates: string[] = [primaryKey];
   if ((await isFallbackConfigured("fallback_1")) && primaryKey !== "fallback_1") candidates.push("fallback_1");
   if ((await isFallbackConfigured("fallback_2")) && primaryKey !== "fallback_2") candidates.push("fallback_2");
+  if ((await isFallbackConfigured("fallback_3")) && primaryKey !== "fallback_3") candidates.push("fallback_3");
 
   let lastError: unknown = null;
 
