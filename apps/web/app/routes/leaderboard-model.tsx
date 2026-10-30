@@ -18,16 +18,17 @@ import type { Screen } from "../components/shell/screens";
 export const handle: Screen = { tab: "leaderboard" };
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  return loadOr404<LbModelDetail>(`/api/site/leaderboard/models/${encodeURIComponent(params.slug)}`, { signal: request.signal });
+  return loadOr404<LbModelDetail>(`/api/site/leaderboard/models/${encodeURIComponent(params.slug)}`, { request, signal: request.signal });
 }
 
-export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return [{ title: titled("页面不存在") }];
+export function meta({ matches, loaderData }: Route.MetaArgs) {
+  if (!loaderData) return [{ title: titled("頁面不存在") }];
   const { model } = loaderData;
   const path = `/leaderboard/${model.slug}`;
   return pageMeta({
-    title: `${model.name} 评分、排名与各项成绩`,
-    description: `查看 ${model.name} 的${loaderData.historical ? "历史" : "当前"} ${SITE.name} 评分、参考位次与证据覆盖，以及各项公开评测的原始成绩和运行配置。`,
+    title: `${model.name} 評分、排名與各項成績`,
+    matches,
+    description: `查看 ${model.name} 的${loaderData.historical ? "歷史" : "當前"} ${SITE.name} 評分、參考名次與依據覆蓋，以及各項公開評測的原始成績和運行配置。`,
     path,
     image: "/og/pages/leaderboard.png",
     jsonLd: [

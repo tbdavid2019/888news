@@ -11,8 +11,8 @@ export function headers() {
   return { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" };
 }
 
-export function meta() {
-  return pageMeta({ title: "使用規則", description: `本站網站、RSS、公開 API 與 MCP 的使用規則。`, path: "/terms", image: "/og/pages/terms.png" });
+export function meta({ matches }: { matches?: unknown }) {
+  return pageMeta({ title: "使用規則", description: `本站網站、RSS、公開 API 與 MCP 的使用規則。`, path: "/terms", image: "/og/pages/terms.png", matches });
 }
 
 export default function TermsPage() {

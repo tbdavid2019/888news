@@ -49,6 +49,7 @@ function readScreens(): Record<string, HistoryScreen> {
 
 /** Records which page the current history entry shows ("" for one named by its content). */
 export function noteScreen(name: string | undefined, key: string, tab: TabKey | undefined) {
+  if (typeof window === "undefined") return;
   // POP changes browser history before its loader commits the next React location. An effect from
   // the page still on screen must not overwrite the destination entry during that interval.
   const browserKey = (window.history.state as { key?: string } | null)?.key ?? "default";

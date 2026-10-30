@@ -25,8 +25,8 @@ export async function loader({ request }: { request: Request }) {
   return apiGet<{ latestVersion: string; releases: Release[] }>("/api/site/changelog", { request, signal: request.signal });
 }
 
-export function meta() {
-  return pageMeta({ title: "更新日誌", description: `${SITE.name} 的功能更新、最佳化、公告與下線記錄。`, path: "/changelog", image: "/og/pages/changelog.png" });
+export function meta({ matches }: { matches?: unknown }) {
+  return pageMeta({ title: "更新日誌", description: `${SITE.name} 的功能更新、最佳化、公告與下線記錄。`, path: "/changelog", image: "/og/pages/changelog.png", matches });
 }
 
 const KIND_DOT: Record<Release["kind"], string> = {

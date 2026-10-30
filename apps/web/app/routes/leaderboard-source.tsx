@@ -14,15 +14,16 @@ import type { Screen } from "../components/shell/screens";
 export const handle: Screen = { tab: "leaderboard" };
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  return loadOr404<LbSourceDetail>(`/api/site/leaderboard/sources/${encodeURIComponent(params.key)}`, { signal: request.signal });
+  return loadOr404<LbSourceDetail>(`/api/site/leaderboard/sources/${encodeURIComponent(params.key)}`, { request, signal: request.signal });
 }
 
-export function meta({ loaderData }: Route.MetaArgs) {
-  if (!loaderData) return [{ title: titled("页面不存在") }];
+export function meta({ matches, loaderData }: Route.MetaArgs) {
+  if (!loaderData) return [{ title: titled("頁面不存在") }];
   const { source } = loaderData;
   const path = `/leaderboard/sources/${source.key}`;
   return pageMeta({
-    title: `${source.name} · 评测来源`,
+    title: `${source.name} · 評測來源`,
+    matches,
     description: source.description,
     path,
     image: "/og/pages/leaderboard.png",

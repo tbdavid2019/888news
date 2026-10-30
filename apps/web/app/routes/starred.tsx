@@ -12,8 +12,8 @@ export function headers() {
   return { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" };
 }
 
-export function meta() {
-  return pageMeta({ title: "我的收藏", description: `儲存在這臺裝置上的 ${SITE.name} 收藏。`, path: "/starred", noindex: true });
+export function meta({ matches }: { matches?: unknown }) {
+  return pageMeta({ title: "我的收藏", description: `儲存在這臺裝置上的 ${SITE.name} 收藏。`, path: "/starred", noindex: true, matches });
 }
 
 function reportText(r: ImportReport): string {

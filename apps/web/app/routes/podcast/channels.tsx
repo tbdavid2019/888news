@@ -20,9 +20,10 @@ export async function loader({ request }: { request: Request }): Promise<LoaderD
   return data;
 }
 
-export function meta() {
+export function meta({ matches }: { matches?: unknown }) {
   return pageMeta({
     title: "Podcast 頻道目錄",
+    matches,
     description: "探索收錄之全球 100 個頂級科技、趨勢與商業 Podcast 頻道，建立專屬追蹤清單。",
     path: "/podcast/channels",
   });

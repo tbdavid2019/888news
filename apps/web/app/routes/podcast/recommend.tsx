@@ -42,9 +42,10 @@ export async function loader({ request }: { request: Request }): Promise<LoaderD
   };
 }
 
-export function meta() {
+export function meta({ matches }: { matches?: unknown }) {
   return pageMeta({
     title: "推薦 Podcast 單集",
+    matches,
     description: `精選全球頂級科技、趨勢與商業 Podcast 單集，深度精華摘要與即時商業行情聯動。`,
     path: "/podcast/recommend",
   });

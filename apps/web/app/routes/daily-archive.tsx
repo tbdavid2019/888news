@@ -14,8 +14,8 @@ export async function loader({ request }: { request: Request }) {
   return { index, today: beijingDate(Date.now()) };
 }
 
-export function meta() {
-  return pageMeta({ title: `日報 · 歷史存檔`, description: `${SITE.name} 歷史日報，按日期歸檔。`, path: "/daily/archive", image: "/og/pages/daily.png" });
+export function meta({ matches }: { matches?: unknown }) {
+  return pageMeta({ title: `日報 · 歷史存檔`, description: `${SITE.name} 歷史日報，按日期歸檔。`, path: "/daily/archive", image: "/og/pages/daily.png", matches });
 }
 
 export function headers() {

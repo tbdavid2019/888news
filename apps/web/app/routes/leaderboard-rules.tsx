@@ -15,18 +15,19 @@ import type { Screen } from "../components/shell/screens";
 export const handle: Screen = { tab: "leaderboard" };
 
 export async function loader({ request }: { request: Request }) {
-  return loadOr404<LbRulesData>("/api/site/leaderboard/rules", { signal: request.signal });
+  return loadOr404<LbRulesData>("/api/site/leaderboard/rules", { request, signal: request.signal });
 }
 
-export function meta() {
+export function meta({ matches }: { matches?: unknown }) {
   return pageMeta({
-    title: "模型榜评分与排名的计算方法",
-    description: `查看 ${SITE.name} 模型榜如何核验配置、按能力维度分配权重、校准共同评测，并计算 ${SITE.name} 评分。`,
+    title: "模型榜評分與排名的計算方法",
+    matches,
+    description: `查看 ${SITE.name} 模型榜如何核驗配置、按能力維度分配權重、校準共同評測，並計算 ${SITE.name} 評分。`,
     path: "/leaderboard/rules",
     image: "/og/pages/leaderboard.png",
     jsonLd: breadcrumbLd([
       { name: "模型榜", path: "/leaderboard" },
-      { name: "排序怎么算", path: "/leaderboard/rules" },
+      { name: "排序怎麼算", path: "/leaderboard/rules" },
     ]),
   });
 }

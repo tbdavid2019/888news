@@ -30,8 +30,8 @@ export async function loader({ request }: { request: Request }) {
   return { contact, stats };
 }
 
-export function meta() {
-  return pageMeta({ title: "關於", description: `關於 ${SITE.name}：${SITE.description}`, path: "/about", image: "/og/pages/about.png", jsonLd: organizationLd() });
+export function meta({ matches }: { matches?: unknown }) {
+  return pageMeta({ title: "關於", description: `關於 ${SITE.name}：${SITE.description}`, path: "/about", image: "/og/pages/about.png", matches, jsonLd: organizationLd() });
 }
 
 const NO_SOURCES: RiverSource[] = [];

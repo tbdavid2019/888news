@@ -11,8 +11,8 @@ export function headers() {
   return { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=600" };
 }
 
-export function meta() {
-  return pageMeta({ title: "隱私說明", description: `本站如何處理瀏覽器本地資料、反饋資料與訪問日誌。`, path: "/privacy", image: "/og/pages/privacy.png" });
+export function meta({ matches }: { matches?: unknown }) {
+  return pageMeta({ title: "隱私說明", description: `本站如何處理瀏覽器本地資料、反饋資料與訪問日誌。`, path: "/privacy", image: "/og/pages/privacy.png", matches });
 }
 
 export default function PrivacyPage() {

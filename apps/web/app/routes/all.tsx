@@ -33,12 +33,13 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ matches, loaderData }: Route.MetaArgs) {
   const f = loaderData?.data.filters;
   const q = f?.q;
   const page = loaderData?.data.page ?? 1;
   return pageMeta({
     title: q ? `搜尋：${q}` : "全部動態",
+    matches,
     description: `${SITE.name} 收錄的全部動態，可按類別與標籤篩選，支援中英文搜尋。`,
     path: listPath("/all", { channel: f && f.channel !== "all" ? f.channel : null, category: f?.category, tag: f?.tag, topic: f?.topic, q, tab: f?.tab === "relevance" ? "relevance" : null, page: page > 1 ? page : null }),
     noindex: !!q,

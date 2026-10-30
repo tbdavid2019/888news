@@ -138,13 +138,13 @@ export function PwaAutoPrompt() {
       try {
         await deferredPrompt.prompt();
         const choice = await deferredPrompt.userChoice;
-        if (choice.outcome === "accepted") {
-          recordPwaPromptDismissed();
-          setDeferredPrompt(null);
-          setIsOpen(false);
-        }
+        setDeferredPrompt(null);
+        recordPwaPromptDismissed();
+        setIsOpen(false);
       } catch (err) {
         console.error("PWA install error:", err);
+        setDeferredPrompt(null);
+        handleDismiss();
       }
     } else {
       // For iOS or browsers without native prompt, dismiss after user acknowledging
@@ -214,27 +214,45 @@ export function PwaAutoPrompt() {
         {isIOS ? (
           <div className="rounded-xl bg-bg-sunk p-3.5 space-y-2.5 text-[12.5px] text-ink border border-line/60">
             <div className="font-semibold text-accent flex items-center gap-1.5">
-              <span>📱 iPhone / iPad 加到主畫面：</span>
+              <span>{locale === "en" ? "📱 Add to iPhone / iPad Home Screen:" : "📱 iPhone / iPad 加到主畫面："}</span>
             </div>
-            <ol className="list-decimal list-inside space-y-1.5 text-ink-2 pl-1 leading-relaxed">
-              <li>
-                點擊 Safari 底部工具列的 <span className="font-semibold text-accent">「分享」</span> 按鈕（⎋ 向上箭頭）
-              </li>
-              <li>
-                向下滑動選單，點選 <span className="font-semibold text-accent">「加入主畫面」</span>（➕ 圖示）
-              </li>
-              <li>
-                點擊右上角的 <span className="font-semibold text-accent">「新增」</span>，即可在桌面隨開即看！
-              </li>
-            </ol>
+            {locale === "en" ? (
+              <ol className="list-decimal list-inside space-y-1.5 text-ink-2 pl-1 leading-relaxed">
+                <li>
+                  Tap the <span className="font-semibold text-accent">Share</span> button in Safari toolbar (⎋ square with arrow)
+                </li>
+                <li>
+                  Scroll down and tap <span className="font-semibold text-accent">Add to Home Screen</span> (➕ icon)
+                </li>
+                <li>
+                  Tap <span className="font-semibold text-accent">Add</span> in top right corner for instant reading!
+                </li>
+              </ol>
+            ) : (
+              <ol className="list-decimal list-inside space-y-1.5 text-ink-2 pl-1 leading-relaxed">
+                <li>
+                  點擊 Safari 底部工具列的 <span className="font-semibold text-accent">「分享」</span> 按鈕（⎋ 向上箭頭）
+                </li>
+                <li>
+                  向下滑動選單，點選 <span className="font-semibold text-accent">「加入主畫面」</span>（➕ 圖示）
+                </li>
+                <li>
+                  點擊右上角的 <span className="font-semibold text-accent">「新增」</span>，即可在桌面隨開即看！
+                </li>
+              </ol>
+            )}
           </div>
         ) : deferredPrompt ? (
           <p className="text-[13px] text-ink-3 leading-relaxed">
-            點擊下方「立即安裝」即可直接將 888news 加至手機主畫面或電腦桌面，無需下載安裝包。
+            {locale === "en"
+              ? "Tap 'Install Now' below to add 888news directly to your home screen or desktop."
+              : "點擊下方「立即安裝」即可直接將 888news 加至手機主畫面或電腦桌面，無需下載安裝包。"}
           </p>
         ) : (
           <div className="rounded-xl bg-bg-sunk p-3.5 text-[12.5px] text-ink-3 leading-relaxed border border-line/60">
-            可點擊瀏覽器網址列右側的 <span className="font-semibold text-ink">「⊕ 安裝」</span> 圖示，或從瀏覽器選單中選擇「安裝 888news」加入桌面。
+            {locale === "en"
+              ? "Click the 'Install' icon in your browser address bar or menu to add 888news."
+              : <>可點擊瀏覽器網址列右側的 <span className="font-semibold text-ink">「⊕ 安裝」</span> 圖示，或從瀏覽器選單中選擇「安裝 888news」加入桌面。</>}
           </div>
         )}
 
@@ -245,32 +263,32 @@ export function PwaAutoPrompt() {
             onClick={handleDismiss}
             className="px-4 py-2.5 rounded-xl text-[13.5px] font-medium text-ink-3 hover:text-ink hover:bg-bg-sunk transition-colors"
           >
-            {isIOS ? "稍後再說" : "暫時不要"}
+            {locale === "en" ? "Not Now" : isIOS ? "稍後再說" : "暫時不要"}
           </button>
           {isIOS ? (
             <button
               type="button"
               onClick={handleDismiss}
-              className="flex-1 px-4 py-2.5 rounded-xl text-[14px] font-semibold text-white bg-accent hover:opacity-90 active:scale-[0.98] transition-all shadow-md text-center"
+              className="flex-1 px-4 py-2.5 rounded-xl text-[14px] font-semibold text-accent-contrast bg-accent hover:opacity-90 active:scale-[0.98] transition-all shadow-md text-center"
             >
-              我知道了
+              {locale === "en" ? "Got It" : "我知道了"}
             </button>
           ) : deferredPrompt ? (
             <button
               type="button"
               onClick={handleInstallClick}
-              className="flex-1 px-4 py-2.5 rounded-xl text-[14px] font-semibold text-white bg-accent hover:opacity-90 active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 rounded-xl text-[14px] font-semibold text-accent-contrast bg-accent hover:opacity-90 active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-2"
             >
               <IconDownload size={16} />
-              <span>立即安裝 888news</span>
+              <span>{locale === "en" ? "Install 888news" : "立即安裝 888news"}</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={handleDismiss}
-              className="flex-1 px-4 py-2.5 rounded-xl text-[14px] font-semibold text-white bg-accent hover:opacity-90 active:scale-[0.98] transition-all shadow-md text-center"
+              className="flex-1 px-4 py-2.5 rounded-xl text-[14px] font-semibold text-accent-contrast bg-accent hover:opacity-90 active:scale-[0.98] transition-all shadow-md text-center"
             >
-              我知道了
+              {locale === "en" ? "Got It" : "我知道了"}
             </button>
           )}
         </div>

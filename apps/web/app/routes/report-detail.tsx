@@ -26,11 +26,12 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return { report, index, today: beijingDate(Date.now()) };
 }
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ matches, loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: titled("報告不存在") }, { name: "robots", content: "noindex" }];
   const r = loaderData.report;
   return pageMeta({
     title: r.kind === "daily" ? `${withSubject("日報")} ${r.key}` : r.title.replace(`${SITE.name} `, `${SITE.subject} `),
+    matches,
     description: r.lead?.leadParagraph ?? r.overview?.slice(0, 150) ?? `${SITE.name} ${r.key} 的${withSubject(KIND_LABEL[r.kind])}。`,
     path: `/${r.kind}/${r.key}`,
     image: `/og/reports/${r.kind}/${r.key}.png`,

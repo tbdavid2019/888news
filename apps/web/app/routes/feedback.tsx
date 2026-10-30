@@ -26,8 +26,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { captcha };
 }
 
-export function meta() {
-  return pageMeta({ title: "意見反饋", description: `告訴 ${SITE.name} 哪裡可以做得更好：內容、功能、接入或來源方的更正與下架請求。`, path: "/feedback", image: "/og/pages/feedback.png", noindex: true });
+export function meta({ matches }: { matches?: unknown }) {
+  return pageMeta({ title: "意見反饋", description: `告訴 ${SITE.name} 哪裡可以做得更好：內容、功能、接入或來源方的更正與下架請求。`, path: "/feedback", image: "/og/pages/feedback.png", noindex: true, matches });
 }
 
 interface Draft {

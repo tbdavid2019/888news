@@ -31,7 +31,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ matches, loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: titled("內容不存在") }, { name: "robots", content: "noindex" }];
   const { item } = loaderData;
   return pageMeta({
@@ -41,6 +41,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
     image: `/og/items/${item.id}.png`,
     type: "article",
     noindex: !item.indexable,
+    matches,
     jsonLd: breadcrumbLd([
       { name: SITE.name, path: "/" },
       { name: item.selected ? "精選" : "全部動態", path: item.selected ? "/" : "/all" },

@@ -49,7 +49,8 @@ export function useModal({ open, panel, onClose, initialFocus, returnFocus, onKe
       // Presence keeps an exiting layer mounted briefly; it must no longer accept focus then.
       element.inert = true;
       const wasTop = layers.at(-1) === layer;
-      layers.splice(layers.indexOf(layer), 1);
+      const idx = layers.indexOf(layer);
+      if (idx !== -1) layers.splice(idx, 1);
       if (!layers.length) document.documentElement.style.overflow = pageOverflow;
       if (wasTop && opener?.isConnected) opener.focus({ preventScroll: true });
     };

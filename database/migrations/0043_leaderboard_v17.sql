@@ -1,4 +1,4 @@
--- Leaderboard method v17: calibrations table, cleanup of obsolete rankings columns, and model name normalization.
+-- Leaderboard method v17: calibrations table and model name normalization.
 
 CREATE TABLE IF NOT EXISTS lb_calibrations (
   methodology_version text NOT NULL,
@@ -8,13 +8,6 @@ CREATE TABLE IF NOT EXISTS lb_calibrations (
   created_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (methodology_version, unit, protocol)
 );
-
-ALTER TABLE lb_rankings
-  DROP COLUMN IF EXISTS uncertainty,
-  DROP COLUMN IF EXISTS confidence,
-  DROP COLUMN IF EXISTS metric_count,
-  DROP COLUMN IF EXISTS summary,
-  DROP COLUMN IF EXISTS component_scores;
 
 UPDATE lb_models AS m SET name = v.name, updated_at = now()
 FROM (VALUES

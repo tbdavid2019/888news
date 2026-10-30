@@ -16,12 +16,13 @@ export async function loader({ request }: { request: Request }) {
 }
 
 
-export function meta() {
+export function meta({ matches }: { matches?: unknown }) {
   return pageMeta({
     title: withSubject("熱點榜"),
     description: "過去 48 小時科技與資訊圈討論最多的 10 個事件：熱度指數、趨勢與組成熱度的公開來源。",
     path: "/hot",
     image: "/og/pages/hot.png",
+    matches,
   });
 }
 

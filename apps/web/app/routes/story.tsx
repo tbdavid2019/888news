@@ -34,11 +34,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 }
 
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ matches, loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: titled("事件不存在") }, { name: "robots", content: "noindex" }];
   const s = loaderData.story;
   return pageMeta({
     title: s.title,
+    matches,
     description: (s.digest ?? s.summary)?.slice(0, 150) ?? `${s.sourceCount} 個報道來源 ${s.reportCount} 篇報道，完整時間線與最新進展。`,
     path: `/story/${s.publicId}`,
     image: `/og/stories/${s.publicId}.png`,

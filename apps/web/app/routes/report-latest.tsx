@@ -16,11 +16,12 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { kind, report, index, today: beijingDate(Date.now()) };
 }
 
-export function meta({ loaderData, location }: Route.MetaArgs) {
+export function meta({ matches, loaderData, location }: Route.MetaArgs) {
   const kind = loaderData?.kind ?? "daily";
   return pageMeta({
     title: kind === "daily" ? SITE.name : KIND_LABEL[kind],
     rawTitle: kind === "daily",
+    matches,
     description: kind === "daily" ? `${SITE.name} 每天 08:00（北京時間）釋出的日報。` : kind === "weekly" ? "每週綜合回顧。" : "每月盤點。",
     path: location.pathname,
     image: `/og/pages/${kind}.png`,

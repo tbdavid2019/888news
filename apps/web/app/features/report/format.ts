@@ -27,17 +27,20 @@ export function isoWeekRange(key: string): [string, string] {
   return [ymd(monday), ymd(new Date(monday.getTime() + 6 * 86400000))];
 }
 
+import { withSubject } from "@aihot/industry/site";
+
 /** First and last day of a month key such as 2026-08. */
 export function monthRange(key: string): [string, string] {
   const [y, m] = key.split("-").map(Number) as [number, number];
   return [`${key}-01`, ymd(new Date(Date.UTC(y, m, 0)))];
 }
 
-/** "這一天的 4 件 AI 大事" / "本週的 12 件 AI 大事" / "8 月的 20 件 AI 大事". */
+/** "這一天的 4 件大事" / "本週的 12 件大事" / "8 月的 20 件大事". */
 export function headline(kind: ReportKind, key: string, count: number): string {
-  if (kind === "daily") return `這一天的 ${count} 件 AI 大事`;
-  if (kind === "weekly") return `本週的 ${count} 件 AI 大事`;
-  return `${Number(key.slice(5, 7))} 月的 ${count} 件 AI 大事`;
+  const matter = withSubject("大事");
+  if (kind === "daily") return `這一天的 ${count} 件${matter}`;
+  if (kind === "weekly") return `本週的 ${count} 件${matter}`;
+  return `${Number(key.slice(5, 7))} 月的 ${count} 件${matter}`;
 }
 
 /** "09.16" for a story inside a week or month. */

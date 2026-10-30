@@ -28,12 +28,13 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   return { data };
 }
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ matches, loaderData }: Route.MetaArgs) {
   if (!loaderData) return [{ title: titled("主題不存在") }, { name: "robots", content: "noindex" }];
   const { topic, page } = loaderData.data;
   const path = page > 1 ? `/topics/${topic.slug}/page/${page}` : `/topics/${topic.slug}`;
   return pageMeta({
     title: page > 1 ? `${topic.name} · 第 ${page} 頁` : topic.name,
+    matches,
     description: topic.definition,
     path,
     image: `/og/topics/${topic.slug}.png`,

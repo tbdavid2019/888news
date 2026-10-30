@@ -40,10 +40,11 @@ export async function loader({
   };
 }
 
-export function meta({ data }: { data: LoaderData }) {
+export function meta({ matches, data }: { matches?: unknown; data: LoaderData }) {
   const title = data.channel ? `${data.channel.title} — Podcast 專頁` : "Podcast 頻道";
   return pageMeta({
     title,
+    matches,
     description: data.channel?.description || "查看該 Podcast 頻道的最新單集與深度精選摘要。",
     path: `/podcast/channels/${data.channel?.slug || ""}`,
   });

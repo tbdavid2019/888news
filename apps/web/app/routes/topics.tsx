@@ -17,8 +17,8 @@ export async function loader({ request }: { request: Request }) {
   return apiGet<{ topics: TopicSummary[] }>("/api/site/topics", { request, signal: request.signal });
 }
 
-export function meta() {
-  return pageMeta({ title: "主題", description: "按公司與模型、技術方向、內容形態聚合的技術與產業主題頁：涵蓋資訊安全、系統架構、程式語言、開發工具、開源與前沿探索等方向。", path: "/topics", image: "/og/pages/topics.png" });
+export function meta({ matches }: { matches?: unknown }) {
+  return pageMeta({ title: "主題", description: "按公司與模型、技術方向、內容形態聚合的技術與產業主題頁：涵蓋資訊安全、系統架構、程式語言、開發工具、開源與前沿探索等方向。", path: "/topics", image: "/og/pages/topics.png", matches });
 }
 
 export function headers() {
