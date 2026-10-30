@@ -1,4 +1,4 @@
-// Beijing (Asia/Shanghai, fixed UTC+8, no DST) calendar helpers shared by web and backend.
+// Taipei (Asia/Taipei, fixed UTC+8, no DST) calendar helpers shared by web and backend.
 
 const OFFSET_MS = 8 * 3600 * 1000;
 

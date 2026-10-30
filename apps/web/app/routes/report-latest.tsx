@@ -22,7 +22,7 @@ export function meta({ matches, loaderData, location }: Route.MetaArgs) {
     title: kind === "daily" ? SITE.name : KIND_LABEL[kind],
     rawTitle: kind === "daily",
     matches,
-    description: kind === "daily" ? `${SITE.name} 每天 08:00（北京時間）釋出的日報。` : kind === "weekly" ? "每週綜合回顧。" : "每月盤點。",
+    description: kind === "daily" ? `${SITE.name} 每天 08:00（台北時間）釋出的日報。` : kind === "weekly" ? "每週綜合回顧。" : "每月盤點。",
     path: location.pathname,
     image: `/og/pages/${kind}.png`,
   });

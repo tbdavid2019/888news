@@ -1,6 +1,6 @@
 // The company behind a model, from the organization a source names or else the model's own name. A
 // model a source introduces gets its provider here, and rows that still say "other" are resolved the
-// same way when the leaderboard shows their mark or applies the 国产模型 filter. Unknown companies stay
+// same way when the leaderboard shows their mark or applies the 中國模型 filter. Unknown companies stay
 // as the source names them.
 
 export interface Provider {

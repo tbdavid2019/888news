@@ -22,7 +22,7 @@ export default function LeaderboardFrame() {
         large
         actions={
           <Link viewTransition to="/leaderboard/rules" className="flex h-11 items-center gap-1 px-3 text-[14px] text-accent active:opacity-50">
-            <IconInfo size={17} /> 怎么算
+            <IconInfo size={17} /> 怎麼算
           </Link>
         }
       />
@@ -33,10 +33,10 @@ export default function LeaderboardFrame() {
         </div>
         <div className="flex gap-2">
           <Link viewTransition to="/leaderboard/sources" className={chip}>
-            评测来源 <IconArrowUpRight size={13} />
+            評測來源 <IconArrowUpRight size={13} />
           </Link>
           <Link viewTransition to="/leaderboard/rules" className={chip}>
-            排序怎么算 <IconArrowUpRight size={13} />
+            排序怎麼算 <IconArrowUpRight size={13} />
           </Link>
         </div>
       </header>

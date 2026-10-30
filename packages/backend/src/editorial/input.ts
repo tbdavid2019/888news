@@ -81,7 +81,7 @@ export function buildMaterial(a: AnalyzeInputArticle): string {
   lines.push(`类型：${KIND_LABEL[a.source.kind] ?? a.source.kind}；分级：${a.source.tier}；一手来源：${a.source.firstParty ? "是" : "否"}`);
   lines.push("</source>");
   lines.push("<material>");
-  if (a.publishedAt) lines.push(`发布时间：${beijingDate(a.publishedAt)} ${beijingTime(a.publishedAt)}（北京时间）`);
+  if (a.publishedAt) lines.push(`發布時間：${beijingDate(a.publishedAt)} ${beijingTime(a.publishedAt)}（台北時間）`);
   if (a.author) lines.push(`作者：${a.author}`);
   if (a.xPost) {
     lines.push(`作者：${a.xPost.authorName ?? ""} (@${a.xPost.handle ?? ""})`);

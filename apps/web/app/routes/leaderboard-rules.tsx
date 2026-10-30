@@ -39,74 +39,74 @@ export function headers() {
 const STEPS = [
   {
     n: "01",
-    title: "先核验型号与运行配置",
-    body: "统一模型名称、版本与推理配置，按预先确定的规则选代表运行，不挑最高分。统一固定工具且全程同一型号可以采用；多模型回退、混合模型与专属异构 Agent 系统不混排。配置未公开就保留未知，不据此断言混用了模型。",
+    title: "先核驗型號與運行配置",
+    body: "統一模型名稱、版本與推理配置，按預先確定的規則選代表運行，不挑最高分。統一固定工具且全程同一型號可以採用；多模型回退、混合模型與專屬異構 Agent 系統不混排。配置未公開就保留未知，不據此斷言混用了模型。",
   },
   {
     n: "02",
-    title: "按能力分配，重复证据不加权",
-    body: "综合榜按八个能力维度等权分配，每维占 12.5%。维度内再分配到评测题族，同一题库的重复成绩、榜单切片与已用分项的综合指标不叠加计权。新增评测先核对题目与协议的重叠关系。",
+    title: "按能力分配，重複依據不加權",
+    body: "綜合榜按八個能力維度等權分配，每維佔 12.5%。維度內再分配到評測題族，同一題庫的重複成績、榜單切片與已用分項的綜合指標不疊加計權。新增評測先核對題目與協定的重疊關係。",
   },
   {
     n: "03",
-    title: "用同协议参照校准真实分差",
-    body: "只比较同一评测协议下双方都有的成绩，用预先固定参照组的四分位距校准连续分差，避免把微小领先和大幅领先都当成同一票。缺测不补分，未知标准误不当成零。",
+    title: "用同協定參照校準真實分差",
+    body: "只比較同一評測協定下雙方都有的成績，用預先固定參照組的四分位距校準連續分差，避免把微小領先和大幅領先都當成同一票。缺測不補分，未知標準誤差不當成零。",
   },
   {
     n: "04",
-    title: "算成评分，方便比较",
-    body: `汇总共同评测的相对成绩差，寻找冲突较少的参考顺序。在保持顺序的条件下，将共同成绩分差拟合为 0–100 的 ${SITE.name} 评分；各项原始成绩供进一步核对。`,
+    title: "算成評分，方便比較",
+    body: `彙總共同評測的相對成績差，尋找衝突較少的參考順序。在保持順序的條件下，將共同成績分差擬合為 0–100 的 ${SITE.name} 評分；各項原始成績供進一步核對。`,
   },
 ];
 
 const FAQ = [
   {
-    q: `${SITE.name} 评分怎么看？`,
-    a: "0–100 分，越高表示该模型在本榜的综合表现越强。分数根据共同评测的实际分差拟合，不是按名次逐个扣分，也不会自动给榜首满分。它不是正确率或胜率；请在同一榜单、同一轮内比较。",
+    q: `${SITE.name} 評分怎麼看？`,
+    a: "0–100 分，越高表示該模型在本榜的綜合表現越強。分數根據共同評測的實際分差擬合，不是按名次逐個扣分，也不會自動給榜首滿分。它不是正確率或勝率；請在同一榜單、同一輪內比較。",
   },
   {
-    q: "为什么不同名次可能同分？",
-    a: "评分只显示一位小数；差距很小，或各项评测存在冲突、无法用一个分数完全表达时，可能同分。此时仍按原来的共同评测排序，不额外编造 0.1 分的差距。",
+    q: "為什麼不同名次可能同分？",
+    a: "評分只顯示一位小數；差距很小，或各項評測存在衝突、無法用一個分數完全表達時，可能同分。此時仍按原來的共同評測排序，不額外編造 0.1 分的差距。",
   },
   {
-    q: "参考位次能说明谁一定更强吗？",
-    a: "不能。它是当前公开成绩在指定规则下的浏览顺序，不是全世界所有任务的绝对能力排名。实际体验还受产品版本、推理预算、工具环境与任务类型影响。相邻位次不代表显著差距。",
+    q: "參考名次能說明誰一定更強嗎？",
+    a: "不能。它是當前公開成績在指定規則下的瀏覽順序，不是全世界所有任務的絕對能力排名。實際體驗還受產品版本、推理預算、工具環境與任務類型影響。相鄰名次不代表顯著差距。",
   },
   {
-    q: "证据覆盖百分比是什么？",
-    a: "它表示该模型已有成绩覆盖了多少预设评测权重。覆盖高说明已知的范围更广，不代表能力更强，也不是正确率。缺失的份额不转给其他评测，更不补成零分或平均分。",
+    q: "依據覆蓋百分比是什麼？",
+    a: "它表示該模型已有成績覆蓋了多少預設評測權重。覆蓋高說明已知的範圍更廣，不代表能力更強，也不是正確率。缺失的份額不轉給其他評測，更不補成零分或平均分。",
   },
   {
-    q: "共同评测的相对成绩差是胜率吗？",
-    a: "不是。它汇总双方共同评测中经过固定参照校准的连续分差，正负只表示相对方向，不表示获胜概率或显著领先。两两比较可能相互冲突，完整参考顺序要同时处理这些关系。",
+    q: "共同評測的相對成績差是勝率嗎？",
+    a: "不是。它彙總雙方共同評測中經過固定參照校準的連續分差，正負只表示相對方向，不表示獲勝概率或顯著領先。兩兩比較可能相互衝突，完整參考順序要同時處理這些關係。",
   },
   {
-    q: "为什么不直接取每个模型的最高成绩？",
-    a: "最高成绩可能对应更高推理预算、不同工具或不同评测协议。代表配置的选择规则必须先确定，不能看到结果后挑分。使用同一推理档位名称，也不保证计算量完全相同；具体配置在成绩旁保留。",
+    q: "為什麼不直接取每個模型的最高成績？",
+    a: "最高成績可能對應更高推理預算、不同工具或不同評測協定。代表配置的選擇規則必須先確定，不能看到結果後挑分。使用同一推理檔位名稱，也不保證計算量完全相同；具體配置在成績旁保留。",
   },
   {
-    q: "评测重复、污染和误差能全部消除吗？",
-    a: "不能。我们按公开题库与协议检查重复，并限制同一题族的份额；无法确认的题目重叠和训练污染仍是局限。上游未公开样本级结果或标准误时，无法补造可靠误差，也不会把未知当成零。",
+    q: "評測重複、污染和誤差能全部消除嗎？",
+    a: "不能。我們按公開題庫與協定檢查重複，並限制同一題族的份額；無法確認的題目重疊和訓練污染仍是局限。上游未公開樣本級結果或標準誤差時，無法補造可靠誤差，也不會把未知當成零。",
   },
   {
-    q: "新模型什么时候会出现？",
-    a: `${SITE.name} 每天检查四次上游结果。只有评测方实际发布了新模型的成绩，才能用于参考顺序；网页刷新、价格更新或我们的抓取时间，都不算重新评测。`,
+    q: "新模型什麼時候會出現？",
+    a: `${SITE.name} 每天檢查四次上游結果。只有評測方實際發布了新模型的成績，才能用於參考順序；網頁重新整理、價格更新或我們的抓取時間，都不算重新評測。`,
   },
   {
-    q: "某家榜单暂时打不开，会怎样？",
-    a: "仍有效的来源快照可继续使用。相同评测版本内，临时漏行最多沿用最近七天已核验的记录；仍在公开榜中保留的有效成绩，不因数值长期不变被删除。官方撤回、更正、换版会相应失效或替换，不保留历史最高分。整轮计算失败时保留上一轮有效榜及原时间。",
+    q: "某家榜單暫時打不開，會怎樣？",
+    a: "仍有效的來源快照可繼續使用。相同評測版本內，臨時漏行最多沿用最近七天已核驗的記錄；仍在公開榜中保留的有效成績，不因數值長期不變被刪除。官方撤回、更正、換版會相應失效或替換，不保留歷史最高分。整輪計算失敗時保留上一輪有效榜及原時間。",
   },
   {
-    q: "价格或速度会影响参考顺序吗？",
-    a: "都不会。价格只供你了解 API 的使用成本，统一按每百万 Token 展示，并保留厂商官方来源。它不代表订阅费用。",
+    q: "價格或速度會影響參考順序嗎？",
+    a: "都不會。價格只供你了解 API 的使用成本，統一按每百萬 Token 展示，並保留廠商官方來源。它不代表訂閱費用。",
   },
 ];
 
 const SECTIONS = [
-  ["#rules-steps", "四步形成参考顺序"],
-  ["#rules-budgets", "证据怎么分配"],
-  ["#rules-faq", "常见问题"],
-  ["#rules-details", "计算细节"],
+  ["#rules-steps", "四步形成參考名次"],
+  ["#rules-budgets", "依據怎麼分配"],
+  ["#rules-faq", "常見問題"],
+  ["#rules-details", "計算細節"],
 ] as const;
 
 /** One question or detail block: a hairline row that opens in place. */
@@ -132,8 +132,8 @@ export default function LeaderboardRulesPage() {
   const { run, budgets, anchors } = useLoaderData<typeof loader>();
   const aside = (
     <>
-      <AsideCard title="本页内容" className="hidden lg:block">
-        <nav aria-label="本页内容" className="-mx-2 -mb-1">
+      <AsideCard title="本頁內容" className="hidden lg:block">
+        <nav aria-label="本頁內容" className="-mx-2 -mb-1">
           {SECTIONS.map(([href, label]) => (
             <a key={href} href={href} className="block rounded-control px-2 py-2 text-[13.5px] text-ink-2 transition-colors hover:bg-bg-sunk hover:text-ink">
               {label}
@@ -141,23 +141,23 @@ export default function LeaderboardRulesPage() {
           ))}
         </nav>
       </AsideCard>
-      <AsideCard title="当前方法">
+      <AsideCard title="當前方法">
         <dl className="space-y-2 text-[12.5px]">
           <div className="flex gap-3">
             <dt className="w-14 shrink-0 text-ink-4">方法版本</dt>
             <dd className="mono min-w-0 text-ink-2">{run.methodologyVersion}</dd>
           </div>
           <div className="flex gap-3">
-            <dt className="w-14 shrink-0 text-ink-4">本轮计算</dt>
+            <dt className="w-14 shrink-0 text-ink-4">本輪計算</dt>
             <dd className="mono min-w-0 text-ink-2">{fullDateTime(run.generatedAt)}</dd>
           </div>
         </dl>
       </AsideCard>
-      <AsideCard title="继续看">
-        <nav aria-label="继续看" className="-mx-2 -mb-1">
+      <AsideCard title="繼續看">
+        <nav aria-label="繼續看" className="-mx-2 -mb-1">
           {[
             ["/leaderboard", "模型榜"],
-            ["/leaderboard/sources", "每一份评测证据"],
+            ["/leaderboard/sources", "每一份評測依據"],
           ].map(([to, label]) => (
             <Link key={to} to={to!} viewTransition={to !== "/leaderboard"} prefetch="intent" className="flex items-center justify-between rounded-control px-2 py-2 text-[13.5px] text-ink-2 transition-colors hover:bg-bg-sunk hover:text-ink">
               {label}
@@ -170,22 +170,22 @@ export default function LeaderboardRulesPage() {
   );
   return (
     <>
-    <PhoneBar back={{ to: "/leaderboard", label: "模型榜" }} title="排序怎么算" />
+    <PhoneBar back={{ to: "/leaderboard", label: "模型榜" }} title="排序怎麼算" />
     <ReadingLayout aside={aside}>
       <Link to="/leaderboard" className="hidden items-center gap-1.5 py-2 text-[13px] text-ink-3 transition-colors hover:text-accent lg:inline-flex">
         <IconArrowLeft size={14} /> 返回模型榜
       </Link>
 
       <header className="lg:pt-3">
-        <h1 data-page-title="" className="text-[24px] font-semibold leading-[1.3] text-ink">排序怎么算</h1>
-        <p className="mt-1.5 text-[13px] text-ink-3">了解 {SITE.name} 评分怎么算，以及每个分数背后的公开成绩。</p>
+        <h1 data-page-title="" className="text-[24px] font-semibold leading-[1.3] text-ink">排序怎麼算</h1>
+        <p className="mt-1.5 text-[13px] text-ink-3">了解 {SITE.name} 評分怎麼算，以及每個分數背後的公開成績。</p>
       </header>
 
       <section className="mt-6 rounded-panel border border-line-soft bg-bg-sunk px-6 py-7 dark:bg-bg-muted/40 md:px-10 md:py-9">
         <Eyebrow>EVIDENCE BEFORE CONCLUSIONS</Eyebrow>
-        <h2 className="mt-2 text-[19px] font-bold text-ink">先看评分，再看所长。</h2>
-        <p className="mt-2.5 text-[13px] leading-[1.8] text-ink-3">综合榜与四类榜单最多展示 30 个模型。{SITE.name} 评分帮助快速比较；分项成绩说明各有所长，证据覆盖说明已有评测的范围。</p>
-        <p className="mt-1.5 text-[13px] leading-[1.8] text-ink-3">评分是基于公开评测折算的综合比较指数，不是答题正确率，也不表示所有任务的绝对能力。具体用途请结合分项原始成绩和运行配置。</p>
+        <h2 className="mt-2 text-[19px] font-bold text-ink">先看評分，再看所長。</h2>
+        <p className="mt-2.5 text-[13px] leading-[1.8] text-ink-3">綜合榜與四類榜單最多展示 30 個模型。{SITE.name} 評分幫助快速比較；分項成績說明各有所長，依據覆蓋說明已有評測的範圍。</p>
+        <p className="mt-1.5 text-[13px] leading-[1.8] text-ink-3">評分是基於公開評測折算的綜合比較指數，不是答題正確率，也不表示所有任務的絕對能力。具體用途請結合分項原始成績和運行配置。</p>
       </section>
 
       <ol id="rules-steps" className="mt-8 grid scroll-mt-[calc(var(--bar-h)+1.5rem)] gap-x-10 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
@@ -200,28 +200,28 @@ export default function LeaderboardRulesPage() {
 
       <section id="rules-budgets" className="mt-12 scroll-mt-[calc(var(--bar-h)+1.5rem)]">
         <Eyebrow>A BALANCED VIEW</Eyebrow>
-        <h2 className="mt-2 text-[20px] font-bold text-ink">八个能力维度，各占相同份额。</h2>
+        <h2 className="mt-2 text-[20px] font-bold text-ink">八個能力維度，各佔相同份額。</h2>
         <p className="mt-1.5 max-w-[64em] text-[13px] leading-[1.8] text-ink-3">
-          编程、数学与推理、知识与事实、语言理解与指令、写作与表达、视觉理解、专业任务、中文与多语言各占 12.5%。这是均衡取向的公开选择，不是通用能力的天然权重。每个维度先分配题族份额，再处理题族内的评测；同题重复不会增加总权重。已采用分项时，包含它们的综合指标不再重复计入。缺失份额不转给其他证据。
+          程式設計、數學與推理、知識與事實、語言理解與指令、寫作與表達、視覺理解、專業任務、中文與多語言各佔 12.5%。這是均衡取向的公開選擇，不是通用能力的天然權重。每個維度先分配題族份額，再處理題族內的評測；同題重複不會增加總權重。已採用分項時，包含它們的綜合指標不再重複計入。缺失份額不轉給其他依據。
         </p>
-        <ul className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" aria-label="证据预算分配">
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" aria-label="依據預算分配">
           {budgets.map((b) => (
             <li key={b.key} className="card flex flex-col p-4 lg:p-5">
               <span className="flex items-baseline justify-between gap-2">
                 <span className="text-[13.5px] font-semibold text-ink">{b.name}</span>
                 <span className="mono text-[20px] font-medium text-ink">{pct(b.weight)}</span>
               </span>
-              <span className="mt-2.5 text-[11.5px] leading-[1.7] text-ink-4">{b.sources.length ? `本轮参与：${b.sources.join(" · ")}` : "本轮暂无可计入证据"}</span>
+              <span className="mt-2.5 text-[11.5px] leading-[1.7] text-ink-4">{b.sources.length ? `本輪參與：${b.sources.join(" · ")}` : "本輪暫無可計入依據"}</span>
             </li>
           ))}
         </ul>
         <p className="mt-4 max-w-[64em] text-[12.5px] leading-[1.8] text-ink-3">
-          编程、推理、知识、专业办公四类榜单保留独立入口，只比较对应能力的公开成绩；分类评分与参考位次不能跨分类比较。公开评测来自同一机构时，不能当成多个独立机构。更多评测只有补充不同的有效证据才有价值，数量本身不增加某个能力维度的总份额。
+          程式設計、推理、知識、專業辦公四類榜單保留獨立入口，只比較對應能力的公開成績；分類評分與參考名次不能跨分類比較。公開評測來自同一機構時，不能當成多個獨立機構。更多評測只有補充不同的有效依據才有價值，數量本身不增加某個能力維度的總份額。
         </p>
       </section>
 
       <section id="rules-faq" className="mt-12 scroll-mt-[calc(var(--bar-h)+1.5rem)]">
-        <h2 className="text-[20px] font-bold text-ink">你可能还想知道</h2>
+        <h2 className="text-[20px] font-bold text-ink">你可能還想知道</h2>
         <div className="mt-3 border-t border-line">
           {FAQ.map((f) => (
             <Disclosure key={f.q} summary={f.q}>
@@ -232,38 +232,38 @@ export default function LeaderboardRulesPage() {
       </section>
 
       <section id="rules-details" className="mt-10 scroll-mt-[calc(var(--bar-h)+1.5rem)] border-t border-line">
-        <Disclosure summary="查看计算细节与当前版本">
+        <Disclosure summary="查看計算細節與當前版本">
           <div className="space-y-3">
             <p>
-              方法版本：<code className="mono rounded-mark bg-bg-sunk px-1.5 py-0.5 text-[12px] text-ink-2">{run.methodologyVersion}</code>。模型身份、代表配置、题族归属、维度权重、参照组与计算输入均保留版本。参考顺序采用加权不完整 Kemeny 排序，最小化与共同评测相对成绩差的冲突；只发布求解达到最优且满足资格与连通条件的结果。可能存在多个同样最优的顺序，固定展示顺序不代表已精确分开所有型号，数学求解最优也不代表真实能力顺序已获证明。
+              方法版本：<code className="mono rounded-mark bg-bg-sunk px-1.5 py-0.5 text-[12px] text-ink-2">{run.methodologyVersion}</code>。模型身分、代表配置、題族歸屬、維度權重、參照組與計算輸入均保留版本。參考順序採用加權不完整 Kemeny 排序，最小化與共同評測相對成績差的衝突；只發布求解達到最優且滿足資格與連通條件的結果。可能存在多個同樣最優的順序，固定展示順序不代表已精確分開所有型號，數學求解最優也不代表真實能力順序已獲證明。
             </p>
             <p>
-              每项评测先确认协议和方向，再以固定参照组在同协议下的四分位距（中间一半参照成绩的跨度）校准连续分差。参照不是当前参榜模型的动态最高分或最低分；新增极端成绩不会因此重新拉伸其他模型的尺度。至少有四个有效参照且四分位距大于零才可校准；不足时等待有效参照。方向统一后的原始分差除以冻结的四分位距，再截断到 −1 至 1。它是相对成绩差，不是天然能力单位。
+              每項評測先確認協定和方向，再以固定參照組在同協定下的四分位距（中間一半參照成績的跨度）校準連續分差。參照不是當前參榜模型的動態最高分或最低分；新增極端成績不會因此重新拉伸其他模型的尺度。至少有四個有效參照且四分位距大於零才可校準；不足時等待有效參照。方向統一後的原始分差除以凍結的四分位距，再截斷到 −1 至 1。它是相對成績差，不是天然能力單位。
             </p>
             <p>
-              评分在参考顺序确定后拟合：对每对共同评测的型号，以共同证据份额 W 加权，让分数差尽量接近标准化的平均成绩差 d，最小化 Σ W·(xᵢ−xⱼ−dᵢⱼ)²；同时约束 x 不与已发布顺序反向。本轮有效参照型号的 x 均值固定为 0，再按 100 / (1 + 9⁻ˣ) 映射为 0–100 分，参照中心为 50、相差一个拟合单位对应 90 或 10。这个尺度是公开约定，不是测得的概率。不同分类、轮次及方法版本不直接比较；新增有效证据或参评型号可改变拟合分数，筛选页面不会重新计算。
+              評分在參考順序確定後擬合：對每對共同評測的型號，以共同依據份額 W 加權，讓分數差儘量接近標準化的平均成績差 d，最小化 Σ W·(xᵢ−xⱼ−dᵢⱼ)²；同時約束 x 不與已發布順序反向。本輪有效參照型號的 x 均值固定為 0，再按 100 / (1 + 9⁻ˣ) 映射為 0–100 分，參照中心為 50、相差一個擬合單位對應 90 或 10。這個尺度是公開約定，不是測得的概率。不同分類、輪次及方法版本不直接比較；新增有效依據或參評型號可改變擬合分數，篩選頁面不會重新計算。
             </p>
             <p>
-              加权拟合借鉴 <a href="https://arxiv.org/abs/0811.1067" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">HodgeRank 的成对比较思路</a>，本榜额外约束分数顺序。它会压缩冲突，不能把全部任务表现保真地浓缩成一个数字。拟合结果、实际参照和残差随计算轮次保存，未达到有效求解条件时不发布新轮次。
+              加權擬合借鑑 <a href="https://arxiv.org/abs/0811.1067" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">HodgeRank 的成對比較思路</a>，本榜額外約束分數順序。它會壓縮衝突，不能把全部任務表現保真地濃縮成一個數字。擬合結果、實際參照和殘差隨計算輪次保存，未達到有效求解條件時不發布新輪次。
             </p>
             <p>
-              标准误已公开时保留其误差信息；未公开时保留未知，不设为零，也不把标准化分差说成概率。缺测不补零、不补均值；共同证据不足或不连通时，不强行编造跨组的确定顺序。覆盖比例表示已覆盖的评测权重，不能解释成对最终参考位次的精确贡献率。
+              標準誤差已公開時保留其誤差資訊；未公開時保留未知，不設為零，也不把標準化分差說成概率。缺測不補零、不補均值；共同依據不足或不連通時，不強行編造跨組的確定順序。覆蓋比例表示已覆蓋的評測權重，不能解釋成對最終參考名次的精確貢獻率。
             </p>
             <p>
-              综合榜至少需要三个来源、三个题族、三家机构、三个能力领域，并与至少两个固定参照有直接可比成绩。分类按其可用来源要求最多两项来源和两家机构、至少一个参照。发布超过十八个月的型号退出当前排序，已有详情页保留注明时间的历史记录。
+              綜合榜至少需要三個來源、三個題族、三家機構、三個能力領域，並與至少兩個固定參照有直接可比成績。分類按其可用來源要求最多兩項來源和兩家機構、至少一個參照。發布超過十八個月的型號退出當前排序，已有詳情頁保留註明時間的歷史記錄。
             </p>
             <p>
-              没有逐题数据时不能把展开的模型对数量当成独立样本量。已公开的成绩不涵盖所有可能偏差，也不能替代对未知成绩的研究。评分不附带未经验证的统计置信度。
+              沒有逐題數據時不能把展開的模型對數量當成獨立樣本量。已公開的成績不涵蓋所有可能偏差，也不能替代對未知成績的研究。評分不附帶未經驗證的統計信賴度。
             </p>
             <p>
-              固定参照型号：<span className="mono text-[12px] text-ink-2">{anchors.join("、")}</span>。参照组用于校准评测尺度，不指定任何厂商应排第几。与评测协议一起冻结并保留版本，协议变化时重新核验。
+              固定參照型號：<span className="mono text-[12px] text-ink-2">{anchors.join("、")}</span>。參照組用於校準評測尺度，不指定任何廠商應排第幾。與評測協定一起凍結並保留版本，協定變化時重新核驗。
             </p>
           </div>
         </Disclosure>
       </section>
 
       <Link viewTransition to="/leaderboard/sources" className="mt-8 inline-flex items-center gap-1 text-[13.5px] font-medium text-accent hover:text-accent-ink">
-        查看每一份评测证据 →
+        查看每一份評測依據 →
       </Link>
     </ReadingLayout>
     </>

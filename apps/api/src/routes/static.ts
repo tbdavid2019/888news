@@ -98,7 +98,7 @@ function manifest() {
   };
 }
 
-const SW_SCRIPT = `const CACHE_NAME = '888news-v1';
+const SW_SCRIPT = `const CACHE_NAME = '888news-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',

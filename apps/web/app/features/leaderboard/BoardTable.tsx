@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import type { LbBoardEntry } from "@aihot/contracts/leaderboard";
 import { SITE } from "@aihot/industry/site";
 import { BrandMark } from "./BrandMark";
-import { modelHref, noOfficialApi, score, yuan } from "./format";
+import { formatPrice, getPriceValue, modelHref, noOfficialApi, score, type LbCurrency } from "./format";
 import { monthDay } from "../../lib/format";
 import { IconChevronDown } from "../../components/icons";
 
@@ -11,15 +11,15 @@ export type SortKey = "rank" | "released" | "coverage" | "cached" | "input" | "o
 
 /** The orders on offer, as the phone's sort sheet lists them (each in its natural direction). */
 export const SORTS: Array<{ key: SortKey; label: string; order: string }> = [
-  { key: "rank", label: `${SITE.name} 评分`, order: "分数高的在前" },
-  { key: "released", label: "上线日期", order: "新的在前" },
-  { key: "coverage", label: "证据覆盖", order: "覆盖多的在前" },
-  { key: "input", label: "输入价格", order: "便宜的在前" },
-  { key: "output", label: "输出价格", order: "便宜的在前" },
-  { key: "cached", label: "缓存价格", order: "便宜的在前" },
+  { key: "rank", label: `${SITE.name} 評分`, order: "分數高的在前" },
+  { key: "released", label: "上線日期", order: "新的在前" },
+  { key: "coverage", label: "依據覆蓋", order: "覆蓋多的在前" },
+  { key: "input", label: "輸入價格", order: "便宜的在前" },
+  { key: "output", label: "輸出價格", order: "便宜的在前" },
+  { key: "cached", label: "快取價格", order: "便宜的在前" },
 ];
 
-function sortValue(e: LbBoardEntry, key: SortKey): number | null {
+function sortValue(e: LbBoardEntry, key: SortKey, currency: LbCurrency): number | null {
   switch (key) {
     case "rank":
       return e.rank;
@@ -28,18 +28,18 @@ function sortValue(e: LbBoardEntry, key: SortKey): number | null {
     case "coverage":
       return -(e.coverage * 1000 + e.sourceCount);
     case "cached":
-      return e.price?.cachedCny ?? null;
+      return getPriceValue(e.price, "cached", currency);
     case "input":
-      return e.price?.inputCny ?? null;
+      return getPriceValue(e.price, "input", currency);
     case "output":
-      return e.price?.outputCny ?? null;
+      return getPriceValue(e.price, "output", currency);
   }
 }
 
-function sorted(entries: LbBoardEntry[], key: SortKey, dir: 1 | -1) {
+function sorted(entries: LbBoardEntry[], key: SortKey, dir: 1 | -1, currency: LbCurrency) {
   return [...entries].sort((a, b) => {
-    const va = sortValue(a, key);
-    const vb = sortValue(b, key);
+    const va = sortValue(a, key, currency);
+    const vb = sortValue(b, key, currency);
     if (va === null && vb === null) return a.rank - b.rank;
     if (va === null) return 1; // unknown prices and dates always sink
     if (vb === null) return -1;
@@ -66,8 +66,6 @@ function SortHeader({ k, children, sort, dir, onSort, align = "left", className 
   );
 }
 
-const unit = <span className="block text-[10.5px] font-normal text-ink-4">人民币 / 百万 Token</span>;
-
 /** "9月3日" for a release date given as YYYY-MM-DD. */
 function shortDate(date: string | null): string {
   return date ? monthDay(date) : "—";
@@ -78,16 +76,19 @@ function shortDate(date: string | null): string {
  * release in one line) whose right column shows the score and supporting evidence, or the value the board is
  * sorted by; the order is chosen in a sheet the right column's head opens (`onSortSheet`).
  */
-export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet }: {
+export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet, currency = "TWD" }: {
   entries: LbBoardEntry[];
   board: string;
   sort: SortKey;
   dir: 1 | -1;
   onSort: (key: SortKey, dir: 1 | -1) => void;
   onSortSheet: () => void;
+  currency?: LbCurrency;
 }) {
   const navigate = useNavigate();
-  const rows = useMemo(() => sorted(entries, sort, dir), [entries, sort, dir]);
+  const rows = useMemo(() => sorted(entries, sort, dir, currency), [entries, sort, dir, currency]);
+  const unit = <span className="block text-[10.5px] font-normal text-ink-4">{currency === "TWD" ? "新台幣 (TWD) / 百萬 Token" : "美元 (USD) / 百萬 Token"}</span>;
+
   // Re-sorting moves each row from where it was to its new place (FLIP), as rows keep their key.
   const body = useRef<HTMLTableSectionElement>(null);
   const tops = useRef(new Map<string, number>());
@@ -109,32 +110,34 @@ export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet }: {
     tops.current = next;
   }, [order]);
   const sortBy = (k: SortKey) => onSort(k, k === sort ? (dir === 1 ? -1 : 1) : 1);
-  // Not yet checked reads "待核验"; checked with no paid API reads "无官方价"; a missing tier (no cache pricing) reads "—".
-  const price = (e: LbBoardEntry, v: number | null | undefined) =>
-    !e.price ? <span className="text-[12px] text-ink-4">待核验</span>
-    : noOfficialApi(e.price) ? <span className="text-[12px] text-ink-4" title={e.price.note ?? undefined}>无官方价</span>
-    : v == null ? <span className="text-ink-4">—</span> : yuan(v);
+  // Not yet checked reads "待核驗"; checked with no paid API reads "無官方價"; a missing tier (no cache pricing) reads "—".
+  const price = (e: LbBoardEntry, field: "cached" | "input" | "output") => {
+    if (!e.price) return <span className="text-[12px] text-ink-4">待核驗</span>;
+    if (noOfficialApi(e.price)) return <span className="text-[12px] text-ink-4" title={e.price.note ?? undefined}>無官方價</span>;
+    const v = getPriceValue(e.price, field, currency);
+    return v == null ? <span className="text-ink-4">—</span> : formatPrice(v, currency);
+  };
 
   // Fixed column widths: filtering swaps the rows, and content-sized columns would jump (on phones the
   // name column takes what the rank and value columns leave, and long names end in an ellipsis).
   return (
     <table className="w-full table-fixed border-collapse text-[14px]">
-      <caption className="sr-only">当前展示 {entries.length} 个模型，可按列重排；参考位次来自原榜</caption>
+      <caption className="sr-only">當前展示 {entries.length} 個模型，可按列重排；參考名次來自原榜</caption>
       <thead className="bg-[rgba(28,39,51,0.04)] text-[12px] text-ink-4 dark:bg-white/[0.03]">
         <tr className="border-y border-line">
           <th scope="col" className="w-[60px] py-2.5 pl-4 pr-1 text-left font-medium lg:w-[86px] lg:pl-[22px] lg:pr-3">
             {/* Phones order the board from the sheet only; a tap here would quietly turn it upside down. */}
-            <span className="lg:hidden">参考<br />位次</span>
+            <span className="lg:hidden">參考<br />名次</span>
             <button type="button" onClick={() => sortBy("rank")} className={`hidden transition-colors hover:text-ink lg:inline ${sort === "rank" ? "text-accent" : ""}`}>
-              参考位次
+              參考名次
             </button>
           </th>
           <th scope="col" className="px-2 py-2.5 text-left font-medium lg:px-3">模型</th>
-          <SortHeader k="released" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[9%]">上线日期</SortHeader>
-          <SortHeader k="coverage" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[9%]">评测证据</SortHeader>
-          <SortHeader k="cached" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[12%]">缓存价格{unit}</SortHeader>
-          <SortHeader k="input" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[12%]">输入价格{unit}</SortHeader>
-          <SortHeader k="output" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[12%]">输出价格{unit}</SortHeader>
+          <SortHeader k="released" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[9%]">上線日期</SortHeader>
+          <SortHeader k="coverage" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[9%]">評測依據</SortHeader>
+          <SortHeader k="cached" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[13%]">快取價格{unit}</SortHeader>
+          <SortHeader k="input" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[13%]">輸入價格{unit}</SortHeader>
+          <SortHeader k="output" sort={sort} dir={dir} onSort={sortBy} className="hidden lg:table-cell lg:w-[13%]">輸出價格{unit}</SortHeader>
           <th scope="col" className="w-[104px] py-1 pl-0 pr-2 text-right font-medium lg:w-[11%] lg:py-2.5 lg:pl-3 lg:pr-[22px]">
             {/* Phones: the order in use; tapping it opens the sort sheet. */}
             <button type="button" onClick={onSortSheet} aria-haspopup="dialog" className="inline-flex h-11 items-center gap-1 whitespace-nowrap rounded-full px-2 text-accent active:bg-bg-sunk lg:hidden">
@@ -144,10 +147,10 @@ export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet }: {
             <button
               type="button"
               onClick={() => sortBy("rank")}
-              title="0–100 的综合比较分数，越高表示本榜表现越强；不是正确率。同分仍按参考位次排列。"
+              title="0–100 的綜合比較分數，越高表示本榜表現越強；不是正確率。同分仍按參考名次排列。"
               className={`hidden items-center gap-1 whitespace-nowrap transition-colors hover:text-ink lg:inline-flex ${sort === "rank" ? "text-accent" : ""}`}
             >
-              {SITE.name} 评分 <span className="inline-flex size-3.5 items-center justify-center rounded-full border border-current text-[9px] leading-none">i</span>
+              {SITE.name} 評分 <span className="inline-flex size-3.5 items-center justify-center rounded-full border border-current text-[9px] leading-none">i</span>
             </button>
           </th>
         </tr>
@@ -179,15 +182,15 @@ export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet }: {
                       <strong className="text-[15px] font-[650] leading-[21px] text-ink transition-colors group-hover:text-accent">{e.model.name}</strong>
                     </Link>
                     {e.access?.weightsUrl && (
-                      <a href={e.access.weightsUrl} target="_blank" rel="noopener noreferrer" className="whitespace-nowrap text-[11px] text-accent hover:underline" aria-label={`${e.model.name} 开源权重`}>
-                        开源权重 ↗
+                      <a href={e.access.weightsUrl} target="_blank" rel="noopener noreferrer" className="whitespace-nowrap text-[11px] text-accent hover:underline" aria-label={`${e.model.name} 開源權重`}>
+                        開源權重 ↗
                       </a>
                     )}
                   </span>
                   <small className="hidden text-[12px] leading-[18px] text-ink-4 lg:block">{e.model.provider ?? "—"}</small>
                   {/* Phones: maker and release in one line under the name. */}
                   <small className="block truncate text-[12px] leading-[18px] text-ink-4 lg:hidden">
-                    {e.model.provider ?? "—"} · <span className="num">{shortDate(e.model.releasedAt)}</span>上线
+                    {e.model.provider ?? "—"} · <span className="num">{shortDate(e.model.releasedAt)}</span>上線
                   </small>
                 </span>
               </span>
@@ -196,25 +199,25 @@ export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet }: {
               <time dateTime={e.model.releasedAt ?? undefined}>{e.model.releasedAt ?? "—"}</time>
             </td>
             <td className="hidden px-3 py-3 lg:table-cell">
-              <span className="num block text-[13px] text-ink-2">{e.sourceCount} 项评测</span>
-              <span className="block text-[11px] leading-[17px] text-ink-4">覆盖 {Math.round(e.coverage * 100)}%</span>
+              <span className="num block text-[13px] text-ink-2">{e.sourceCount} 項評測</span>
+              <span className="block text-[11px] leading-[17px] text-ink-4">覆蓋 {Math.round(e.coverage * 100)}%</span>
             </td>
-            <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, e.price?.cachedCny)}</td>
-            <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, e.price?.inputCny)}</td>
-            <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, e.price?.outputCny)}</td>
+            <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, "cached")}</td>
+            <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, "input")}</td>
+            <td className="mono hidden px-3 py-3 text-[14.5px] font-medium text-ink lg:table-cell">{price(e, "output")}</td>
             <td className="py-2.5 pl-2 pr-4 text-right align-middle lg:py-3 lg:pl-3 lg:pr-[22px]">
               <span className={sort === "rank" ? "block" : "hidden lg:block"}>
-                <strong className="mono block text-[24px] font-semibold leading-7 tracking-[-0.025em] text-accent lg:text-[22px]" aria-label={`${e.model.name} ${SITE.name} 评分 ${score(e.score)}`}>
+                <strong className="mono block text-[24px] font-semibold leading-7 tracking-[-0.025em] text-accent lg:text-[22px]" aria-label={`${e.model.name} ${SITE.name} 評分 ${score(e.score)}`}>
                   {score(e.score)}
                 </strong>
-                <small className="block text-[11px] leading-[17px] text-ink-4 lg:hidden">覆盖 {Math.round(e.coverage * 100)}%</small>
+                <small className="block text-[11px] leading-[17px] text-ink-4 lg:hidden">覆蓋 {Math.round(e.coverage * 100)}%</small>
               </span>
               {sort !== "rank" && (
                 <span className="block lg:hidden">
                   <span className="mono text-[15px] font-semibold text-ink">
-                    {sort === "coverage" ? `${Math.round(e.coverage * 100)}%` : sort === "released" ? shortDate(e.model.releasedAt) : price(e, sort === "input" ? e.price?.inputCny : sort === "output" ? e.price?.outputCny : e.price?.cachedCny)}
+                    {sort === "coverage" ? `${Math.round(e.coverage * 100)}%` : sort === "released" ? shortDate(e.model.releasedAt) : price(e, sort === "input" ? "input" : sort === "output" ? "output" : "cached")}
                   </span>
-                  <small className="block text-[11px] leading-[17px] text-ink-4">评分 {score(e.score)}</small>
+                  <small className="block text-[11px] leading-[17px] text-ink-4">評分 {score(e.score)}</small>
                 </span>
               )}
             </td>

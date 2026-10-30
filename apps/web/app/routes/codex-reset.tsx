@@ -187,7 +187,7 @@ export default function CodexResetPage() {
           <h1 className="text-[24px] font-semibold leading-[1.3] text-ink">Tibo重置監控</h1>
           <p className="mt-1.5 text-[13px] text-ink-3">Codex 額度重置與重置卡發放：什麼時候生效、給誰、Tibo 原話</p>
         </div>
-        <p className="text-[12px] text-ink-4">全部為北京時間 · UTC+8</p>
+        <p className="text-[12px] text-ink-4">全部為台北時間 · UTC+8</p>
       </header>
 
       <LiveMonitor d={d} />
@@ -201,8 +201,8 @@ export default function CodexResetPage() {
           <span className="text-[12px] text-ink-4">來源與規則</span>
         </summary>
         <div className="grid gap-x-8 gap-y-[18px] pb-6 pt-1.5 text-[12px] leading-[1.9] text-ink-4 md:grid-cols-2">
-          <p><strong className="font-semibold text-ink-3">有原話就按原話。</strong>Tibo 寫了時間（如 “6pm PST”“next hour”“end of day”），按太平洋時間換算成北京時間，並多留一兩個小時——他的確認帖通常比說的時間晚一點。只寫了日期的，按他以往的習慣落在當天太平洋時間傍晚。</p>
-          <p><strong className="font-semibold text-ink-3">沒寫時間就按習慣。</strong>Tibo 多在太平洋時間 16:30–21:30 按下重置按鈕，也就是北京時間第二天早上 07:30–12:30。{d.confirmMinutes.length ? `近 ${d.confirmMinutes.length} 次確認中有 ${d.confirmMinutes.filter(inUsual).length} 次在這個時段。` : ""}推算只是參考，以 Tibo 的確認和你 Codex 裡的用量為準。</p>
+          <p><strong className="font-semibold text-ink-3">有原話就按原話。</strong>Tibo 寫了時間（如 “6pm PST”“next hour”“end of day”），按太平洋時間換算成台北時間，並多留一兩個小時——他的確認帖通常比說的時間晚一點。只寫了日期的，按他以往的習慣落在當天太平洋時間傍晚。</p>
+          <p><strong className="font-semibold text-ink-3">沒寫時間就按習慣。</strong>Tibo 多在太平洋時間 16:30–21:30 按下重置按鈕，也就是台北時間第二天早上 07:30–12:30。{d.confirmMinutes.length ? `近 ${d.confirmMinutes.length} 次確認中有 ${d.confirmMinutes.filter(inUsual).length} 次在這個時段。` : ""}推算只是參考，以 Tibo 的確認和你 Codex 裡的用量為準。</p>
           <p><strong className="font-semibold text-ink-3">已生效、應已生效、等待中。</strong>Tibo 發帖確認才算“已生效”；預計時間過去幾個小時仍沒有確認帖，顯示“應已生效”——他宣佈過的重置以往都兌現了，只是常常不再發確認。重置卡與額度重置分開記錄，髮卡不代表額度已恢復。</p>
           <p><strong className="font-semibold text-ink-3">持續追蹤 Tibo 的公開貼文。</strong>平時每 5 分鐘檢查一次，Tibo 確認故障或宣佈重置後改為每 3 分鐘。只有明確的重置或發卡訊息才會推播至通知頻道。個人額度與重置卡餘額請在 Codex 內檢視。</p>
         </div>

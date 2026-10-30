@@ -198,7 +198,7 @@ export const PeriodSchema = z.object({
 export function periodPrompt(kind: "weekly" | "monthly", startDate: string, endDateInclusive: string, top: Candidate[]) {
   const list = top.map((e, i) => `${i + 1}. [${SECTION_OF[e.category ?? ""] ?? DEFAULT_SECTION}] ${e.title}｜${e.summary.slice(0, 140)}`).join("\n");
   return {
-    system: promptText("report-period", { kindName: kind === "weekly" ? "周报" : "月报", overviewLength: kind === "weekly" ? "150–300" : "200–400" }),
+    system: promptText("report-period", { kindName: kind === "weekly" ? "週報" : "月報", overviewLength: kind === "weekly" ? "150–300" : "200–400" }),
     user: `本期：${startDate} 至 ${endDateInclusive}\n${list}`,
   };
 }
@@ -230,7 +230,7 @@ async function composePeriod(kind: "weekly" | "monthly", key: string, startDate:
   }
   const content = {
     kind,
-    title: kind === "weekly" ? `${SITE.name} 周报 · ${key}` : `${SITE.name} 月报 · ${key}`,
+    title: kind === "weekly" ? `${SITE.name} 週報 · ${key}` : `${SITE.name} 月報 · ${key}`,
     ...(kind === "weekly" ? { isoLabel: key } : { monthLabel: key }),
     periodStart: startDate,
     periodEnd: endDateInclusive,

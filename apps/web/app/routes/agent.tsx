@@ -112,7 +112,7 @@ function RssTab({ base }: { base: string }) {
     ["精選摘要（推薦）", "最新 50 條精選摘要，保留標題、站內閱讀與原文入口。", "/feed.xml"],
     ["精選全文", "與精選摘要相同的最新 50 條；只對明確允許再分發的來源內聯正文。", "/feed/full.xml"],
     ["最近 7 天全部動態", "最近 7 天公開動態，按真實發布時間倒序。", "/feed/all.xml"],
-    [withSubject("日報"), `每天 08:00 北京時間釋出的${withSubject("日報")}，保留最近 30 期。`, "/feed/daily.xml"],
+    [withSubject("日報"), `每天 08:00 台北時間釋出的${withSubject("日報")}，保留最近 30 期。`, "/feed/daily.xml"],
   ];
   const categories = CATEGORY_KEYS.join("|");
   return (

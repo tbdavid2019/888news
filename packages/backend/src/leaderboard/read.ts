@@ -206,8 +206,14 @@ async function buildRunView(runId: string): Promise<RunView> {
 
   const priceRows = await sql<{ model_id: string; currency: "CNY" | "USD"; input: number | null; output: number | null; cached_input: number | null; source_url: string | null; note: string | null }[]>`
     SELECT model_id, currency, input, output, cached_input, source_url, note FROM lb_prices WHERE kind = 'official' AND model_id = ANY(${modelIds})`;
-  const rate = info.fx?.rate ?? null;
-  const toCny = (v: number | null, currency: string) => (v == null ? null : currency === "CNY" ? v : rate ? v * rate : null);
+  const usdCnyRate = info.fx?.rate ?? 7.2;
+  const usdTwdRate = 31.5;
+  const toCny = (v: number | null, currency: string) => (v == null ? null : currency === "CNY" ? v : usdCnyRate ? v * usdCnyRate : null);
+  const toUsd = (v: number | null, currency: string) => (v == null ? null : currency === "USD" ? v : usdCnyRate ? v / usdCnyRate : null);
+  const toTwd = (v: number | null, currency: string) => {
+    const usd = toUsd(v, currency);
+    return usd == null ? null : usd * usdTwdRate;
+  };
   const prices = new Map<string, LbPrice>(
     priceRows.map((p) => [
       p.model_id,
@@ -216,6 +222,12 @@ async function buildRunView(runId: string): Promise<RunView> {
         input: p.input,
         output: p.output,
         cached: p.cached_input,
+        inputUsd: toUsd(p.input, p.currency),
+        outputUsd: toUsd(p.output, p.currency),
+        cachedUsd: toUsd(p.cached_input, p.currency),
+        inputTwd: toTwd(p.input, p.currency),
+        outputTwd: toTwd(p.output, p.currency),
+        cachedTwd: toTwd(p.cached_input, p.currency),
         inputCny: toCny(p.input, p.currency),
         outputCny: toCny(p.output, p.currency),
         cachedCny: toCny(p.cached_input, p.currency),
@@ -375,9 +387,9 @@ interface ScoreDetailRow {
 }
 
 function usageLabel(status: string | undefined) {
-  if (status === "ranked") return "综合比较证据";
-  if (status === "cross_reference") return "交叉参考";
-  return "仅供参考";
+  if (status === "ranked") return "綜合比較依據";
+  if (status === "cross_reference") return "交叉參考";
+  return "僅供參考";
 }
 
 export async function loadModel(slug: string): Promise<LbModelDetail | null> {
@@ -620,7 +632,7 @@ export async function loadSource(key: string): Promise<LbSourceDetail | null> {
       display: formatScore(r.raw_score, format),
       configurationLabel: r.configuration_label,
       modelSlug: view.pageSlugs.has(r.slug) ? r.slug : null,
-      excluded: s.allRows ? null : !r.selected_for_product ? r.selection_reason ?? "该配置不能代表单个公开模型。"
+      excluded: s.allRows ? null : !r.selected_for_product ? r.selection_reason ?? "該配置不能代表單個公開模型。"
         : admissionOf(key, {sourceModelName: r.source_model_name ?? r.name, configurationKey: r.configuration_key, metadata: {...snapshot.metadata,...r.metadata}}).reason,
     }));
   }
@@ -636,7 +648,7 @@ export async function loadSource(key: string): Promise<LbSourceDetail | null> {
       usage: s.usage,
       limits: s.limits,
       license: s.license,
-      attribution: s.attribution ?? `成绩由 ${s.operator} 发布，各项原始分数使用不同尺度，不能直接相加；参考位次采用公开的分差标准化规则。`,
+      attribution: s.attribution ?? `成績由 ${s.operator} 發布，各項原始分數使用不同尺度，不能直接相加；參考名次採用公開的分差標準化規則。`,
     },
     upstreamAt: showRows ? snapshot.published_at?.toISOString() ?? null : null,
     syncedAt: showRows ? lastSeen ?? snapshot.fetched_at.toISOString() : null,
@@ -645,8 +657,8 @@ export async function loadSource(key: string): Promise<LbSourceDetail | null> {
     systemRows: !!s.allRows,
     rowsNote: showRows
       ? s.allRows
-        ? "下列为模型搭配不同 Agent 的系统成绩，运行条件不同，仅供参考。每项最多展示 30 条配置，匿名测试型号不展示。"
-        : "按固定规则，每个公开模型采用一套代表配置；没有可采用配置的模型标为未计入并写明原因。匿名测试型号不展示，保留原榜名次，每项最多 30 个。"
+        ? "下列為模型搭配不同 Agent 的系統成績，運行條件不同，僅供參考。每項最多展示 30 條配置，匿名測試型號不展示。"
+        : "按固定規則，每個公開模型採用一套代表配置；沒有可採用配置的模型標為未計入並寫明原因。匿名測試型號不展示，保留原榜名次，每項最多 30 個。"
       : null,
   };
 }

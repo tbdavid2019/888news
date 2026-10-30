@@ -47,34 +47,34 @@ export function sourceKeyOfUnit(unit: string): string {
   return unit.split(":")[0]!;
 }
 
-const GENERAL_READING = `${SITE.name} 评分越高，表示本榜综合表现越强；评分不是正确率，具体能力可查看分项成绩。`;
+const GENERAL_READING = `${SITE.name} 評分越高，表示本榜綜合表現越強；評分不是正確率，具體能力可查看分項成績。`;
 
 /** Page copy of each board; board names are LEADERBOARD_BOARD_LABELS. */
 export const BOARD_COPY: Record<LeaderboardBoardKey, Pick<LbBoardMeta, "title" | "description" | "howToRead">> = {
   overall: {
     title: `${SITE.name} 大模型排行榜`,
-    description: `在统一单型号口径下比较公开评测，展示 ${SITE.name} 评分、参考位次与各项原始成绩。`,
+    description: `在統一單型號口徑下比較公開評測，展示 ${SITE.name} 評分、參考名次與各項原始成績。`,
     howToRead: GENERAL_READING,
   },
   coding: {
-    title: `编程模型排行榜 · ${SITE.name}`,
-    description: "从写代码到改仓库，看模型能不能把软件做出来。",
+    title: `程式設計模型排行榜 · ${SITE.name}`,
+    description: "從寫程式到改專案，看模型能不能把軟體做出來。",
     howToRead: GENERAL_READING,
   },
   reasoning: {
     title: `推理模型排行榜 · ${SITE.name}`,
-    description: "数学、逻辑与陌生规则，看模型能不能想明白新问题。",
+    description: "數學、邏輯與陌生規則，看模型能不能想明白新問題。",
     howToRead: GENERAL_READING,
   },
   knowledge: {
-    title: `知识模型排行榜 · ${SITE.name}`,
-    description: "事实问答与研究生级科学知识，看知识掌握与回答准确性。",
-    howToRead: "当前知识榜采用 Epoch 的两项评测，来自同一家机构。",
+    title: `知識模型排行榜 · ${SITE.name}`,
+    description: "事實問答與研究生級科學知識，看知識掌握與回答準確性。",
+    howToRead: "當前知識榜採用 Epoch 的兩項評測，來自同一家機構。",
   },
   professional: {
-    title: `专业办公模型排行榜 · ${SITE.name}`,
-    description: "金融分析、法律咨询与银行业务，看专业任务能否完成。",
-    howToRead: "当前覆盖金融分析与专业咨询，尚不能代表全部办公任务；统一工具流程中的成绩可以参与比较。",
+    title: `專業辦公模型排行榜 · ${SITE.name}`,
+    description: "金融分析、法律諮詢與銀行業務，看專業任務能否完成。",
+    howToRead: "當前覆蓋金融分析與專業諮詢，尚不能代表全部辦公任務；統一工具流程中的成績可以參與比較。",
   },
 };
 

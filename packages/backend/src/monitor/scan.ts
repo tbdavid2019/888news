@@ -175,7 +175,7 @@ function resetCard(eventId: string, action: "announce" | "confirm", snapshot: Aw
   const window = e.estimate ?? e.schedule;
   const lines = [
     action === "announce" && window ? `**预计生效**：${window.label}${e.estimate ? `（${SITE.name} 推算）` : ""}` : null,
-    action === "confirm" && e.confirmedAt ? `**确认时间**：北京时间 ${e.confirmedAt.slice(5, 16).replace("T", " ")}（确认帖时间，不是精确到账时间）` : null,
+    action === "confirm" && e.confirmedAt ? `**確認時間**：台北時間 ${e.confirmedAt.slice(5, 16).replace("T", " ")}（確認帖時間，不是精確到帳時間）` : null,
     `**适用范围**：${e.presentation?.audienceZh ?? e.presentation?.scopeLabel ?? "未说明"}${e.presentation?.productsZh ? ` · ${e.presentation.productsZh}` : ""}`,
   ].filter(Boolean);
   return {

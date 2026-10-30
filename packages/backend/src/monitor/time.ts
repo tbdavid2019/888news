@@ -65,18 +65,18 @@ export function scheduleFrom(stated: StatedTime): Schedule {
     // A whole Pacific day.
     const from = pacificToUtc(stated.date, "00:00");
     const through = new Date(pacificToUtc(stated.date, "23:59").getTime() + 60_000);
-    return { precision: "date", from: from.toISOString(), through: through.toISOString(), label: `北京时间预计 ${beijingRange(from, through)}` };
+    return { precision: "date", from: from.toISOString(), through: through.toISOString(), label: `台北时间预计 ${beijingRange(from, through)}` };
   }
   const start = pacificToUtc(stated.date, stated.from ?? "18:00");
   if (stated.precision === "deadline") {
-    return { precision: "deadline", from: start.toISOString(), through: start.toISOString(), label: `北京时间预计 ${md(start)} ${hm(start)} 前` };
+    return { precision: "deadline", from: start.toISOString(), through: start.toISOString(), label: `台北时间预计 ${md(start)} ${hm(start)} 前` };
   }
   if (stated.precision === "approximate") {
-    return { precision: "approximate", from: start.toISOString(), through: start.toISOString(), label: `北京时间约 ${md(start)} ${hm(start)}` };
+    return { precision: "approximate", from: start.toISOString(), through: start.toISOString(), label: `台北时间约 ${md(start)} ${hm(start)}` };
   }
   // exact / window: a stated clock time lands within the hour.
   const end = stated.through ? pacificToUtc(stated.date, stated.through) : new Date(start.getTime() + HOUR);
-  return { precision: stated.precision === "exact" ? "window" : stated.precision, from: start.toISOString(), through: end.toISOString(), label: `北京时间预计 ${beijingRange(start, end)}` };
+  return { precision: stated.precision === "exact" ? "window" : stated.precision, from: start.toISOString(), through: end.toISOString(), label: `台北时间预计 ${beijingRange(start, end)}` };
 }
 
 export type EstimateBasis = "model" | "source" | "source_day" | "history";
@@ -94,7 +94,7 @@ const USUAL_FROM = "16:30";
 const USUAL_TO = "21:30";
 
 function estimate(from: Date, through: Date, basis: EstimateBasis, reason: string): Estimate {
-  return { from: from.toISOString(), through: through.toISOString(), basis, label: `北京时间 ${beijingRange(from, through)}`, reason };
+  return { from: from.toISOString(), through: through.toISOString(), basis, label: `台北时间 ${beijingRange(from, through)}`, reason };
 }
 
 /**
@@ -122,7 +122,7 @@ export function estimateFor(opts: { schedule: Schedule | null; announcedAt: Date
   if (schedule) {
     const from = new Date(schedule.from);
     const through = new Date(new Date(schedule.through).getTime() + 2 * HOUR);
-    return estimate(from, through, "source", "按原帖时间换算成北京时间，并预留一两个小时：他的确认帖通常比说的时间晚一点。");
+    return estimate(from, through, "source", "按原帖时间换算成台北时间，并预留一两个小时：他的确认帖通常比说的时间晚一点。");
   }
   // No time given: the next usual evening after the announcement.
   const p = pacificParts(announcedAt);
@@ -172,7 +172,7 @@ export function resolveStatedTime(w: StatedWords, postAt: Date): StatedTime | nu
 
 /** A schedule an operator entered in Beijing time (admin corrections). */
 export function manualSchedule(precision: SchedulePrecision, from: Date, through: Date): Schedule {
-  if (precision === "deadline") return { precision, from: from.toISOString(), through: from.toISOString(), label: `北京时间预计 ${md(from)} ${hm(from)} 前` };
-  if (precision === "approximate") return { precision, from: from.toISOString(), through: from.toISOString(), label: `北京时间约 ${md(from)} ${hm(from)}` };
-  return { precision: precision === "exact" ? "window" : precision, from: from.toISOString(), through: through.toISOString(), label: `北京时间预计 ${beijingRange(from, through)}` };
+  if (precision === "deadline") return { precision, from: from.toISOString(), through: from.toISOString(), label: `台北时间预计 ${md(from)} ${hm(from)} 前` };
+  if (precision === "approximate") return { precision, from: from.toISOString(), through: from.toISOString(), label: `台北时间约 ${md(from)} ${hm(from)}` };
+  return { precision: precision === "exact" ? "window" : precision, from: from.toISOString(), through: through.toISOString(), label: `台北时间预计 ${beijingRange(from, through)}` };
 }
