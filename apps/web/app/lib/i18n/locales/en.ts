@@ -12,6 +12,7 @@ export const en: Record<TranslationKey, string> = {
   "nav.daily": "Daily Brief",
   "nav.daily_short": "Daily",
   "nav.topics": "Topics",
+  "nav.podcast": "Podcast",
   "nav.starred": "Bookmarks",
   "nav.leaderboard": "Leaderboard",
   "nav.codex_reset": "Codex Reset",

@@ -65,6 +65,11 @@ export async function loadOr404<T>(
   }
 }
 
+/** How long shared caches may keep a page; the web server writes its final cache headers (server.ts). */
+export function edgeTtl(seconds: number): Record<string, string> {
+  return { "Cache-Control": `public, s-maxage=${seconds}` };
+}
+
 export function queryString(params: Record<string, string | number | null | undefined>): string {
   const sp = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== null && v !== undefined && v !== "") sp.set(k, String(v));

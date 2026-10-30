@@ -11,8 +11,8 @@ export function MobileTabBar({ changelogVersion }: { changelogVersion: string | 
   const tabbar = getTabBar(t);
 
   return (
-    <nav aria-label="Bottom Navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-      <div className="mx-auto grid h-[54px] max-w-[640px] grid-cols-4">
+    <nav aria-label="Bottom Navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] backdrop-blur lg:hidden">
+      <div className="mx-auto grid h-[54px] max-w-[640px] md:max-w-[860px]" style={{ gridTemplateColumns: `repeat(${tabbar.length}, minmax(0, 1fr))` }}>
         {tabbar.map((item) => {
           const active = tabIsActive(item, pathname);
           const Icon = item.icon;

@@ -4,8 +4,9 @@
 import { createId } from "@paralleldrive/cuid2";
 import { sql } from "../../db.ts";
 import { sha256, stableJson } from "../../lib/ids.ts";
+import { annotateEvaluation } from "./admission.ts";
 import { REASONS } from "./configuration.ts";
-import { IdentityResolver, modelSlug } from "./identity.ts";
+import { cloakedModel, IdentityResolver, modelSlug } from "./identity.ts";
 import { competitionRanks } from "./rank.ts";
 import type { FetchResult, ParsedRow } from "./types.ts";
 
@@ -33,7 +34,8 @@ export function selectRepresentatives(rows: Array<ParsedRow & { modelId: string 
   }
   const out: ResolvedRow[] = [];
   for (const group of groups.values()) {
-    const eligible = group.filter((r) => !r.configuration.ineligible);
+    const cloaked = (r: ParsedRow & { modelId: string }) => cloakedModel(r.sourceModelName, modelSlugs.get(r.modelId));
+    const eligible = group.filter((r) => !r.configuration.ineligible && !cloaked(r));
     const slugShaped = (r: ParsedRow) => Number(/^[a-z0-9-]+$/.test(r.sourceModelName));
     const selfNamed = (r: ParsedRow & { modelId: string }) => Number(modelSlug(r.sourceModelName) === modelSlugs.get(r.modelId));
     const best = [...eligible].sort(
@@ -50,6 +52,8 @@ export function selectRepresentatives(rows: Array<ParsedRow & { modelId: string 
       const scaffolded = r.configuration.kind === "SCAFFOLDED";
       const selectionReason = r.configuration.ineligible
         ? r.configuration.ineligible
+        : cloaked(r)
+          ? REASONS.cloaked
         : selected
           ? scaffolded ? REASONS.scaffoldedSelected : r.configuration.kind === "FIRST_PARTY" ? REASONS.firstParty : REASONS.sourceDefault
           : scaffolded ? REASONS.scaffoldedLower : REASONS.lowerPriority;
@@ -93,22 +97,30 @@ export async function resolveRows(result: FetchResult, dryRun = false): Promise<
     const modelId = await resolver.resolve([r.sourceModelName, ...(r.altNames ?? [])], r.baseName, { organization: r.organization, releasedAt: r.releasedAt });
     withIds.push({ ...r, modelId });
   }
-  const ids = [...new Set(withIds.map((r) => r.modelId))];
-  const slugs = new Map((await sql<{ id: string; slug: string }[]>`SELECT id, slug FROM lb_models WHERE id IN ${sql(ids.length ? ids : [""])}`).map((m) => [m.id, m.slug]));
-  for (const m of resolver.newModels) slugs.set(m.id, m.slug);
-  return { rows: selectRepresentatives(withIds, slugs), newModels: resolver.newModels };
+  return { rows: selectRepresentatives(withIds, resolver.slugsById), newModels: resolver.newModels };
 }
 
-function contentHash(rows: ResolvedRow[]): string {
+function contentHash(result: FetchResult, rows: ResolvedRow[]): string {
   const canon = rows
-    .map((r) => [r.sourceModelName, storedConfigurationKey(r), r.metricKey, r.rawScore, r.lowerBound ?? null, r.upperBound ?? null, r.modelId, r.selected])
-    .sort((a, b) => (stableJson(a) < stableJson(b) ? -1 : 1));
-  return sha256(stableJson(canon));
+    .map((r) => stableJson([
+      r.sourceModelName, storedConfigurationKey(r), r.metricKey, r.metricName, r.rawScore,
+      r.lowerBound ?? null, r.upperBound ?? null, r.modelId, r.selected, r.selectionReason,
+      r.configuration.label, r.configuration.kind, r.configuration.priority,
+      r.sourceRank ?? null, r.sampleSize ?? null, r.organization ?? null,
+      r.sourcePublishedAt ?? null, r.metadata ?? {},
+    ]))
+    .sort();
+  // A corrected rank/date or a new benchmark edition is new evidence even if scores stayed equal.
+  return sha256(stableJson({
+    sourceName: result.sourceName, sourceUrl: result.sourceUrl, license: result.license,
+    attributionUrl: result.attributionUrl, publishedAt: result.publishedAt, metadata: result.metadata, rows: canon,
+  }));
 }
 
 export async function storeSnapshot(result: FetchResult): Promise<{ snapshotId: string; changed: boolean; rows: number; selected: number; newModels: number }> {
+  result = annotateEvaluation(result);
   const { rows, newModels } = await resolveRows(result);
-  const hash = contentHash(rows);
+  const hash = contentHash(result, rows);
   const now = new Date();
   const [latest] = await sql<{ id: string; content_hash: string; metadata: Record<string, unknown> }[]>`
     SELECT id, content_hash, metadata FROM lb_snapshots WHERE source_key = ${result.sourceKey} ORDER BY fetched_at DESC LIMIT 1`;

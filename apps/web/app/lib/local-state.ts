@@ -38,7 +38,7 @@ function storage(kind: "local" | "session"): Storage | null {
   }
 }
 
-function readRaw(key: string, kind: "local" | "session" = "local"): string | null {
+export function readRaw(key: string, kind: "local" | "session" = "local"): string | null {
   try {
     return storage(kind)?.getItem(key) ?? null;
   } catch {
@@ -46,7 +46,18 @@ function readRaw(key: string, kind: "local" | "session" = "local"): string | nul
   }
 }
 
-function writeRaw(key: string, value: string | null, kind: "local" | "session" = "local"): boolean {
+/** A stored JSON value; null when it is missing, unreadable or not JSON. */
+export function readJson(key: string, kind: "local" | "session" = "local"): unknown {
+  const raw = readRaw(key, kind);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function writeRaw(key: string, value: string | null, kind: "local" | "session" = "local"): boolean {
   try {
     const s = storage(kind);
     if (!s) return false;

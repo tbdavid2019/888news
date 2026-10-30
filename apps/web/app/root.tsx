@@ -143,9 +143,9 @@ function SiteShell({ changelogVersion, children }: { changelogVersion: string | 
       </a>
       <Sidebar changelogVersion={changelogVersion} />
       {/* Mobile shell (≤ 960px): one centred column, the tab bar below. Desktop: the page fills the main area
-          up to the list width (--page-max-wide), centred beyond it. */}
+          up to the list width (--page-max-wide), centred beyond it. Unfolded foldables (iPhone Duo) adapt with md:max-w-[860px]. */}
       <main id="main" className="min-w-0 flex-1 pb-[calc(72px+env(safe-area-inset-bottom))] lg:px-7 lg:pb-[72px] lg:pt-6">
-        <div className="mx-auto w-full max-w-[640px] px-4 lg:max-w-[var(--page-max-wide)] lg:px-0">{children}</div>
+        <div className="mx-auto w-full max-w-[640px] pl-[var(--gutter-l)] pr-[var(--gutter-r)] md:max-w-[860px] lg:max-w-[var(--page-max-wide)] lg:px-0">{children}</div>
       </main>
       <MobileTabBar changelogVersion={changelogVersion} />
       <BackToTop />

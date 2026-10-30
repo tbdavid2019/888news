@@ -1,7 +1,8 @@
 // LiveBench (Apache 2.0): the latest release's per-task table; category scores are means of unrounded
 // task scores, and each board averages its category pair (general: all categories).
 import { guardedFetch } from "../../../lib/http-fetch.ts";
-import { configurationOf, peelEffortSuffix } from "../configuration.ts";
+import { configurationOf, peelEffortSuffix, slug } from "../configuration.ts";
+import { parseCsv } from "../csv.ts";
 import type { FetchResult, Fetcher, ParsedRow } from "../types.ts";
 
 const BOARDS = [
@@ -11,8 +12,7 @@ const BOARDS = [
   { key: "livebench-reasoning", name: "LiveBench · 推理与数学", categories: ["Reasoning", "Mathematics"], url: "https://livebench.ai/#/?cats=Reasoning%2CMathematics&ft=1" },
 ];
 
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+const mean =(xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 
 /** The newest release date the site lists (its bundle carries the release array). */
 async function latestRelease(): Promise<string> {
@@ -26,10 +26,6 @@ async function latestRelease(): Promise<string> {
   return [...dates].sort().pop()!;
 }
 
-function parseCsv(text: string): string[][] {
-  return text.trim().split(/\r?\n/).map((l) => l.split(","));
-}
-
 export const livebench: Fetcher = {
   sourceKeys: BOARDS.map((b) => b.key),
   async fetch() {
@@ -39,17 +35,18 @@ export const livebench: Fetcher = {
     const table = await guardedFetch(`https://livebench.ai/table_${tag}.csv`, { timeoutMs: 30_000 });
     if (table.status !== 200) throw new Error(`livebench table ${release} HTTP ${table.status}`);
     const upstream = table.headers.get("last-modified");
-    const [header, ...lines] = parseCsv(table.text());
-    const col = new Map(header!.map((h, i) => [h, i]));
+    const lines = parseCsv(table.text());
+    const modelColumn = Object.keys(lines[0] ?? {})[0];
     const out: FetchResult[] = [];
     for (const b of BOARDS) {
       const cats = b.categories ?? Object.keys(categories);
       const rows: ParsedRow[] = [];
       for (const line of lines) {
-        const model = line[0]!;
+        const model = modelColumn ? line[modelColumn]?.trim() : null;
+        if (!model) continue;
         const categoryScores: number[] = [];
         for (const c of cats) {
-          const vals = (categories[c] ?? []).map((t) => Number(line[col.get(t) ?? -1])).filter((v) => Number.isFinite(v));
+          const vals = (categories[c] ?? []).map((t) => line[t]?.trim()).filter((v) => v != null && v !== "").map(Number).filter(Number.isFinite);
           if (vals.length === (categories[c] ?? []).length && vals.length) categoryScores.push(mean(vals));
         }
         if (categoryScores.length !== cats.length) continue;
@@ -62,7 +59,12 @@ export const livebench: Fetcher = {
           metricKey: b.key,
           metricName: b.name,
           rawScore: mean(categoryScores),
-          metadata: { release, categories: cats.join(" + "), categoryCount: cats.length, metricDirection: "HIGHER" },
+          // Each category's own score, shown beside the pair on a model's evidence.
+          metadata: {
+            release, categories: cats.join(" + "), categoryCount: cats.length, metricDirection: "HIGHER",
+            ...Object.fromEntries(cats.map((c, i) => [`livebenchCategoryScore:${c}`, categoryScores[i]!])),
+            livebenchTaskScores: Object.fromEntries(cats.flatMap((c) => (categories[c] ?? []).map((task) => [task, Number(line[task])]))),
+          },
         });
       }
       out.push({
@@ -73,7 +75,7 @@ export const livebench: Fetcher = {
         attributionUrl: b.url,
         publishedAt: upstream ? new Date(upstream).toISOString() : null,
         rows,
-        metadata: { release, upstreamPublishedAt: upstream ? new Date(upstream).toISOString() : null, sourceOperator: "LiveBench", sourceFamily: "rolling-objective", metricCount: 1 },
+        metadata: { release, taskGroups: Object.fromEntries(cats.map((c) => [c, categories[c]])), upstreamPublishedAt: upstream ? new Date(upstream).toISOString() : null, sourceOperator: "LiveBench", sourceFamily: "rolling-objective", metricCount: 1 },
       });
     }
     return out;

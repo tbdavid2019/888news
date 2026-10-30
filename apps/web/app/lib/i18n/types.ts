@@ -14,6 +14,7 @@ export type TranslationKey =
   | "nav.daily"
   | "nav.daily_short"
   | "nav.topics"
+  | "nav.podcast"
   | "nav.starred"
   | "nav.leaderboard"
   | "nav.codex_reset"

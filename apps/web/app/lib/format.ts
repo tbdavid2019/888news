@@ -3,6 +3,11 @@ import type { Locale } from "./i18n/types.ts";
 
 export { beijingDate, beijingTime, beijingWeekday };
 
+/** "9月28日" of a calendar date (YYYY-MM-DD). */
+export function monthDay(date: string): string {
+  return `${Number(date.slice(5, 7))}月${Number(date.slice(8, 10))}日`;
+}
+
 export function dayLabel(date: string, today: string, locale: Locale = "zh-TW"): string {
   const [y, m, d] = date.split("-").map(Number) as [number, number, number];
   if (locale === "en") {

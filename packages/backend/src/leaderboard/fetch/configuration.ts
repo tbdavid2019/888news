@@ -25,9 +25,11 @@ export const REASONS = {
   hybrid: "混合模型或回退配置，不能代表单个模型的能力。",
   preRelease: "来源明确标为发布前版本，不能代表可使用的正式模型。",
   special: "来源为专用系统或尚未核实的运行配置，无法归到单个公开模型。",
+  cloaked: "匿名测试时期的型号，尚不能把该次评测对应到已公开的固定版本。",
 } as const;
 
-const slug = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+/** Lowercase-hyphenated form of a run descriptor or a source's own name, for configuration keys. */
+export const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 /** Tokens that describe how a model was run (as opposed to dates, channels or editions). */
 const CONFIG_TOKEN = /^(reasoning|non-reasoning|thinking|non-thinking|adaptive-reasoning|(x?high|medium|low|max|minimal)(-effort)?|thinking-(\d+k|minimal)|high-\d+k|default-fallback|.+-fallback|\d+|\d+-\d+)$/;
@@ -138,9 +140,4 @@ export function splitName(name: string): { base: string; descriptors: string[] }
   const m = /^(.*?)\s*\(([^()]*)\)\s*$/.exec(name.trim());
   if (!m) return { base: name.trim(), descriptors: [] };
   return { base: m[1]!.trim(), descriptors: [m[2]!] };
-}
-
-/** Pre-release markers in a source's own naming. */
-export function isPreRelease(name: string): boolean {
-  return /\b(preview|experimental|exp)\b/i.test(name) && !/\bpreview[- ]?\d/i.test(name);
 }

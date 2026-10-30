@@ -17,6 +17,8 @@ export interface NavItem {
   changelog?: boolean;
 }
 
+export type TabKey = "featured" | "all" | "podcast" | "daily" | "more" | "hot" | "leaderboard" | "me";
+
 export function getSidebar(t: (key: TranslationKey) => string, locale: string = "zh-TW"): Array<{ title: string; items: NavItem[] }> {
   const isEn = locale === "en";
   const allLabel = isEn ? "All Stories" : t("nav.all");
@@ -62,6 +64,7 @@ export function getTabBar(t: (key: TranslationKey) => string): NavItem[] {
   return [
     { to: "/", label: t("nav.featured"), icon: IconBolt, end: true },
     { to: "/all", label: t("nav.all_short"), icon: IconList },
+    { to: "/podcast/recommend", label: t("nav.podcast"), icon: IconMic },
     { to: "/daily", label: t("nav.daily_short"), icon: IconDoc },
     { to: "/more", label: t("nav.more"), icon: IconApps },
   ];
@@ -72,10 +75,11 @@ export const SIDEBAR = getSidebar((k) => k);
 export const TABBAR = getTabBar((k) => k);
 
 /** Pages reached from the mobile "更多" tab keep that tab highlighted. */
-export const MORE_PATHS = ["/more", "/hot", "/topics", "/starred", "/podcast", "/leaderboard", "/agent", "/about", "/feedback", "/terms", "/privacy"];
+export const MORE_PATHS = ["/more", "/hot", "/topics", "/starred", "/leaderboard", "/agent", "/about", "/feedback", "/terms", "/privacy"];
 
 export function tabIsActive(item: NavItem, pathname: string): boolean {
   if (item.end) return pathname === item.to;
+  if (item.to === "/podcast/recommend") return pathname === "/podcast" || pathname.startsWith("/podcast/");
   if (item.to === "/more") return MORE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   if (item.to === "/daily") return /^\/(daily|weekly|monthly)(\/|$)/.test(pathname);
   return pathname === item.to || pathname.startsWith(`${item.to}/`);
