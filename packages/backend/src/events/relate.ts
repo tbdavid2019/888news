@@ -162,10 +162,33 @@ export function reportText(title: string, summary: string | null | undefined): s
   return `${title}。${(summary ?? "").slice(0, 300)}`;
 }
 
+const ENTITY_ALIASES: Array<[RegExp, string]> = [
+  [/幣安/gi, "binance"],
+  [/微軟/gi, "microsoft"],
+  [/谷歌/gi, "google"],
+  [/蘋果/gi, "apple"],
+  [/輝達|英偉達/gi, "nvidia"],
+  [/臉書/gi, "meta"],
+  [/特斯拉/gi, "tesla"],
+  [/亞馬遜/gi, "amazon"],
+  [/台積電/gi, "tsmc"],
+  [/億美元/gi, "b"],
+  [/億/gi, "b"],
+  [/後門/gi, "backdoor"],
+  [/漏洞/gi, "vulnerability"],
+  [/被駭|遭駭|黑客|駭客/gi, "hack"],
+];
+
+function normalizeAliases(s: string): string {
+  let res = s.toLowerCase();
+  for (const [re, rep] of ENTITY_ALIASES) res = res.replace(re, rep);
+  return res;
+}
+
 /** Lexical stand-in for cosine when embeddings are off (tests, development without a key): shared character bigrams. */
 export function lexicalSimilarity(a: string, b: string): number {
   const grams = (s: string) => {
-    const chars = [...s.replace(/\s+/g, "")];
+    const chars = [...normalizeAliases(s).replace(/\s+/g, "")];
     return new Set(chars.map((_c, i) => chars.slice(i, i + 2).join("")).filter((g) => g.length === 2));
   };
   const g = grams(a), h = grams(b);

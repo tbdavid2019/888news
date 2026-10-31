@@ -214,7 +214,7 @@ async function recallFacts(queryId: string, queryText: string, minScore: number,
       const texts = await reportTexts([...new Set(pool.map((r) => r.article_id))]);
       for (const r of pool) {
         const s = lexicalSimilarity(queryText, texts.get(r.article_id) ?? "");
-        if (s >= 0.25) consider(r, s);
+        if (s >= 0.18) consider(r, s);
       }
     } else {
       // Window members already in the cache keep their vector (a later revision of their text is
