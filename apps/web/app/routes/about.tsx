@@ -59,6 +59,7 @@ const KIND_ORDER: Array<[string, string]> = [
   ["rss", "RSS"],
   ["web_list", "網頁"],
   ["json_list", "API"],
+  ["external", "Podcast"],
 ];
 
 /**

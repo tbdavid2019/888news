@@ -42,9 +42,15 @@ for (const s of sources) {
     VALUES (${s.id}, ${s.name}, ${s.kind}, ${sql.json(s.config as never)}, ${s.tier ?? "T2"}, ${s.first_party ?? false}, ${s.owner_entity_id ?? null},
             ${s.participation_mode ?? "editorial"}, ${s.interval_minutes ?? 60}, ${s.tags ?? []}, ${s.site_fulltext ?? false}, ${s.syndicate_fulltext ?? false},
             ${s.enabled ?? true}, now())
-    ON CONFLICT (id) DO NOTHING RETURNING id`;
-  added += inserted.length;
+    ON CONFLICT (id) DO UPDATE SET
+      tier = EXCLUDED.tier,
+      first_party = EXCLUDED.first_party,
+      tags = EXCLUDED.tags
+    RETURNING (xmax = 0) AS inserted`;
+  if (inserted[0]?.inserted) added++;
 }
+// Disable legacy spam CVE feeds if present in database
+await sql`UPDATE sources SET enabled = false WHERE id IN ('cve', 'cve-news', 'rss-cve-high', 'rss-cve-news')`;
 console.log(`sources: ${added} added, ${sources.length - added} already there`);
 if (FEATURES.leaderboard) {
   const { models, aliases } = await importModelDirectory();

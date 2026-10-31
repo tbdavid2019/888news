@@ -17,8 +17,8 @@ export function evalPodcastDecisionLogic(decision: {
   category?: string | null;
   authorRole?: "principal" | "observer" | "relayer" | null;
 }): PodcastEvalResult {
-  // Pass items with score >= 35 are selected for featured recommend feed
-  const selected = decision.label !== "BLOCK" && decision.score >= 35;
+  // Pass items with score >= 60 are selected for featured recommend feed
+  const selected = decision.label !== "BLOCK" && decision.score >= 60;
   return {
     label: decision.label,
     score: decision.score,

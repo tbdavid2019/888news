@@ -2,6 +2,27 @@
   "$comment": "示範信源：首次啟動時導入（scripts/seed.ts），已存在的不會被覆蓋。之後在後台「信源」裡增刪改。欄位說明見 docs/sources.md。",
   "sources": [
     {
+      "id": "_mohansolo",
+      "name": "Mohan (@_mohansolo)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:_mohansolo -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "開發工具",
+        "Agent"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "amd",
       "name": "AMD",
       "kind": "x_search",
@@ -37,6 +58,27 @@
       "tags": [
         "專家觀點",
         "教學/實務"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "claudeai",
+      "name": "Claude (@claudeai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:claudeai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Anthropic",
+        "官方",
+        "產品更新"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -281,6 +323,26 @@
       "syndicate_fulltext": true
     },
     {
+      "id": "higgsfield_ai",
+      "name": "Higgsfield AI (@higgsfield_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:higgsfield_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "視訊/影片",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "ilyasut",
       "name": "Ilya Sutskever (@ilyasut)",
       "kind": "x_search",
@@ -341,6 +403,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "krea_ai",
+      "name": "Krea AI (@krea_ai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:krea_ai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "圖像生成",
+        "視訊/影片"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "ollama-release",
       "name": "ollama release",
       "kind": "rss",
@@ -361,6 +443,47 @@
       "syndicate_fulltext": true
     },
     {
+      "id": "openai",
+      "name": "OpenAI (@OpenAI)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OpenAI -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "openai",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "OpenAI",
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "openaidevs",
+      "name": "OpenAI Developers (@OpenAIDevs)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:OpenAIDevs -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "openai",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "OpenAI",
+        "官方",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "openclaw",
       "name": "OpenClaw (@openclaw)",
       "kind": "x_search",
@@ -376,6 +499,26 @@
       "tags": [
         "產品更新",
         "開源專案"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode (@opencode)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:opencode -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "開發工具",
+        "Agent"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -420,6 +563,92 @@
       "syndicate_fulltext": true
     },
     {
+      "id": "orca_build",
+      "name": "Orca (@orca_build)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:orca_build -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-404media",
+      "name": "404 Media",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.404media.co/rss/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體",
+        "資訊安全",
+        "數位權益"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-a16z-news",
+      "name": "a16z News",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.a16z.news/feed"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "創投觀點",
+        "產業動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-airstreet",
+      "name": "Air Street Press",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://press.airstreet.com/feed"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-apple-ml",
       "name": "Apple Machine Learning Research",
       "kind": "rss",
@@ -435,6 +664,50 @@
         "官方",
         "晶片與硬體",
         "前沿研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-apple-newsroom",
+      "name": "Apple Newsroom",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.apple.com/newsroom/rss-feed.rss"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "Apple",
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-armin-ronacher",
+      "name": "Armin Ronacher (lucumr)",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://lucumr.pocoo.org/feed.atom"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "程式開發"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -524,6 +797,50 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-big-technology",
+      "name": "Big Technology",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.bigtechnology.com/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體",
+        "產業動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-chinatalk",
+      "name": "ChinaTalk",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.chinatalk.media/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "政策/法規"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-chipsandcheese",
       "name": "Chips and Cheese",
       "kind": "rss",
@@ -564,40 +881,46 @@
       "syndicate_fulltext": false
     },
     {
-      "id": "rss-cve-high",
-      "name": "CVE-high",
+      "id": "rss-codex-releases",
+      "name": "OpenAI Codex Releases",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://cvefeed.io/rssfeed/severity/high.xml"
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://github.com/openai/codex/releases.atom"
       },
       "tier": "T1",
       "first_party": true,
       "owner_entity_id": null,
       "participation_mode": "editorial",
-      "interval_minutes": 30,
+      "interval_minutes": 60,
       "tags": [
-        "資安",
-        "官方",
-        "CVE"
+        "OpenAI",
+        "開源專案",
+        "開發工具"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
     },
     {
-      "id": "rss-cve-news",
-      "name": "CVE news",
+      "id": "rss-databricks",
+      "name": "Databricks Blog",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://thecyberthrone.in/category/cve-news/feed/"
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.databricks.com/feed"
       },
-      "tier": "T1_5",
-      "first_party": false,
+      "tier": "T1",
+      "first_party": true,
       "owner_entity_id": null,
       "participation_mode": "editorial",
       "interval_minutes": 60,
       "tags": [
-        "資安",
-        "漏洞分析"
+        "官方",
+        "資料/訓練"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -609,7 +932,7 @@
       "config": {
         "feedUrl": "https://podcast.david888.com/rss.xml"
       },
-      "tier": "T1",
+      "tier": "T1_5",
       "first_party": true,
       "owner_entity_id": null,
       "participation_mode": "editorial",
@@ -703,6 +1026,50 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-epoch-gradient",
+      "name": "Epoch AI Gradient Updates",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://epochai.substack.com/feed"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "論文/研究",
+        "評測/基準"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-exponential-view",
+      "name": "Exponential View (Azeem Azhar)",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.exponentialview.co/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "現象/趨勢"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-gary-marcus",
       "name": "Gary Marcus (The Road to AI We Can Trust)",
       "kind": "rss",
@@ -785,6 +1152,29 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-google-devs",
+      "name": "Google Developers Blog",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://developers.googleblog.com/feeds/posts/default"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "Google",
+        "官方",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-google-research",
       "name": "Google Research",
       "kind": "rss",
@@ -824,6 +1214,27 @@
       "tags": [
         "官方",
         "開源"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-huggingface-papers",
+      "name": "Hugging Face Daily Papers",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://granary.io/url?input=html&output=atom&url=https://huggingface.co/papers"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "論文/研究"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -877,7 +1288,7 @@
       "config": {
         "feedUrl": "https://krebsonsecurity.com/feed/"
       },
-      "tier": "T1",
+      "tier": "T1_5",
       "first_party": false,
       "owner_entity_id": null,
       "participation_mode": "editorial",
@@ -886,6 +1297,29 @@
         "資訊安全",
         "網路犯罪",
         "調查報導"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-langchain",
+      "name": "LangChain Blog",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.langchain.com/blog/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "Agent",
+        "開發工具"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -1035,6 +1469,28 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-mit-news-ai",
+      "name": "MIT News · AI",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://news.mit.edu/rss/topic/artificial-intelligence2"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "論文/研究",
+        "前沿科學"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-mit-tech-review-ai",
       "name": "MIT Technology Review · AI",
       "kind": "rss",
@@ -1071,6 +1527,29 @@
         "官方",
         "雲端與邊緣",
         "系統架構"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-n8n-blog",
+      "name": "n8n Blog",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://blog.n8n.io/rss/"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "Agent",
+        "開發工具"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -1117,6 +1596,29 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-openai-alignment",
+      "name": "OpenAI Alignment Research Blog",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://alignment.openai.com/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "OpenAI",
+        "安全/對齊",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-openai-news",
       "name": "OpenAI News",
       "kind": "rss",
@@ -1153,6 +1655,72 @@
         "官方",
         "模型發布",
         "算力定價"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-oreilly-radar",
+      "name": "O'Reilly Radar",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.oreilly.com/radar/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "教學/實務"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-platformer",
+      "name": "Platformer",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.platformer.news/rss/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體",
+        "產業動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-pragmatic-engineer",
+      "name": "The Pragmatic Engineer",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://newsletter.pragmaticengineer.com/feed"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "系統架構"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -1244,7 +1812,7 @@
       "config": {
         "feedUrl": "https://www.schneier.com/feed/atom/"
       },
-      "tier": "T1",
+      "tier": "T1_5",
       "first_party": false,
       "owner_entity_id": null,
       "participation_mode": "editorial",
@@ -1318,6 +1886,28 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-steve-yegge",
+      "name": "Steve Yegge",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://steve-yegge.medium.com/feed"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "程式開發"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-supabase",
       "name": "Supabase Blog",
       "kind": "rss",
@@ -1344,7 +1934,7 @@
       "config": {
         "feedUrl": "https://blog.talosintelligence.com/rss/"
       },
-      "tier": "T1",
+      "tier": "T1_5",
       "first_party": true,
       "owner_entity_id": null,
       "participation_mode": "editorial",
@@ -1427,7 +2017,7 @@
       "config": {
         "feedUrl": "https://feeds.feedburner.com/TheHackersNews"
       },
-      "tier": "T1_5",
+      "tier": "T2",
       "first_party": false,
       "owner_entity_id": null,
       "participation_mode": "editorial",
@@ -1481,6 +2071,50 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-trailofbits",
+      "name": "Trail of Bits Blog",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://blog.trailofbits.com/feed/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資訊安全",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-understanding-ai",
+      "name": "Understanding AI (Timothy B. Lee)",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.understandingai.org/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "現象/趨勢"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "rss-vllm",
       "name": "vLLM Official Blog",
       "kind": "rss",
@@ -1501,6 +2135,50 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "rss-wheres-your-ed-at",
+      "name": "Where’s Your Ed At (Ed Zitron)",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.wheresyoured.at/rss/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "產業動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-wiz-research",
+      "name": "Wiz Blog & Research",
+      "kind": "rss",
+      "config": {
+        "_aihot": {
+          "initialBackfillLimit": 8
+        },
+        "feedUrl": "https://www.wiz.io/feed/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資訊安全",
+        "雲端與邊緣"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "sama",
       "name": "Sam Altman (@sama)",
       "kind": "x_search",
@@ -1516,6 +2194,44 @@
       "tags": [
         "OpenAI",
         "專家觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "schee_info",
+      "name": "Schee Info Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.schee.info/feed.xml"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "專家觀點",
+        "產業動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "spacex",
+      "name": "SpaceX (@SpaceX)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:SpaceX -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "前沿科學"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -1619,6 +2335,135 @@
       "syndicate_fulltext": true
     },
     {
+      "id": "web-anthropic-news",
+      "name": "Anthropic Newsroom",
+      "kind": "web_list",
+      "config": {
+        "url": "https://www.anthropic.com/news",
+        "allowUrlPrefixes": [
+          "https://www.anthropic.com/news/"
+        ],
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Anthropic",
+        "官方",
+        "模型發布"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-anthropic-research",
+      "name": "Anthropic Research",
+      "kind": "web_list",
+      "config": {
+        "url": "https://www.anthropic.com/research",
+        "allowUrlPrefixes": [
+          "https://www.anthropic.com/research/"
+        ],
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "anthropic",
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "Anthropic",
+        "論文/研究",
+        "安全/對齊"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-cognition-blog",
+      "name": "Cognition / Devin Blog",
+      "kind": "web_list",
+      "config": {
+        "url": "https://cognition.ai/blog",
+        "allowUrlPrefixes": [
+          "https://cognition.ai/blog/"
+        ],
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "Agent",
+        "程式開發"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-cursor-blog",
+      "name": "Cursor Blog",
+      "kind": "web_list",
+      "config": {
+        "url": "https://cursor.com/blog",
+        "allowUrlPrefixes": [
+          "https://cursor.com/blog/"
+        ],
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "官方",
+        "開發工具",
+        "程式開發"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "web-lmsys-blog",
+      "name": "LMSYS Org Blog",
+      "kind": "web_list",
+      "config": {
+        "url": "https://lmsys.org/blog/",
+        "allowUrlPrefixes": [
+          "https://lmsys.org/blog/"
+        ],
+        "_aihot": {
+          "initialBackfillLimit": 8
+        }
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "評測/基準",
+        "論文/研究"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "x-_akhaliq",
       "name": "AK (@_akhaliq)",
       "kind": "x_search",
@@ -1717,6 +2562,26 @@
       "tags": [
         "專家觀點",
         "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-aiwarts",
+      "name": "卡爾的 AI 沃茨 (@aiwarts)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:aiwarts -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "教學/實務",
+        "專家觀點"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -1947,6 +2812,26 @@
         "官方",
         "模型評估",
         "可觀測性"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-arthurmensch",
+      "name": "Arthur Mensch (@arthurmensch)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:arthurmensch -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家觀點",
+        "模型發布"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -2381,6 +3266,27 @@
         "官方",
         "程式開發",
         "企業方案"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-cognition",
+      "name": "Cognition / Devin (@cognition)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:cognition -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "Agent",
+        "程式開發"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -2865,6 +3771,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "x-gemini-notebook",
+      "name": "NotebookLM / Gemini (@Gemini_Notebook)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Gemini_Notebook -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "x-geminiapp",
       "name": "Google Gemini (@GeminiApp)",
       "kind": "x_search",
@@ -3170,6 +4096,47 @@
       "tags": [
         "專家觀點",
         "科技動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-joshwoodward",
+      "name": "Josh Woodward (@joshwoodward)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:joshwoodward -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-karinanguyen",
+      "name": "Karina Nguyen (@karinanguyen)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:karinanguyen -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "openai",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "OpenAI",
+        "專家觀點",
+        "產品更新"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -4019,6 +4986,47 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "x-philschmid",
+      "name": "Philipp Schmid (@_philschmid)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:_philschmid -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "教學/實務",
+        "開發工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-pixverse",
+      "name": "PixVerse (@PixVerse)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:PixVerse -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "視訊/影片",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "x-pixverse_",
       "name": "PixVerse (@PixVerse_)",
       "kind": "x_search",
@@ -4120,6 +5128,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "x-promptarmor",
+      "name": "PromptArmor (@PromptArmor)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:PromptArmor -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資訊安全",
+        "安全/對齊"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "x-pytorch",
       "name": "PyTorch Official (@PyTorch)",
       "kind": "x_search",
@@ -4178,6 +5206,26 @@
         "官方",
         "雲端開發",
         "Agent程式"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-ring-hyacinth",
+      "name": "Ring Hyacinth (@ring_hyacinth)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:ring_hyacinth -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "教學/實務",
+        "Agent"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
@@ -4864,6 +5912,26 @@
       "syndicate_fulltext": false
     },
     {
+      "id": "x-tripoai",
+      "name": "Tripo AI (@tripoai)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:tripoai -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "圖像生成",
+        "產品更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "x-unslothai",
       "name": "Unsloth AI (@UnslothAI)",
       "kind": "x_search",
@@ -4942,6 +6010,26 @@
         "官方",
         "推理加速",
         "開源專案"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "x-waymo",
+      "name": "Waymo (@Waymo)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:Waymo -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": true,
+      "owner_entity_id": "google",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Google",
+        "具身智能/機器人"
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false

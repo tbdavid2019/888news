@@ -112,8 +112,12 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
     const bodyText = ep.body_text || summary;
     const bodyHtml = ep.body_html || null;
     const bodyMode = bodyHtml ? "full" : "summary";
-    const numScore = ep.score !== null ? Number(ep.score) : 85;
-    const isSelected = ep.selected || numScore >= 80;
+    const rawScore = ep.score !== null ? Number(ep.score) : 60;
+    const numScore = rawScore === 85 ? 62 : rawScore;
+    const hasChineseCopy = /[\u4e00-\u9fa5]/.test(displayTitle) && summary.trim().length >= 30;
+    const isSponsoredOrNoise = /\b(sponsored|advertisement)\b|贊助內容/i.test(`${displayTitle} ${originalTitle}`);
+    // Only genuinely high-scoring (>= 76), non-sponsored episodes with Chinese copy enter the main home "精選" feed
+    const isSelected = !isSponsoredOrNoise && hasChineseCopy && numScore >= 76;
 
     // Filter and sanitize tags
     const tags = Array.from(new Set([
@@ -166,20 +170,33 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
     `;
     articlesBridged++;
 
-    // 2b. Insert/update analyses
-    const analysisRows = await sql<{ id: string }[]>`
-      INSERT INTO analyses (
-        article_id, input_revision, origin, relevance, category,
-        tags, title_zh, summary_zh, score, selected, created_at
-      ) VALUES (
-        ${articleId}, 1, 'rule', 'pass', 'opinion',
-        ${tags}, ${displayTitle}, ${summary},
-        ${numScore}, ${isSelected}, now()
-      )
-      ON CONFLICT DO NOTHING
-      RETURNING id
+    // 2b. Insert/update analyses (avoid duplicate rows on repeated bridge runs)
+    const existingAnalysis = await sql<{ id: string }[]>`
+      SELECT id FROM analyses WHERE article_id = ${articleId} ORDER BY id DESC LIMIT 1
     `;
-    const analysisId = analysisRows[0]?.id ? Number(analysisRows[0].id) : null;
+    let analysisId: number | null = null;
+    if (existingAnalysis[0]?.id) {
+      analysisId = Number(existingAnalysis[0].id);
+      await sql`
+        UPDATE analyses
+        SET tags = ${tags}, title_zh = ${displayTitle}, summary_zh = ${summary},
+            score = ${numScore}, selected = ${isSelected}
+        WHERE id = ${analysisId}
+      `;
+    } else {
+      const analysisRows = await sql<{ id: string }[]>`
+        INSERT INTO analyses (
+          article_id, input_revision, origin, relevance, category,
+          tags, title_zh, summary_zh, score, selected, created_at
+        ) VALUES (
+          ${articleId}, 1, 'rule', 'pass', 'opinion',
+          ${tags}, ${displayTitle}, ${summary},
+          ${numScore}, ${isSelected}, now()
+        )
+        RETURNING id
+      `;
+      analysisId = analysisRows[0]?.id ? Number(analysisRows[0].id) : null;
+    }
 
     // 2c. Insert/update publications
     const searchText = `${displayTitle} ${originalTitle} ${summary} ${ep.search_text || ""}`.slice(0, 3000);

@@ -2,6 +2,29 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-31] — 🎯 信源大規模擴充（301 個 X/RSS/網頁信源）、精選評分門檻校準與 CVE / Podcast 洗版治理 (Source Expansion & Selection Calibration)
+
+### 🌐 信源大幅擴充與遠端資料庫整合 (`industry/sources.json` & `scripts/seed.ts`)
+- **整合遠端生產環境與上游權威信源**：
+  - 完整匯出並合併生產環境資料庫既有信源與上游 `aihot.news` 的 AI 領域權威帳號與部落格，將 `industry/sources.json` 從 43 個擴充至 **301 個精選信源**（包含 **212 個 X 帳號**、**84 個 RSS 訂閱源**、**5 個官方網頁列表 `web_list`**，外加 **103 個 Podcast 頻道**，全站總追蹤信源突破 **400+ 個**）。
+  - 新增涵蓋 LangChain、a16z News、Google Developers、The Pragmatic Engineer、Exponential View、Understanding AI、Platformer、Where's Your Ed At、404 Media、ChinaTalk、Air Street Press、Big Technology、Databricks、Armin Ronacher、Trail of Bits、Wiz Research、n8n、OpenAI Alignment、OpenAI Codex Releases、Apple Newsroom、MIT News AI、O'Reilly Radar、Steve Yegge、Epoch AI、Anthropic Newsroom/Research、Cursor Blog、Cognition/Devin Blog、LMSYS 等一手技術與產業來源。
+  - 更新 `scripts/seed.ts` 支援信源 `tier`、`first_party` 與 `tags` 的冪等同步更新，並自動停用高噪音無差別 CVE 流水帳信源。
+
+### ⚖️ 精選門檻與資安評分標準校準 (`industry/selection.ts` & `industry/prompts/selection-score.md` & `industry/clef-selection.ts`)
+- **拉開信源分級門檻差距**：
+  - 將 `industry/selection.ts` 的入選門檻由 `{ T1: 60, T1_5: 60, T2: 68 }` 校準為 **`{ T1: 60, T1_5: 68, T2: 78 }`**，確保官方一手重大發布（T1）正常入選，同時嚴格過濾二線媒體與社群（T2）的一般水文。
+- **根除冷門軟體 CVE 洗版「產業」頻道**：
+  - 移除並停用 `cvefeed.io` 全網無差別 CVE 流水帳信源（`rss-cve-high`、`rss-cve-news`）。
+  - 於 `selection-score.md` 與 `clef-selection.ts` 明確規範：只有影響主流 AI 平台、主流雲端與核心基礎設施（如 Linux、主流瀏覽器、AWS/Cloudflare/Azure/GCP、GitHub、主流開發工具與 Agent 框架）或已確認遭大規模野外利用的重大漏洞才可獲高分；一般中小型或冷門第三方套件的例行 CVE 通報一律壓在 `sig ≤ 2` 且 `reson ≤ 2`。
+
+### 🎙️ 修復 Podcast 單集硬編碼 85 分霸榜與 `analyses` 重複寫入問題 (`podcast-sync.ts` & `podcast-bridge.ts`)
+- **移除硬編碼 85 分保送機制**：
+  - 修正 `packages/backend/src/sources/podcast-sync.ts` 將所有同步單集寫死 `score = 85` 的問題，改為預設合理基準分（58–65 分），保留在 `/podcast/recommend` 專區展示。
+  - 修正 `packages/backend/src/publication/podcast-bridge.ts`：不再將所有 Podcast 無腦標記為 `selected = true` 灌入主站首頁「精選」與「觀點」頻道；僅允許具備完整繁體中文摘要、非贊助內容（Sponsored）且實質評分 `>= 76` 的高價值單集進入主站精選。
+  - 修復 `podcast-bridge.ts` 每次同步時因 `analyses` 表無唯一約束而無限 `INSERT` 重複紀錄的 Bug（改為先查詢既有 `analysis_id` 進行 `UPDATE`）。
+- **關於頁（`/about`）統計展示完善**：
+  - 於 `apps/web/app/routes/about.tsx` 補齊 `external`（Podcast）信源類別統計顯示。
+
 ## [2026-10-28] — 🛡️ Cloudflare Turnstile 人機安全驗證整合與容災 Fallback 防偽加固 (Turnstile Bot Protection & Anti-Spoofing Fallback)
 
 ### 🛡️ 核心功能亮點與安全防禦架構

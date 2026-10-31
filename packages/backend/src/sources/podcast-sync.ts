@@ -213,7 +213,8 @@ export async function syncBigGoPodcastEpisodes(
         updated_at = now()
     `;
 
-    // Upsert episode
+    // Upsert episode (score is 65 for curated BigGo summaries with Chinese title, 58 otherwise; not auto-selected for main home feed)
+    const defaultScore = ep.title_zh && summaryZh.length >= 40 ? 65 : 58;
     const ins = await sql`
       INSERT INTO podcast_episodes (
         id, podcast_id, guid, url, title, title_zh, published_at, audio_url,
@@ -224,7 +225,7 @@ export async function syncBigGoPodcastEpisodes(
         ${publishedAt}, ${audioUrl}, ${durationSec}, ${durationStr},
         ${speakers}, ${[]}, ${ep.language || "zh-TW"},
         ${summaryZh}, ${fullBodyText}, ${fullBodyHtml}, ${combinedKeyPoints},
-        ${ep.source_image_url || null}, ${searchText}, true, 85, now()
+        ${ep.source_image_url || null}, ${searchText}, true, ${defaultScore}, now()
       )
       ON CONFLICT (podcast_id, guid) DO UPDATE SET
         url = EXCLUDED.url,
@@ -238,7 +239,7 @@ export async function syncBigGoPodcastEpisodes(
         key_points = EXCLUDED.key_points,
         search_text = EXCLUDED.search_text,
         selected = true,
-        score = 85,
+        score = CASE WHEN podcast_episodes.score = 85 THEN EXCLUDED.score ELSE COALESCE(podcast_episodes.score, EXCLUDED.score) END,
         updated_at = now()
       RETURNING id;
     `;
@@ -528,7 +529,7 @@ export async function syncPodcastFeeds(
                 ${ep.author ? [ep.author] : []}, ${[]}, ${detectedLang},
                 ${summaryText}, ${bodyText}, ${bodyHtml}, ${[]},
                 ${ep.coverUrl ?? null}, ${searchText},
-                ${youtubeUrl}, true, 85, now()
+                ${youtubeUrl}, true, 58, now()
               )
               ON CONFLICT (podcast_id, guid) DO UPDATE SET
                 audio_url = COALESCE(podcast_episodes.audio_url, EXCLUDED.audio_url),
@@ -538,7 +539,7 @@ export async function syncPodcastFeeds(
                 body_html = COALESCE(podcast_episodes.body_html, EXCLUDED.body_html),
                 youtube_url = COALESCE(podcast_episodes.youtube_url, EXCLUDED.youtube_url),
                 selected = true,
-                score = COALESCE(podcast_episodes.score, 85),
+                score = CASE WHEN podcast_episodes.score = 85 THEN 58 ELSE COALESCE(podcast_episodes.score, 58) END,
                 updated_at = now()
               RETURNING (xmax = 0) AS inserted;
             `.catch((err) => {
