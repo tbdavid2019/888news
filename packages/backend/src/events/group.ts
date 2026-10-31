@@ -210,28 +210,35 @@ async function recallFacts(queryId: string, queryText: string, minScore: number,
     if (!prev || score > prev.score) best.set(r.fact_id, { factId: r.fact_id, storyId: r.story_id, factTitle: r.fact_title, score });
   };
   if (pool.length) {
-    if (!embeddingsAvailable()) {
-      const texts = await reportTexts([...new Set(pool.map((r) => r.article_id))]);
-      for (const r of pool) {
-        const s = lexicalSimilarity(queryText, texts.get(r.article_id) ?? "");
-        if (s >= 0.18) consider(r, s);
-      }
-    } else {
-      // Window members already in the cache keep their vector (a later revision of their text is
-      // picked up when the cache turns over); only new members and the query are embedded now.
-      const ids = [...new Set(pool.map((r) => r.article_id))];
-      const uncached = ids.filter((id) => !vectorCache.has(id));
-      const texts = await reportTexts(uncached);
-      const fresh = await vectorsFor([{ id: queryId, text: queryText }, ...uncached.map((id) => ({ id, text: texts.get(id) ?? "" })).filter((x) => x.text)]);
-      const mine = fresh.get(queryId);
-      if (mine) {
-        for (const r of pool) {
-          const v = fresh.get(r.article_id) ?? vectorCache.get(r.article_id)?.vector;
-          if (!v) continue;
-          const s = cosine32(mine, v);
-          if (s >= minScore) consider(r, s);
+    let usedEmbeddings = false;
+    if (embeddingsAvailable()) {
+      try {
+        // Window members already in the cache keep their vector (a later revision of their text is
+        // picked up when the cache turns over); only new members and the query are embedded now.
+        const ids = [...new Set(pool.map((r) => r.article_id))];
+        const uncached = ids.filter((id) => !vectorCache.has(id));
+        const texts = await reportTexts(uncached);
+        const fresh = await vectorsFor([{ id: queryId, text: queryText }, ...uncached.map((id) => ({ id, text: texts.get(id) ?? "" })).filter((x) => x.text)]);
+        const mine = fresh.get(queryId);
+        if (mine) {
+          usedEmbeddings = true;
+          for (const r of pool) {
+            const v = fresh.get(r.article_id) ?? vectorCache.get(r.article_id)?.vector;
+            if (!v) continue;
+            const s = cosine32(mine, v);
+            if (s >= minScore) consider(r, s);
+          }
         }
+      } catch (err) {
+        console.warn("[Group] Embedding recall failed, falling back to lexical matching:", err);
       }
+    }
+
+    // Hybrid recall: also consider lexical similarity (for exact keywords, CVEs, or fallback)
+    const texts = await reportTexts([...new Set(pool.map((r) => r.article_id))]);
+    for (const r of pool) {
+      const s = lexicalSimilarity(queryText, texts.get(r.article_id) ?? "");
+      if (s >= (usedEmbeddings ? 0.28 : 0.18)) consider(r, s);
     }
   }
   for (const r of boost) consider(r, 1);

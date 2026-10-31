@@ -3,6 +3,9 @@
 // 24-hour half-life, and the source time (not collection time) places evidence in the window.
 import { sql } from "../db.ts";
 import { tierRank, type HotEntry } from "./hot-read.ts";
+import { consolidate } from "./group.ts";
+import { lexicalSimilarity } from "./relate.ts";
+import { cosine, embeddingsAvailable, ensureEmbeddings } from "../providers/embeddings.ts";
 
 export const HOT_RULE_VERSION = "heat-v1-48h-halflife24h";
 const WINDOW_HOURS = 48;
@@ -90,8 +93,67 @@ export function heatIndex(heat: number): number {
 
 export async function computeHotRanking(at = new Date()): Promise<{ id: number; entries: number }> {
   const behind = behindSources(await sourceClocks(), at.getTime(), true);
-  const rows = (await heatRows(at, behind)).filter((r) => Number(r.participants) >= MIN_PARTICIPANTS && Number(r.editorial_participants) >= 1);
+  let rows = (await heatRows(at, behind)).filter((r) => Number(r.participants) >= MIN_PARTICIPANTS && Number(r.editorial_participants) >= 1);
   rows.sort((a, b) => Number(b.heat) - Number(a.heat) || (b.latest_at?.getTime() ?? 0) - (a.latest_at?.getTime() ?? 0));
+
+  // --- Active Semantic Deduplication Guard ---
+  // Inspect top candidate stories. If any pair exhibits strong semantic or lexical similarity,
+  // invoke LLM consolidation to evaluate whether they represent the same event / development.
+  // Merged stories will combine their heat and signals, preventing duplicate entries on the leaderboard.
+  const candidatePool = rows.slice(0, 15);
+  let mergedAny = false;
+  if (embeddingsAvailable() && candidatePool.length >= 2) {
+    try {
+      const storyVectors = await ensureEmbeddings("story", candidatePool.map((c) => ({ id: String(c.story_id), text: c.title })));
+      for (let i = 0; i < candidatePool.length; i++) {
+        for (let j = i + 1; j < candidatePool.length; j++) {
+          const a = candidatePool[i]!;
+          const b = candidatePool[j]!;
+          const vA = storyVectors.get(String(a.story_id));
+          const vB = storyVectors.get(String(b.story_id));
+          const cosSim = vA && vB ? cosine(vA, vB) : 0;
+          const lexSim = lexicalSimilarity(a.title, b.title);
+          if (cosSim >= 0.70 || lexSim >= 0.28) {
+            try {
+              const consolidations = await consolidate([a.story_id, b.story_id]);
+              if (consolidations.some((c) => c.merge)) {
+                mergedAny = true;
+              }
+            } catch (err) {
+              console.warn(`[HotRanking] Consolidation error between story ${a.story_id} and ${b.story_id}:`, err);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[HotRanking] Embedding deduplication check failed, falling back to lexical:", err);
+    }
+  }
+
+  if (!mergedAny && candidatePool.length >= 2) {
+    for (let i = 0; i < candidatePool.length; i++) {
+      for (let j = i + 1; j < candidatePool.length; j++) {
+        const a = candidatePool[i]!;
+        const b = candidatePool[j]!;
+        const lexSim = lexicalSimilarity(a.title, b.title);
+        if (lexSim >= 0.28) {
+          try {
+            const consolidations = await consolidate([a.story_id, b.story_id]);
+            if (consolidations.some((c) => c.merge)) {
+              mergedAny = true;
+            }
+          } catch (err) {
+            console.warn(`[HotRanking] Lexical consolidation error between story ${a.story_id} and ${b.story_id}:`, err);
+          }
+        }
+      }
+    }
+  }
+
+  if (mergedAny) {
+    rows = (await heatRows(at, behind)).filter((r) => Number(r.participants) >= MIN_PARTICIPANTS && Number(r.editorial_participants) >= 1);
+    rows.sort((a, b) => Number(b.heat) - Number(a.heat) || (b.latest_at?.getTime() ?? 0) - (a.latest_at?.getTime() ?? 0));
+  }
 
   const entries: HotEntry[] = [];
   for (const r of rows) {

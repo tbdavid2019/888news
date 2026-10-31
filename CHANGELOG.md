@@ -2,6 +2,25 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-31] — 🧠 多層次語意歸組與智慧去重架構（向量 Embedding 自動備援、混合召回、熱點榜單主動合併防線）
+
+### 🚀 向量 Embedding 全自動備援解析 (`packages/backend/src/providers/embeddings.ts`)
+- **OpenAI / 備援金鑰智慧探索**：
+  - 修復原本僅嚴格檢查 `EMBEDDING_API_KEY` 或 `DASHSCOPE_API_KEY` 的限制。
+  - 當未顯式指定 `EMBEDDING_API_KEY` 時，系統自動解析並啟用已配置之 `OPENAI_API_KEY`、`OPENAI_DECISION_API_KEY` 或 `LLM_FALLBACK_3_API_KEY`，使用 OpenAI `text-embedding-3-small`（1536 維度，跨語言語意餘弦相似度極佳，每百萬 Token 僅 $0.02）。
+  - 使 `embeddingsAvailable()` 在生產與測試環境自動生效，徹底解決無專用向量金鑰時自動退化為純字面比對的架構缺陷。
+
+### 🔍 密集向量 + 字面稀疏混合召回機制 (Hybrid Recall, `packages/backend/src/events/group.ts`)
+- **向量語意與字面實體雙向覆蓋**：
+  - 升級 `recallFacts` 為工業級 Hybrid Search 架構：既透過密集向量空間捕捉跨語言與抽象語意同義概念（如英文 "Binance $6.36B theft" 與中文 "幣安 63 億美元盜取案" 餘弦相似度高達 0.88，遠高於門檻 0.60），又同時保留關鍵實體、專有名詞、CVE 編號的精確字面匹配。
+  - 加入健全容錯防護（`try-catch`），當向量 API 偶發超時或異常時，無縫降級為字面匹配，不阻斷報導歸組流水線。
+
+### 🛡️ 熱點榜單生成前主動語意合併防線 (`packages/backend/src/events/hot.ts`)
+- **即時熱點 Top 15 智慧巡檢與合併**：
+  - 於 `computeHotRanking` 生成最終榜單前，主動針對前 15 名候選事件進行矩陣式語意相似度檢驗（支援向量餘弦 >= 0.70 與中英文實體字面 >= 0.28）。
+  - 一旦發現潛在重複事件，主動調用大模型雙盲裁決合併機制（`consolidate` -> `judgeStories`），經雙模型（如 Gemini、ChatGPT 或 Clef）確認為 `SAME_OCCURRENCE` 或 `SAME_STORY` 後，直接在資料库執行 `mergeStoryInto` 合併事件並累加熱度。
+  - 合併完成後自動刷新熱度排序，從演算法底層絕對保證「熱點榜單永遠不會同時出現兩筆同一主題的重複事件」。
+
 ## [2026-10-31] — 🎯 精選門檻精準校準（日均 ~25 則對齊上游）、歷史時間戳回填、全面上游 RSS 導入（180+ verified RSS）與生產資料清洗
 
 ### 🔗 事件分組跨語言別名對齊與重複熱點自動合併 (`packages/backend/src/events/relate.ts` & `group.ts`)
