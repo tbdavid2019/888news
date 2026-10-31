@@ -31,7 +31,7 @@ test("an audited direct protocol permits its stated default without inventing a 
   assert.equal(a.mode, "DIRECT");
   assert.equal(a.fallback, "NONE");
   assert.ok(a.scope);
-  assert.ok(a.evidenceUrls.includes("https://epoch.ai/benchmarks/chess-puzzles"));
+  assert.ok(a.evidenceUrls.some((u) => u === "https://epoch.ai/benchmarks/chess-puzzles"));
 });
 
 test("fallback evidence overrides both audited defaults and a composite's ordinary reference reason", () => {

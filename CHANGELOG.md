@@ -2,6 +2,13 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-31] — 🛡️ GitHub CodeQL 安全掃描全數清零（消除最後 1 項 Code Scanning Alert #31）
+
+### 🔒 CodeQL 靜態安全分析修復 (`tests/leaderboard-admission.test.ts`)
+- **修復 URL 子字串檢驗偽陽性告警 (js/incomplete-url-substring-sanitization)**：
+  - 解決 CodeQL Alert #31（全倉庫僅剩的最後 1 個開放告警）：將單元測試斷言中 `evidenceUrls.includes(...)` 重構為精確元素全等比對 `evidenceUrls.some((u) => u === "...")`。
+  - 徹底消除靜態分析器將陣列成員包含誤判為「未完整校驗之 URL 重新導向 / SSRF」的安全警示，達成全專案 Code Scanning **0 Open Alerts**（28/28 全部 Fixed）。
+
 ## [2026-10-31] — 🛑 未來日期時間戳嚴格防禦門禁與歷史污染清洗（RSS / Podcast 全入口截斷）
 
 ### 🕒 全入口未來日期防禦門禁 (Future Timestamp Defensive Clamps)
