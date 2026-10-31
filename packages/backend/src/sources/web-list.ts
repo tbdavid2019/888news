@@ -179,6 +179,9 @@ export function fromHtml(html: string, base: string, source: SourceRow): Candida
       const m = new RegExp(c.publishedAtRegex).exec($.html(el));
       publishedAt = parseLooseDate(m?.[1], c.publishedAtUtcOffset);
     }
+    if (!publishedAt) {
+      publishedAt = parseLooseDate(title, c.publishedAtUtcOffset);
+    }
     seen.add(url);
     out.push({ url, title, publishedAt });
   }

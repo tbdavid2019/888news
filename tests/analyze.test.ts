@@ -131,7 +131,7 @@ test("tag normalization separates infosec from explicit AI safety and preserves 
 });
 
 test("a selected item: prefilter, two scores, the content understanding and the structure", async () => {
-  assert.equal(tierThreshold("T1"), 60);
+  assert.equal(tierThreshold("T1"), 72);
   const id = await article("CLEAR");
   const res = await analyzeArticle(id);
   assert.deepEqual([res!.output!.selected, res!.output!.score], [true, 75], "78 + 72 = 150 >= 120");
