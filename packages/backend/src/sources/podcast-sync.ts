@@ -147,7 +147,9 @@ export async function syncBigGoPodcastEpisodes(
     const podcastId = ep.source_id;
     touchedPodcastIds.add(podcastId);
 
-    const publishedAt = new Date(ep.published_at * 1000);
+    const rawPub = ep.published_at ? new Date(ep.published_at * 1000) : new Date();
+    const nowMs = Date.now();
+    const publishedAt = Number.isFinite(rawPub.getTime()) && rawPub.getTime() <= nowMs + 3600_000 ? rawPub : new Date(nowMs);
     const durationSec = Math.round(ep.duration || 0);
     const m = Math.floor(durationSec / 60);
     const s = durationSec % 60;
@@ -517,6 +519,10 @@ export async function syncPodcastFeeds(
             const detectedLang = containsChinese(`${ep.title} ${ep.showNotes}`) ? "zh-TW" : "en";
             const episodeAudioUrl = validAudioUrl || ep.link || "https://888news.david888.com/podcast";
 
+            const rawPub = ep.publishedAt ? new Date(ep.publishedAt) : new Date();
+            const nowMs = Date.now();
+            const safePublishedAt = Number.isFinite(rawPub.getTime()) && rawPub.getTime() <= nowMs + 3600_000 ? rawPub : new Date(nowMs);
+
             const ins = await sql<{ inserted: boolean }[]>`
               INSERT INTO podcast_episodes (
                 id, podcast_id, guid, url, title, title_zh, published_at, audio_url,
@@ -525,7 +531,7 @@ export async function syncPodcastFeeds(
                 youtube_url, selected, score, updated_at
               ) VALUES (
                 ${epId}, ${c.id}, ${ep.guid}, ${ep.link || episodeAudioUrl}, ${ep.title}, ${ep.title},
-                ${ep.publishedAt}, ${episodeAudioUrl}, ${ep.audioDurationSec ?? null}, ${ep.audioDurationStr ?? null},
+                ${safePublishedAt}, ${episodeAudioUrl}, ${ep.audioDurationSec ?? null}, ${ep.audioDurationStr ?? null},
                 ${ep.author ? [ep.author] : []}, ${[]}, ${detectedLang},
                 ${summaryText}, ${bodyText}, ${bodyHtml}, ${[]},
                 ${ep.coverUrl ?? null}, ${searchText},

@@ -39,12 +39,16 @@ function arr<T>(v: T | T[] | undefined | null): T[] {
 
 function parseDate(v: string): Date | null {
   if (!v) return null;
-  const t = Date.parse(v);
-  if (Number.isFinite(t)) return new Date(t);
-  // RFC 822 variants with Chinese weekday or odd zones
-  const cleaned = v.replace(/星期[一二三四五六日天]/, "").replace(/\s+/g, " ").trim();
-  const t2 = Date.parse(cleaned);
-  return Number.isFinite(t2) ? new Date(t2) : null;
+  const nowTolerance = Date.now() + 3600_000;
+  let t = Date.parse(v);
+  if (!Number.isFinite(t)) {
+    // RFC 822 variants with Chinese weekday or odd zones
+    const cleaned = v.replace(/星期[一二三四五六日天]/, "").replace(/\s+/g, " ").trim();
+    t = Date.parse(cleaned);
+  }
+  if (!Number.isFinite(t)) return null;
+  // Reject future dates from upstream typos or scheduled items
+  return t <= nowTolerance ? new Date(t) : null;
 }
 
 function atomLink(links: unknown): string {

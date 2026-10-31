@@ -2,6 +2,19 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-10-31] — 🛑 未來日期時間戳嚴格防禦門禁與歷史污染清洗（RSS / Podcast 全入口截斷）
+
+### 🕒 全入口未來日期防禦門禁 (Future Timestamp Defensive Clamps)
+- **RSS 與 Podcast 上游異常發布時間截斷 (`packages/backend/src/sources/rss.ts` & `podcast-sync.ts`)**：
+  - 上游廣播頻道（如 The Top Line）官方 RSS 不慎寫入未來日期（`<pubDate>Mon, 16 Nov 2026 ...</pubDate>`，提前 16 天），導致「全部動態 (/all)」首欄誤排入「11月16日 週一」未來日期群組。
+  - 於 `rss.ts` 之 `parseDate` 加入上限門禁：若發布時間超過當前時間 + 1 小時（時鐘漂移容錯），自動判定為無效時間（回傳 `null`），強制降級以發現時間（`discoveredAt`）作為時間基準。
+  - 於 `podcast-sync.ts` 與 `podcast-bridge.ts` 加入發布時間合法性校驗：禁止寫入未來時間戳，一律截斷並對齊至 `discoveredAt` 或 `now()`。
+- **發布層最終硬性門禁 (`packages/backend/src/publication/publish.ts`)**：
+  - 於 `publishArticleTx` 寫入 `publications` 表前增加最終時間保底檢查，嚴格保證 `timeline_at`、`published_at` 與 `sort_at` 永不允許超出未來 1 小時，徹底杜絕首頁或全部動態出現任何未來文章。
+
+### 🧹 線上歷史異常數據清理
+- 即時修正遠端生產環境資料庫中 2 筆受污染之 Podcast 記錄（`Digital Twins: Advancing Clinical Evidence Strategy`），將其 `timeline_at` 與 `published_at` 校準至真實發現時間（2026-10-30）。「全部動態 (/all)」即刻恢復為正常的「10月31日 週六」當前排版。
+
 ## [2026-10-31] — 🧠 多層次語意歸組與智慧去重架構（向量 Embedding 自動備援、混合召回、熱點榜單主動合併防線）
 
 ### 🚀 向量 Embedding 全自動備援解析 (`packages/backend/src/providers/embeddings.ts`)

@@ -136,6 +136,13 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
       guests: ep.guests,
     };
 
+    const discoveredAt = ep.created_at || new Date();
+    const nowMs = Date.now();
+    const rawPub = ep.published_at ? new Date(ep.published_at) : discoveredAt;
+    // Timeline clamp: An episode can NEVER have published_at or timeline_at in the future beyond 1 hour
+    const safePublishedAt = Number.isFinite(rawPub.getTime()) && rawPub.getTime() <= nowMs + 3600_000 ? rawPub : discoveredAt;
+    const safeTimelineAt = safePublishedAt;
+
     // 2a. Insert/update articles
     await sql`
       INSERT INTO articles (
@@ -148,10 +155,10 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
         ${displayTitle},
         ${ep.hosts?.[0] || ep.podcast_title},
         ${ep.language || "zh-TW"},
-        ${ep.published_at},
-        ${ep.published_at},
-        ${ep.created_at || new Date()},
-        ${ep.published_at},
+        ${safePublishedAt},
+        ${safePublishedAt},
+        ${discoveredAt},
+        ${safeTimelineAt},
         ${(summary || displayTitle).slice(0, 500)},
         ${bodyText},
         ${bodyHtml},
@@ -223,10 +230,10 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
         'news',
         false,
         ${ep.url || ep.audio_url || "https://888news.david888.com/podcast/recommend"},
-        ${ep.published_at},
-        ${ep.created_at || new Date()},
-        ${ep.published_at},
-        ${ep.published_at},
+        ${safePublishedAt},
+        ${discoveredAt},
+        ${safeTimelineAt},
+        ${safeTimelineAt},
         now(),
         ${bodyMode},
         false,
@@ -238,6 +245,13 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
         title = EXCLUDED.title,
         original_title = EXCLUDED.original_title,
         summary = EXCLUDED.summary,
+        tags = EXCLUDED.tags,
+        score = EXCLUDED.score,
+        selected = EXCLUDED.selected,
+        published_at = EXCLUDED.published_at,
+        discovered_at = EXCLUDED.discovered_at,
+        timeline_at = EXCLUDED.timeline_at,
+        sort_at = EXCLUDED.sort_at,
         body_mode = EXCLUDED.body_mode,
         category = EXCLUDED.category,
         tags = EXCLUDED.tags,

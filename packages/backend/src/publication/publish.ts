@@ -229,6 +229,12 @@ export async function publishArticleTx(tx: Tx, articleId: string, options: Publi
     if (anchor?.t && anchor.t < sortAt) sortAt = anchor.t;
   }
 
+  // Defensive clamp: Timeline dates can NEVER be in the future beyond 1 hour tolerance
+  const maxFutureMs = now.getTime() + 3600_000;
+  if (sortAt.getTime() > maxFutureMs) sortAt = now;
+  const safeTimelineAt = article.timeline_at.getTime() > maxFutureMs ? now : article.timeline_at;
+  const safePublishedAt = article.published_at && article.published_at.getTime() > maxFutureMs ? now : article.published_at;
+
   const next = {
     visibility, eligible, selected, title: title ?? collapseWhitespace(article.title), original_title: originalTitle, summary, reason,
     category, tags, score: round1(score), body_mode: bodyMode, story_id: membership?.story_id ?? null, fact_id: membership?.fact_id ?? null,
@@ -251,7 +257,7 @@ export async function publishArticleTx(tx: Tx, articleId: string, options: Publi
       selected_ready_at, visible_after, body_mode, syndicate, indexable, story_id, fact_id, search_text, sort_at, updated_at)
     VALUES (${articleId}, ${analysis?.id ?? null}, ${revision}, ${visibility}, ${eligible}, ${selected}, ${next.title},
       ${originalTitle}, ${summary}, ${reason}, ${category}, ${tags}, ${next.score}, ${source.id}, ${channel}, ${source.first_party},
-      ${article.url}, ${article.published_at}, ${article.discovered_at}, ${article.timeline_at}, ${article.backfill},
+      ${article.url}, ${safePublishedAt}, ${article.discovered_at}, ${safeTimelineAt}, ${article.backfill},
       ${selectedReadyAt}, ${visibleAfter}, ${bodyMode}, ${syndicate}, ${indexable}, ${next.story_id}, ${next.fact_id}, ${searchText}, ${sortAt}, now())
     ON CONFLICT (article_id) DO UPDATE SET
       analysis_id = EXCLUDED.analysis_id, revision = EXCLUDED.revision, visibility = EXCLUDED.visibility,
