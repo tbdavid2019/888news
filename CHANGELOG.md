@@ -2,20 +2,25 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
-## [2026-10-31] — 🎯 信源大規模擴充（301 個 X/RSS/網頁信源）、精選評分門檻校準與 CVE / Podcast 洗版治理 (Source Expansion & Selection Calibration)
+## [2026-10-31] — 🎯 全面上游 RSS 信源引進（180 個 verified RSS、全站 397 個信源）、精選評分門檻校準與遠端歷史濫選資料清洗 (Full RSS Ingestion & Production Cleanup)
 
-### 🌐 信源大幅擴充與遠端資料庫整合 (`industry/sources.json` & `scripts/seed.ts`)
-- **整合遠端生產環境與上游權威信源**：
-  - 完整匯出並合併生產環境資料庫既有信源與上游 `aihot.news` 的 AI 領域權威帳號與部落格，將 `industry/sources.json` 從 43 個擴充至 **301 個精選信源**（包含 **212 個 X 帳號**、**84 個 RSS 訂閱源**、**5 個官方網頁列表 `web_list`**，外加 **103 個 Podcast 頻道**，全站總追蹤信源突破 **400+ 個**）。
-  - 新增涵蓋 LangChain、a16z News、Google Developers、The Pragmatic Engineer、Exponential View、Understanding AI、Platformer、Where's Your Ed At、404 Media、ChinaTalk、Air Street Press、Big Technology、Databricks、Armin Ronacher、Trail of Bits、Wiz Research、n8n、OpenAI Alignment、OpenAI Codex Releases、Apple Newsroom、MIT News AI、O'Reilly Radar、Steve Yegge、Epoch AI、Anthropic Newsroom/Research、Cursor Blog、Cognition/Devin Blog、LMSYS 等一手技術與產業來源。
-  - 更新 `scripts/seed.ts` 支援信源 `tier`、`first_party` 與 `tags` 的冪等同步更新，並自動停用高噪音無差別 CVE 流水帳信源。
+### 🌐 全面上游與技術生態 RSS 信源導入 (`industry/sources.json`)
+- **RSS 訂閱源擴充至 180 個（對齊並超越上游 aihot.news 178 個 RSS 規模）**：
+  - 完整分析上游 `aihot.news` 既有所有快照數據、統計樣本與熱門技術部落格，驗證並導入 **180 個高品質 RSS/Atom 信源**（全站總信源增至 **397 個**，外加 103 個 Podcast 頻道，總追蹤量達 **500 個**）。
+  - **核心模型與基礎設施**：深入導入 Modal Blog (Atom)、Together AI Blog、OpenAI News、Google AI Blog、Google Developers Blog、Amazon Science、Berkeley BAIR、CMU ML Blog、MIT News AI、Epoch AI、Hugging Face Blog、Redwood Research、OpenRouter Blog、Ollama Blog、Wired AI、Silicon Republic、MediaNama、ETtech、Globes Tech、少数派 (sspai) 等權威訂閱源。
+  - **開源核心與 Agent 生態 Releases Atom Feeds**：引進 vLLM、llama.cpp、Hugging Face Transformers/Diffusers、SGLang、OpenHands、Cline、Roo Code、Anthropic MCP、Astral uv/Ruff、Pydantic AI、CrewAI、Microsoft AutoGen、Browser Use、FastAPI、TypeScript、Node.js、Go、Rust Compiler、Docker CLI、Kubernetes、Prometheus、Grafana、Redis、ClickHouse、Tauri、Zig、DuckDB、PostgreSQL 等官方發布通知。
+  - **專家專欄與硬體架構**：整合 Chip Huyen、Sebastian Raschka (Ahead of AI)、Dylan Patel (SemiAnalysis)、ServeTheHome (STH)、Tom's Hardware AI、Phoronix、The Register、Krebs on Security、Dark Reading、ByteByteGo (Alex Xu)、Simon Willison、Mitchell Hashimoto、Dan Luu、Julia Evans、Eli Bendersky、Brandur Leach、Martin Fowler、System Design One 等深度專欄。
 
-### ⚖️ 精選門檻與資安評分標準校準 (`industry/selection.ts` & `industry/prompts/selection-score.md` & `industry/clef-selection.ts`)
-- **拉開信源分級門檻差距**：
-  - 將 `industry/selection.ts` 的入選門檻由 `{ T1: 60, T1_5: 60, T2: 68 }` 校準為 **`{ T1: 60, T1_5: 68, T2: 78 }`**，確保官方一手重大發布（T1）正常入選，同時嚴格過濾二線媒體與社群（T2）的一般水文。
-- **根除冷門軟體 CVE 洗版「產業」頻道**：
-  - 移除並停用 `cvefeed.io` 全網無差別 CVE 流水帳信源（`rss-cve-high`、`rss-cve-news`）。
-  - 於 `selection-score.md` 與 `clef-selection.ts` 明確規範：只有影響主流 AI 平台、主流雲端與核心基礎設施（如 Linux、主流瀏覽器、AWS/Cloudflare/Azure/GCP、GitHub、主流開發工具與 Agent 框架）或已確認遭大規模野外利用的重大漏洞才可獲高分；一般中小型或冷門第三方套件的例行 CVE 通報一律壓在 `sig ≤ 2` 且 `reson ≤ 2`。
+### 🧹 遠端生產環境歷史濫選資料全面清理 (Production DB Cleanup)
+- **歷史無差別 CVE 與膨脹 Podcast 下架主站精選**：
+  - 於遠端資料庫執行定向清理：將歷史 884 篇由 `cve` / `cve-news` 流水帳信源自動標記為 `selected = true` 的資料全部改為 `selected = false`。
+  - 將歷史 2899 篇被寫死 `score = 85` 的 Podcast 單集全部解除精選，僅保留評分真實合格者。
+  - 主站首頁「精選」與「產業」頻道徹底告別冷門軟體 CVE 洗版，恢復高品質 AI 與關鍵技術焦點內容。
+
+### ⚖️ 精選門檻與資安評分標準校準 (`industry/selection.ts` & `industry/clef-selection.ts`)
+- **修復測試斷詞與分級門檻**：
+  - 修正 `industry/clef-selection.ts` 評分指令，精確保留核心修復加分判定，使單元測試與安全邊界防禦完全一致。
+  - 維持 T1 官方發布門檻（60），提高二線媒體（T1_5: 68, T2: 78）門檻，徹底壓制低資訊量日常維護雜訊與無差別漏洞通報。
 
 ### 🎙️ 修復 Podcast 單集硬編碼 85 分霸榜與 `analyses` 重複寫入問題 (`podcast-sync.ts` & `podcast-bridge.ts`)
 - **移除硬編碼 85 分保送機制**：

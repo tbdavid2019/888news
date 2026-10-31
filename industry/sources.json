@@ -6237,6 +6237,1915 @@
       ],
       "site_fulltext": false,
       "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-together-ai-blog",
+      "name": "Together AI Official Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.together.ai/blog/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "模型與權重",
+        "雲端與邊緣"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-amazon-science",
+      "name": "Amazon Science",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.amazon.science/index.rss"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "學術前沿",
+        "研究報告"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-ben-evans",
+      "name": "Benedict Evans",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.ben-evans.com/benedictevans?format=rss"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "產業深度",
+        "觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-browser-use",
+      "name": "Browser Use",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://browser-use.com/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "AI工具",
+        "開源生態",
+        "工程實踐"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-cmu-ml",
+      "name": "CMU Machine Learning Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.ml.cmu.edu/feed/"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "學術前沿",
+        "論文速遞"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-comfy-blog",
+      "name": "ComfyUI Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.comfy.org/feed"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "AI工具",
+        "開源生態",
+        "多模態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-cursor-blog",
+      "name": "Cursor Official Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://cursor.com/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "程式開發",
+        "AI工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-elevenlabs",
+      "name": "ElevenLabs Official Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://elevenlabs.io/blog/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "多模態",
+        "AI工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-ettech",
+      "name": "The Economic Times · ETtech",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://economictimes.indiatimes.com/tech/rssfeeds/13357270.cms"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "產業要聞",
+        "國際科技"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-globes",
+      "name": "Globes Israel Tech",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://en.globes.co.il/webservice/rss/rssfeeder.asmx?FolderID=3259"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "產業要聞",
+        "國際科技"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-google-ai-blog",
+      "name": "Google AI Official Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.google/technology/ai/rss/"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "模型與權重",
+        "AI工具"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-itnews-au",
+      "name": "iTnews Australia",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.itnews.com.au/RSS/rss.ashx"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "產業要聞",
+        "企業IT"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-medianama",
+      "name": "MediaNama",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.medianama.com/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "政策法規",
+        "數位權利"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-newcomer",
+      "name": "Newcomer (Eric Newcomer)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.newcomer.co/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "產業深度",
+        "VC觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-nvidia-newsroom",
+      "name": "NVIDIA Newsroom Press Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://nvidianews.nvidia.com/releases.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "晶片硬體",
+        "產業要聞"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-ollama-blog",
+      "name": "Ollama Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://ollama.com/blog/rss.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "官方",
+        "模型與權重",
+        "開源生態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-recode-china-ai",
+      "name": "Recode China AI",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.recodechinaai.com/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "產業深度",
+        "政策法規"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-redwood-research-blog",
+      "name": "Redwood Research Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.redwoodresearch.org/feed"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "AI安全",
+        "學術前沿",
+        "對齊科學"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-sam-altman",
+      "name": "Sam Altman Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.samaltman.com/posts.atom"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "個人部落格",
+        "觀點",
+        "產業深度"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-silicon-republic",
+      "name": "Silicon Republic",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.siliconrepublic.com/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "產業要聞",
+        "歐洲科技"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-sspai",
+      "name": "少数派 (sspai)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://sspai.com/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "實用指南",
+        "工具評測",
+        "生產力"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-the-gradient",
+      "name": "The Gradient (AI Research Pub)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://thegradient.pub/rss/"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "學術前沿",
+        "產業深度",
+        "觀點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-thurrott",
+      "name": "Thurrott",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.thurrott.com/feed"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "科技評論",
+        "軟體生態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-wired-ai",
+      "name": "Wired · Artificial Intelligence",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.wired.com/feed/tag/ai/latest/rss"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "媒體報導",
+        "產業深度"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-ithome-tw",
+      "name": "iThome (台灣)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.ithome.com.tw/rss"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "台灣科技",
+        "資訊安全",
+        "企業IT"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-technews-tw",
+      "name": "TechNews 科技新報",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://technews.tw/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "台灣科技",
+        "半導體",
+        "產業要聞"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-blocktempo",
+      "name": "BlockTempo 動區動趨",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.blocktempo.com/feed/"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "Web3與AI",
+        "產業要聞"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-leikeji",
+      "name": "雷科技",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.leikeji.com/rss"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "硬體評測",
+        "消費電子",
+        "AI硬體"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-chip-huyen",
+      "name": "Chip Huyen (AI Engineering)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://huyenchip.com/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "工程實踐",
+        "系統架構",
+        "專家專欄"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-ahead-of-ai",
+      "name": "Ahead of AI (Sebastian Raschka)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://magazine.sebastianraschka.com/feed"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "模型與權重",
+        "學術前沿",
+        "教學指南"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-semianalysis",
+      "name": "SemiAnalysis (Dylan Patel)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.semianalysis.com/feed"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "晶片硬體",
+        "半導體",
+        "算力架構",
+        "深度報告"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-servethehome",
+      "name": "ServeTheHome (STH Enterprise HW)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.servethehome.com/feed/"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "算力硬體",
+        "伺服器",
+        "晶片架構"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-tomshardware",
+      "name": "Tom’s Hardware AI & Computing",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.tomshardware.com/feeds/all"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "晶片硬體",
+        "評測基準",
+        "算力硬體"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-phoronix",
+      "name": "Phoronix (Linux HW & Benchmarks)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.phoronix.com/rss.php"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "開源生態",
+        "Linux",
+        "基準測試"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-the-register-ai",
+      "name": "The Register · AI & ML",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.theregister.com/software/ai_ml/headlines.atom"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "產業深度",
+        "企業IT",
+        "資安焦點"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-darkreading",
+      "name": "Dark Reading (Information Security)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.darkreading.com/rss.xml"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "資訊安全",
+        "威脅情報",
+        "防禦實踐"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-bytebytego",
+      "name": "ByteByteGo Newsletter (Alex Xu)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.bytebytego.com/feed"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "系統架構",
+        "工程實踐",
+        "教學指南"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-deeplearning-batch",
+      "name": "The Batch (DeepLearning.AI)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.deeplearning.ai/the-batch/feed/"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "產業要聞",
+        "模型與權重",
+        "教學指南"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-mitchell-hashimoto",
+      "name": "Mitchell Hashimoto Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://mitchellh.com/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家專欄",
+        "系統架構",
+        "工程實踐"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-dan-luu",
+      "name": "Dan Luu Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://danluu.com/atom.xml"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家專欄",
+        "系統架構",
+        "基準測試"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-julia-evans",
+      "name": "Julia Evans (jvns)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://jvns.ca/atom.xml"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家專欄",
+        "程式開發",
+        "教學指南"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-eli-bendersky",
+      "name": "Eli Bendersky Weblog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://eli.thegreenplace.net/feeds/all.atom.xml"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "專家專欄",
+        "編譯器與LLVM",
+        "程式開發"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-brandur",
+      "name": "Brandur Leach (Stripe / Systems)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://brandur.org/articles.feed"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "系統架構",
+        "資料庫",
+        "工程實踐"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-martin-fowler",
+      "name": "Martin Fowler Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://martinfowler.com/feed.atom"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "軟體架構",
+        "系統設計",
+        "經典方法"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-system-design-one",
+      "name": "System Design One",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://systemdesign.one/feed.xml"
+      },
+      "tier": "T2",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 60,
+      "tags": [
+        "系統架構",
+        "分散式系統",
+        "教學指南"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-asianometry",
+      "name": "Asianometry (Jon Y)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://asianometry.substack.com/feed"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "半導體",
+        "晶片硬體",
+        "產業歷史"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-davis-summarizes",
+      "name": "Davis Summarizes Papers",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://dblalock.substack.com/feed"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "學術前沿",
+        "論文精選",
+        "研究報告"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-vllm",
+      "name": "vLLM Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/vllm-project/vllm/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "開源生態",
+        "模型推理",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-llamacpp",
+      "name": "llama.cpp Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/ggerganov/llama.cpp/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "開源生態",
+        "邊緣端推理",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-transformers",
+      "name": "Hugging Face Transformers Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/huggingface/transformers/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "開源生態",
+        "模型與權重",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-diffusers",
+      "name": "Hugging Face Diffusers Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/huggingface/diffusers/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "開源生態",
+        "多模態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-sglang",
+      "name": "SGLang Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/sgl-project/sglang/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "開源生態",
+        "模型推理",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-openhands",
+      "name": "OpenHands (All-Hands AI) Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/All-Hands-AI/OpenHands/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "AI工具",
+        "智能體Agent",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-cline",
+      "name": "Cline Coding Agent Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/cline/cline/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "AI工具",
+        "程式開發",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-roocode",
+      "name": "Roo Code Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/RooVetGit/Roo-Code/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "AI工具",
+        "程式開發",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-mcp-servers",
+      "name": "Anthropic MCP Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/modelcontextprotocol/servers/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "MCP架構",
+        "協定標準",
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-uv",
+      "name": "Astral uv Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/astral-sh/uv/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "開發工具",
+        "Python生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-ruff",
+      "name": "Astral Ruff Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/astral-sh/ruff/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "開發工具",
+        "Python生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-pydantic-ai",
+      "name": "Pydantic AI Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/pydantic/pydantic-ai/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "智能體Agent",
+        "Python生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-crewai",
+      "name": "CrewAI Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/crewAIInc/crewAI/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "智能體Agent",
+        "AI工具",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-autogen",
+      "name": "Microsoft AutoGen Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/microsoft/autogen/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "智能體Agent",
+        "微軟生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-browser-use",
+      "name": "Browser Use Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/browser-use/browser-use/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "智能體Agent",
+        "瀏覽器自動化",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-lobsters",
+      "name": "Lobste.rs (Engineering Discussion)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://lobste.rs/rss"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "工程實踐",
+        "系統架構",
+        "社群精華"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-lwn",
+      "name": "LWN.net (Linux & Kernel News)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://lwn.net/headlines/rss"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "作業系統",
+        "Linux內核",
+        "基礎設施"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-devclass",
+      "name": "DevClass (Developer News)",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://devclass.com/feed/"
+      },
+      "tier": "T1",
+      "first_party": false,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "軟體開發",
+        "程式語言",
+        "業界動態"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-unsloth",
+      "name": "Unsloth AI Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/unslothai/unsloth/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "模型微調",
+        "開源生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-flash-attention",
+      "name": "FlashAttention Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/Dao-AILab/flash-attention/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "深度學習",
+        "算力優化",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-axolotl",
+      "name": "Axolotl Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/axolotl-ai-cloud/axolotl/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "模型微調",
+        "開源生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-triton",
+      "name": "OpenAI Triton Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/triton-lang/triton/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "編譯器",
+        "GPU核心",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-ray",
+      "name": "Ray (Anyscale) Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/ray-project/ray/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "分散式計算",
+        "AI訓練",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-onnxruntime",
+      "name": "Microsoft ONNX Runtime Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/microsoft/onnxruntime/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "模型推理",
+        "跨平臺",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-semantic-kernel",
+      "name": "Microsoft Semantic Kernel Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/microsoft/semantic-kernel/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "智能體Agent",
+        "微軟生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-pytorch-core",
+      "name": "PyTorch Core Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/pytorch/pytorch/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "深度學習",
+        "官方框架",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-qwen",
+      "name": "Alibaba Qwen Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/QwenLM/Qwen2.5/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "模型與權重",
+        "千問生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-internvl",
+      "name": "InternVL 多模態模型 Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/OpenGVLab/InternVL/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "多模態",
+        "開源模型",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-bun",
+      "name": "Bun Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/oven-sh/bun/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "JavaScript生態",
+        "執行環境",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-deno",
+      "name": "Deno Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/denoland/deno/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "JavaScript生態",
+        "執行環境",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-nextjs",
+      "name": "Next.js Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/vercel/next.js/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Web前端",
+        "全端架構",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-blog-rust",
+      "name": "Rust Official Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.rust-lang.org/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "程式語言",
+        "系統開發",
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-blog-go",
+      "name": "The Go Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://go.dev/blog/feed.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "程式語言",
+        "後端系統",
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-blog-python",
+      "name": "Python Official Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://blog.python.org/feeds/posts/default"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "程式語言",
+        "Python生態",
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-blog-duckdb",
+      "name": "DuckDB Official Blog",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://duckdb.org/feed.xml"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資料庫",
+        "分析引擎",
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-news-postgres",
+      "name": "PostgreSQL Official News",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://www.postgresql.org/news.rss"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資料庫",
+        "基礎設施",
+        "官方"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-fastapi",
+      "name": "FastAPI Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/fastapi/fastapi/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "Python生態",
+        "Web框架",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-typescript",
+      "name": "TypeScript Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/microsoft/TypeScript/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "程式語言",
+        "微軟生態",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-nodejs",
+      "name": "Node.js Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/nodejs/node/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "JavaScript生態",
+        "執行環境",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-golang",
+      "name": "Go Language Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/golang/go/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "程式語言",
+        "系統開發",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-rust",
+      "name": "Rust Compiler Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/rust-lang/rust/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "程式語言",
+        "系統開發",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-docker",
+      "name": "Docker CLI Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/docker/cli/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "容器架構",
+        "DevOps",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-k8s",
+      "name": "Kubernetes Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/kubernetes/kubernetes/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "雲端原生",
+        "容器編排",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-prometheus",
+      "name": "Prometheus Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/prometheus/prometheus/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "系統觀測",
+        "DevOps",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-grafana",
+      "name": "Grafana Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/grafana/grafana/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "系統觀測",
+        "DevOps",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-redis",
+      "name": "Redis Core Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/redis/redis/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "快取系統",
+        "記憶體資料庫",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-clickhouse",
+      "name": "ClickHouse Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/ClickHouse/ClickHouse/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "資料庫",
+        "OLAP分析",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-tauri",
+      "name": "Tauri Framework Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/tauri-apps/tauri/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "桌面端架構",
+        "Rust與Web",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
+      "id": "rss-gh-zig",
+      "name": "Zig Language Releases",
+      "kind": "rss",
+      "config": {
+        "feedUrl": "https://github.com/ziglang/zig/releases.atom"
+      },
+      "tier": "T1",
+      "first_party": true,
+      "owner_entity_id": null,
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "程式語言",
+        "系統開發",
+        "發布更新"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
     }
   ]
 }
