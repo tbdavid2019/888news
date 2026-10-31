@@ -179,17 +179,25 @@ const ENTITY_ALIASES: Array<[RegExp, string]> = [
   [/被駭|遭駭|黑客|駭客/gi, "hack"],
 ];
 
+export const MAX_LEXICAL_CHARS = 500;
+
 function normalizeAliases(s: string): string {
   let res = s.toLowerCase();
   for (const [re, rep] of ENTITY_ALIASES) res = res.replace(re, rep);
   return res;
 }
 
-/** Lexical stand-in for cosine when embeddings are off (tests, development without a key): shared character bigrams. */
-export function lexicalSimilarity(a: string, b: string): number {
+/** Lexical stand-in for cosine when embeddings are off (tests, development without a key): shared character bigrams, bounded to prevent runaway memory or noise on long texts. */
+export function lexicalSimilarity(a: string, b: string, maxLen = MAX_LEXICAL_CHARS): number {
+  if (!a || !b) return 0;
   const grams = (s: string) => {
-    const chars = [...normalizeAliases(s).replace(/\s+/g, "")];
-    return new Set(chars.map((_c, i) => chars.slice(i, i + 2).join("")).filter((g) => g.length === 2));
+    const text = s.length > maxLen ? s.slice(0, maxLen) : s;
+    const normalized = normalizeAliases(text).replace(/\s+/g, "");
+    const set = new Set<string>();
+    for (let i = 0; i < normalized.length - 1; i++) {
+      set.add(normalized.slice(i, i + 2));
+    }
+    return set;
   };
   const g = grams(a), h = grams(b);
   if (!g.size || !h.size) return 0;

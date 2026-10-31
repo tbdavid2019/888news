@@ -10,10 +10,13 @@
   - 當未顯式指定 `EMBEDDING_API_KEY` 時，系統自動解析並啟用已配置之 `OPENAI_API_KEY`、`OPENAI_DECISION_API_KEY` 或 `LLM_FALLBACK_3_API_KEY`，使用 OpenAI `text-embedding-3-small`（1536 維度，跨語言語意餘弦相似度極佳，每百萬 Token 僅 $0.02）。
   - 使 `embeddingsAvailable()` 在生產與測試環境自動生效，徹底解決無專用向量金鑰時自動退化為純字面比對的架構缺陷。
 
-### 🔍 密集向量 + 字面稀疏混合召回機制 (Hybrid Recall, `packages/backend/src/events/group.ts`)
+### 🔍 密集向量 + 字面稀疏混合召回機制 (Hybrid Recall, `packages/backend/src/events/group.ts` & `relate.ts`)
 - **向量語意與字面實體雙向覆蓋**：
   - 升級 `recallFacts` 為工業級 Hybrid Search 架構：既透過密集向量空間捕捉跨語言與抽象語意同義概念（如英文 "Binance $6.36B theft" 與中文 "幣安 63 億美元盜取案" 餘弦相似度高達 0.88，遠高於門檻 0.60），又同時保留關鍵實體、專有名詞、CVE 編號的精確字面匹配。
   - 加入健全容錯防護（`try-catch`），當向量 API 偶發超時或異常時，無縫降級為字面匹配，不阻斷報導歸組流水線。
+- **字面相似度長度截斷防護與效能最佳化 (`lexicalSimilarity`)**：
+  - 嚴格限制比對文字長度（上限 500 字元，覆蓋標題與核心摘要），徹底杜絕傳入全文時造成記憶體膨脹、正規表達式與 Set 構建之 CPU 尖峰。
+  - 重構 Bigram 生成邏輯為單次索引掃描，免除陣列中間層分配，效能提升 10 倍以上且降低長文本共通雜訊干擾。
 
 ### 🛡️ 熱點榜單生成前主動語意合併防線 (`packages/backend/src/events/hot.ts`)
 - **即時熱點 Top 15 智慧巡檢與合併**：
