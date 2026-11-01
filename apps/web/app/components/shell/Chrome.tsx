@@ -43,7 +43,7 @@ export function BackToTop() {
       type="button"
       aria-label="回到頂部"
       onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })}
-      className={`fixed bottom-[calc(70px+env(safe-area-inset-bottom))] right-4 z-30 flex size-11 items-center justify-center rounded-full border border-line bg-surface text-ink-2 shadow-[var(--shadow-soft)] transition-all duration-200 hover:text-ink lg:bottom-6 lg:right-6 ${
+      className={`fixed bottom-[calc(132px+env(safe-area-inset-bottom))] right-4 z-30 flex size-10 items-center justify-center rounded-full border border-line bg-surface/90 backdrop-blur text-ink-2 shadow-md transition-all duration-200 hover:text-ink lg:bottom-20 lg:right-6 ${
         shown ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
       }`}
     >

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router";
 import { pageMeta } from "../lib/seo";
 import { ReadingLayout } from "../components/ui/Page";
-import { getByokConfig, saveByokConfig, clearByokConfig } from "../lib/local-state";
+import { getByokConfig, saveByokConfig, clearByokConfig, subscribeByokConfig } from "../lib/local-state";
 import { IconCopy, IconCheck, IconBolt } from "../components/icons";
 
 export function meta() {
@@ -233,7 +233,19 @@ export default function AskPage() {
         }),
       });
 
-      const data = await res.json() as { models?: string[]; error?: string };
+      if (ac.signal.aborted) return;
+
+      const rawText = await res.text().catch(() => "");
+      if (ac.signal.aborted) return;
+
+      let data: { models?: string[]; error?: string } = {};
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch {
+        if (ac.signal.aborted) return;
+        throw new Error(rawText ? rawText.slice(0, 150) : `服務器未回應 (${res.status})`);
+      }
+
       if (!res.ok || !data.models) {
         throw new Error(data.error || `取得模型清單失敗 (${res.status})`);
       }
@@ -247,12 +259,13 @@ export default function AskPage() {
         return preferred;
       });
     } catch (err: any) {
-      if (err.name !== "AbortError") {
-        setModelError(err.message || "取得模型清單失敗");
-        setAvailableModels([]);
-      }
+      if (ac.signal.aborted || err?.name === "AbortError") return;
+      setModelError(err?.message || "取得模型清單失敗");
+      setAvailableModels([]);
     } finally {
-      setLoadingModels(false);
+      if (!ac.signal.aborted) {
+        setLoadingModels(false);
+      }
     }
   }
 
@@ -271,6 +284,24 @@ export default function AskPage() {
     if (activeKey.trim()) {
       void fetchModelList(activeKey, cfg.provider, cfg.baseUrl || "", true);
     }
+
+    const unsubscribe = subscribeByokConfig(() => {
+      const updated = getByokConfig();
+      const updatedActiveKey = updated.keys?.[updated.provider] || updated.key || "";
+      setProvider((p) => (p !== updated.provider ? updated.provider : p));
+      setModel((m) => (m !== (updated.model || "") ? updated.model || "" : m));
+      setKey((k) => (k !== updatedActiveKey ? updatedActiveKey : k));
+      setBaseUrl((b) => (b !== (updated.baseUrl || "") ? updated.baseUrl || "" : b));
+      setRememberKey((r) => (r !== updated.rememberKey ? updated.rememberKey : r));
+      setProviderKeys((prev) => {
+        const next = updated.keys || {};
+        const isSame =
+          Object.keys(next).length === Object.keys(prev).length &&
+          Object.keys(next).every((k) => next[k as ProviderKey] === prev[k as ProviderKey]);
+        return isSame ? prev : next;
+      });
+    });
+    return unsubscribe;
   }, []);
 
   // Debounced auto-fetch on key input
@@ -511,8 +542,9 @@ export default function AskPage() {
                 accumulatedAnswer += delta.content;
                 setCurrentAnswer(accumulatedAnswer);
               }
-              if (delta?.reasoning_content) {
-                accumulatedReasoning += delta.reasoning_content;
+              const reasoningChunk = delta?.reasoning_content || delta?.reasoning;
+              if (reasoningChunk) {
+                accumulatedReasoning += reasoningChunk;
                 setCurrentReasoning(accumulatedReasoning);
               }
             } catch {
@@ -727,7 +759,7 @@ export default function AskPage() {
               <div className="space-y-1">
                 <input
                   className={inputClass}
-                  placeholder="輸入模型名稱 (例如: gpt-4o 或 gemini-2.0-flash)"
+                  placeholder="輸入模型名稱 (填入 Key 自動取得清單)"
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
                   autoComplete="off"

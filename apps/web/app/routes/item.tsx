@@ -22,6 +22,7 @@ import { QuotedPost } from "../features/item/QuotedPost";
 import { TweetCard } from "../features/item/TweetCard";
 import { IconArrowLeft, IconCopy, IconDownload, IconExternal, IconImage, IconMenu, IconShare } from "../components/icons";
 import { useMermaid } from "../lib/use-mermaid";
+import { openCompanion } from "../lib/companion-bus";
 
 const PosterSheet = lazy(() => import("../features/item/PosterSheet"));
 
@@ -179,7 +180,20 @@ export default function ItemPage() {
   );
   // Desktop actions head the right rail, one row as tall as 返回 at the head of the left one.
   const actions = (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => openCompanion({
+          title: item.title,
+          summary: item.summary || "",
+          url: item.links.original,
+          question: `請幫我深度分析《${item.title}》的核心要點與實際影響。`,
+        })}
+        className="inline-flex h-8 items-center justify-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2.5 text-[12px] font-semibold text-accent transition-colors hover:bg-accent hover:text-white cursor-pointer"
+        title="向 AI 伴隨助理提問本篇"
+      >
+        <span>🤖 伴隨 AI</span>
+      </button>
       <a
         href={item.links.original}
         target="_blank"
@@ -279,6 +293,18 @@ export default function ItemPage() {
       <div className="sticky top-0 z-30 -mx-4 flex h-12 items-center gap-1.5 border-b border-line-soft bg-bg/95 px-4 backdrop-blur lg:hidden">
         {backButton}
         <span className="flex-1" />
+        <button
+          type="button"
+          onClick={() => openCompanion({
+            title: item.title,
+            summary: item.summary || "",
+            url: item.links.original,
+            question: `請幫我深度分析《${item.title}》的核心觀點。`,
+          })}
+          className="inline-flex h-8 items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2.5 text-[12px] font-semibold text-accent cursor-pointer"
+        >
+          <span>🤖 AI</span>
+        </button>
         <StarButton item={item} size={32} />
         <a href={item.links.original} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1 px-1.5 text-[14px] text-ink-2">
           <IconExternal size={15} /> {originalLabel}
@@ -350,6 +376,58 @@ export default function ItemPage() {
               />
             </section>
           )}
+
+          {/* AI Companion In-Page Action */}
+          <div className="mt-6 rounded-2xl border border-accent/25 bg-accent/[0.03] p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent text-base text-white shadow-2xs">
+                  🤖
+                </div>
+                <div>
+                  <h4 className="text-[14.5px] font-bold text-ink">AI 伴隨問答</h4>
+                  <p className="text-[12.5px] text-ink-3">自備 Key 深入解析本篇技術脈絡、背景驗證與多輪追問</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openCompanion({
+                    title: item.title,
+                    summary: item.summary || "",
+                    url: item.links.original,
+                    question: `請幫我總結《${item.title}》的 3 大核心結論與技術關鍵點。`,
+                  })}
+                  className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 shadow-2xs hover:border-accent hover:text-accent transition-colors cursor-pointer"
+                >
+                  💡 總結重點
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openCompanion({
+                    title: item.title,
+                    summary: item.summary || "",
+                    url: item.links.original,
+                    question: `針對《${item.title}》，有哪些深層技術原理、代幣成本或工程架構值得深入討論？`,
+                  })}
+                  className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 shadow-2xs hover:border-accent hover:text-accent transition-colors cursor-pointer"
+                >
+                  🔍 深度剖析
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openCompanion({
+                    title: item.title,
+                    summary: item.summary || "",
+                    url: item.links.original,
+                  })}
+                  className="inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-1.5 text-[12.5px] font-semibold text-white shadow-2xs hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <span>💬 本篇發問</span>
+                </button>
+              </div>
+            </div>
+          </div>
 
           {item.tags.includes("Podcast") && (
             <div className="mt-6 rounded-2xl border border-line-soft bg-bg-card p-5 shadow-xs">

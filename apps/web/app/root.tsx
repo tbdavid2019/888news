@@ -21,6 +21,7 @@ import { apiGet } from "./lib/api.server.ts";
 import { useHydratedFlag } from "./lib/hydration.ts";
 import { detectLocale, LocaleProvider, useI18n, type Locale } from "./lib/i18n/index.ts";
 import { PwaAutoPrompt } from "./components/shell/PwaInstall.tsx";
+import { AskCompanion } from "./components/ask/AskCompanion";
 
 
 
@@ -170,6 +171,7 @@ export default function App() {
       <SiteShell changelogVersion={meta.changelogVersion}>
         <Outlet />
       </SiteShell>
+      <AskCompanion />
       <PwaAutoPrompt />
     </LocaleProvider>
   );

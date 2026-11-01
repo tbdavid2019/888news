@@ -542,6 +542,19 @@ export function saveByokConfig(cfg: ByokConfig): void {
     baseUrl: cfg.baseUrl || "",
     rememberKey: cfg.rememberKey !== false,
   };
+
+  const current = getByokConfig();
+  if (
+    current.provider === toStore.provider &&
+    current.model === toStore.model &&
+    current.key === toStore.key &&
+    current.baseUrl === toStore.baseUrl &&
+    current.rememberKey === toStore.rememberKey &&
+    JSON.stringify(current.keys || {}) === JSON.stringify(toStore.keys || {})
+  ) {
+    return;
+  }
+
   writeRaw(KEYS.byokConfig, JSON.stringify(toStore));
   invalidate(KEYS.byokConfig);
 }
@@ -560,5 +573,7 @@ export function useByokConfig(): ByokConfig {
     () => DEFAULT_BYOK_CONFIG
   );
 }
+
+export { subscribeByokConfig };
 
 

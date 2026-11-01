@@ -14,8 +14,9 @@ export function registerAskModel(app: FastifyInstance) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return reply.code(400).send({ error: "Invalid request" });
 
     const abortController = new AbortController();
-    const closeHandler = () => abortController.abort();
-    req.raw.once("close", closeHandler);
+    const closeHandler = () => {
+      if (!reply.raw.writableEnded) abortController.abort();
+    };
     reply.raw.once("close", closeHandler);
 
     try {
@@ -60,7 +61,6 @@ export function registerAskModel(app: FastifyInstance) {
       req.log.warn("BYOK worker request failed");
       return reply.code(503).send({ error: "Worker unavailable" });
     } finally {
-      req.raw.off("close", closeHandler);
       reply.raw.off("close", closeHandler);
     }
   });
@@ -75,8 +75,9 @@ export function registerAskModel(app: FastifyInstance) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return reply.code(400).send({ error: "Invalid request" });
 
     const abortController = new AbortController();
-    const closeHandler = () => abortController.abort();
-    req.raw.once("close", closeHandler);
+    const closeHandler = () => {
+      if (!reply.raw.writableEnded) abortController.abort();
+    };
     reply.raw.once("close", closeHandler);
 
     try {
@@ -104,7 +105,6 @@ export function registerAskModel(app: FastifyInstance) {
       req.log.warn("BYOK worker models request failed");
       return reply.code(503).send({ error: "Worker unavailable" });
     } finally {
-      req.raw.off("close", closeHandler);
       reply.raw.off("close", closeHandler);
     }
   });

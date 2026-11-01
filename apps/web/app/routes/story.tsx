@@ -14,6 +14,7 @@ import { Select } from "../components/ui/Controls";
 import { IconArrowLeft, IconChevronRight, IconClock, IconDoc, IconUsers } from "../components/icons";
 import { useI18n } from "../lib/i18n";
 import { formatArticleSummary, renderMarkdown, stripMarkdown } from "../lib/markdown";
+import { openCompanion } from "../lib/companion-bus";
 
 import { detectLocale } from "../lib/i18n/detect.ts";
 import { localizeData } from "../lib/i18n/converter.server.ts";
@@ -236,12 +237,17 @@ export default function StoryPage() {
             </span>
           )}
         </div>
-        <Link
-          to={`/ask?${new URLSearchParams({ q: `請整理「${story.title}」的背景、最新進展與各方觀點。` }).toString()}`}
-          className="mt-5 inline-flex items-center gap-2 rounded-card border border-line bg-surface px-4 py-2.5 text-[16px] font-semibold text-accent transition-colors hover:border-accent"
+        <button
+          type="button"
+          onClick={() => openCompanion({
+            title: story.title,
+            summary: story.digest || story.summary || story.excerpt?.text || "",
+            question: `請整理「${story.title}」的背景、最新進展與各方觀點。`,
+          })}
+          className="mt-5 inline-flex items-center gap-2 rounded-card border border-line bg-surface px-4 py-2.5 text-[16px] font-semibold text-accent transition-colors hover:border-accent cursor-pointer"
         >
-          針對這個事件提問 <IconChevronRight size={16} />
-        </Link>
+          🤖 針對這個事件伴隨提問 <IconChevronRight size={16} />
+        </button>
       </header>
 
       <div className="sticky top-0 z-20 -mx-4 mt-5 bg-bg/90 px-4 py-2 backdrop-blur-md lg:mx-0 lg:px-0">

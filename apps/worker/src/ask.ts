@@ -76,7 +76,6 @@ async function handleAskModels(req: IncomingMessage, res: ServerResponse) {
   active++;
 
   const abortController = new AbortController();
-  // Listen to response close to detect client drop; do NOT listen to req.close which fires upon upload EOF
   const closeHandler = () => {
     if (!res.writableEnded) abortController.abort();
   };
@@ -101,11 +100,11 @@ async function handleAskModels(req: IncomingMessage, res: ServerResponse) {
 
     let endpointUrl: string;
     const headers: Record<string, string> = {
-      "user-agent": "888news-byok/1.0",
+      accept: "application/json",
     };
 
     if (provider === "gemini") {
-      endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`;
+      endpointUrl = "https://generativelanguage.googleapis.com/v1beta/models";
       headers["x-goog-api-key"] = key;
     } else if (provider === "bedrock") {
       const region = (typeof baseUrl === "string" && /^[a-z]{2}(?:-[a-z]+)+-\d$/.test(baseUrl.trim()))
@@ -213,7 +212,6 @@ async function handleAskStream(req: IncomingMessage, res: ServerResponse) {
   active++;
 
   const abortController = new AbortController();
-  // Listen to response close to detect client drop; do NOT listen to req.close which fires upon upload EOF
   const closeHandler = () => {
     if (!res.writableEnded) abortController.abort();
   };
@@ -286,7 +284,7 @@ async function handleAskStream(req: IncomingMessage, res: ServerResponse) {
     try {
       providerRes = await fetch(endpointUrl, {
         method: "POST",
-        redirect: "error", // Reject any redirects to prevent SSRF hopping to private/metadata IPs
+        redirect: "error",
         signal: combinedSignal,
         headers: {
           "content-type": "application/json",

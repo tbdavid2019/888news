@@ -2,6 +2,41 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-01] — 🤖 全站文章「伴隨式 AI 問答」（Floating Copilot）正式上線與核心錯誤修復
+
+### 🌟 全站伴隨式 AI Copilot（In-Page Accompanying Assistant）
+- **根除切頁中斷閱讀體驗的設計**：
+  - 徹底推翻先前必須切換至獨立 `/ask` 頁面才能發問的離散設計，重塑為**隨處伴隨、不離本頁**的浮動 AI 助理。
+  - 於全站右下角提供精緻的「🤖 AI 伴隨問答」懸浮球（Floating Action Button），點擊即可在不離開當前頁面的情況下展開浮動助理面板（桌面端浮窗 / 行動端抽屜）。
+- **當前文章智能感知與深度伴隨問答**：
+  - **自動上下文注入**：當讀者在瀏覽任何文章（如 `/items/:id` 或 `/story/:id`）時，伴隨助理自動讀取並鎖定當前文章的標題、導讀摘要與原始信源，在對話時自動帶入文章上下文與背景檢索。
+  - **文章內快捷觸發點**：
+    - 文章頂部操作列（桌面版）與置頂導航列（手機版）新增「🤖 伴隨 AI 提問」快捷按鈕。
+    - 文章導讀正下方嵌入「AI 伴隨問答」互動卡片，提供「💡 總結重點」、「🔍 深度剖析」與「💬 本篇發問」一鍵快捷選項。
+    - 事件頁（`/story/:id`）直接支援一鍵開啟伴隨問答，無縫探討事件發展脈絡。
+- **輕量化全域總線架構 (`apps/web/app/lib/companion-bus.ts`)**：
+  - 建立基於 `useSyncExternalStore` 的響應式事件總線，支援跨組件與全域無障礙觸發伴隨助理與快捷提問，避免 React 重複渲染與 Hydration 衝突。
+
+### 🐛 核心錯誤修復與現代化清理
+- **徹底修復 `Unexpected end of JSON input` 崩潰**：
+  - 深入排查發現 Node.js `IncomingMessage`（`req.raw`）在 Fastify 解析完 POST Body 的 EOF 時會立即觸發 `close` 事件；先前錯誤監聽 `req.raw.once("close")` 導致每次請求送達即被誤判為斷線並執行 `abort()`，Fastify 隨後回傳空 Body（`Content-Length: 0`），前端解析時引發 `Unexpected end of JSON input`。
+  - 徹底移除 `req.raw.once("close")`，改為僅監聽 `reply.raw.once("close")`（確保僅在客戶端實際中途斷開連線時中斷），並於斷線時回傳標準 HTTP 499 JSON 錯誤，保證後端永遠回傳有效 JSON。
+  - 前端 `fetchModelList` 升級為 `res.text()` 容錯解析機制，防止任何非 JSON 或空回應造成前端腳本拋出未捕獲異常。
+- **清除所有過期模型佔位符**：
+  - 徹底清除所有寫死或提及過期模型（如 `gpt-4o`）的輸入佔位符與文字說明，改為純動態、通用之「輸入模型名稱 (填入 Key 自動取得清單)」，符合 2026 年最新技術標準。
+### 🛡️ Dual Code Review (Codex CLI & OpenCode CLI) 雙重審查加固
+- **雙向同步與無窮迴圈防護 (`apps/web/app/lib/local-state.ts`, `AskCompanion.tsx`, `ask.tsx`)**：
+  - 在 `saveByokConfig` 導入深層內容等價比較（Deep Equality Guard），若設定無變更則直接略過寫入與廣播，杜絕跨組件雙向訂閱觸發的無窮渲染與事件風暴。
+- **文章情境檢索強化 (`apps/web/app/components/ask/AskCompanion.tsx`)**：
+  - 當點選文章快捷提問（如「總結重點」）時，自動將當前文章標題注入情報檢索前綴，確保後端全文檢索精準聚焦在該篇報導上。
+  - 支援 `delta?.reasoning` 與 `delta?.reasoning_content` 雙重思考鏈欄位，適配各類推理模型。
+  - 路由跳轉時自動重設情境，避免跨文章殘留上一篇內容；在 `/ask` 獨立頁面自動隱藏懸浮球以避免 UI 冗餘。
+- **懸浮圖層佈局衝突修復 (`apps/web/app/components/shell/Chrome.tsx`)**：
+  - 將「回到頂部」（Back to Top）按鈕縱向向上位移，徹底解決桌面端與行動端與伴隨問答懸浮球重疊遮擋的問題。
+- **後端安全與中斷處理優化 (`apps/worker/src/ask.ts`, `apps/api/src/routes/ask-model.ts`)**：
+  - Google Gemini 模型列表移除 URL 查詢參數中的 Key，一律透過 `x-goog-api-key` 標頭傳遞，防止金鑰外洩於代理日誌中。
+  - 客戶端主動斷線時乾淨釋放資源，不再向已銷毀的 Socket 嘗試寫入回應，確保服務端零未捕獲異常。
+
 ## [2026-11-01] — ⚡ BYOK 動態 Model List 即時獲取與情報問答全面升級（雙 AI 審查驗證）
 
 ### 🚀 動態 Model List 即時獲取（廢除過期靜態模型，全面自動拉取）
