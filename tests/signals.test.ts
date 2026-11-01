@@ -4,6 +4,7 @@
 // close to it, or when the post it quotes arrives and joins a fact.
 import { stub, tag } from "./setup.ts";
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { after, before, test } from "node:test";
 import { closeDb, sql } from "@aihot/backend/db";
 import { upsertMaterial } from "@aihot/backend/content/materials";
@@ -17,7 +18,7 @@ const EDITORIAL = `test-sig-ed-${T}`;
 const SIGNAL = `test-sig-hs-${T}`;
 const TOPIC = `WL${T}`;
 /** Text of its own: close to nothing stored. */
-const ALONE = `ZZ${T}`;
+const ALONE = randomUUID();
 
 // Embeddings: texts about the topic point one way, everything else another. The judge calls the first
 // candidate the same occurrence.
