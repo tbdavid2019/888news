@@ -16,7 +16,7 @@ test("BYOK bridge requires internal authentication and honors the byok safety sw
     assert.equal(forbidden.status, 403);
     const disabled = await fetch(url, { method: "POST", headers: { "x-worker-secret": "test-internal-secret" }, body: "{}" });
     assert.equal(disabled.status, 503);
-    assert.deepEqual(await disabled.json(), { error: "BYOK service is disabled" });
+    assert.deepEqual(await disabled.json(), { error: "Model calls or BYOK service are disabled" });
   } finally {
     delete process.env.BYOK_ENABLED;
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));

@@ -12,12 +12,20 @@ export function registerAskModel(app: FastifyInstance) {
     const body = req.body;
     if (!body || typeof body !== "object" || Array.isArray(body)) return reply.code(400).send({ error: "Invalid request" });
 
+    const abortController = new AbortController();
+    const closeHandler = () => abortController.abort();
+    req.raw.once("close", closeHandler);
+    reply.raw.once("close", closeHandler);
+
     try {
       const endpoint = new URL("/ask", askWorkerUrl());
+      const timeoutSignal = AbortSignal.timeout(100_000);
+      const combinedSignal = AbortSignal.any ? AbortSignal.any([abortController.signal, timeoutSignal]) : abortController.signal;
+
       const response = await fetch(endpoint, {
         method: "POST",
         redirect: "error",
-        signal: AbortSignal.timeout(100_000),
+        signal: combinedSignal,
         headers: { "content-type": "application/json", "x-worker-secret": secret },
         body: JSON.stringify(body),
       });
@@ -37,6 +45,7 @@ export function registerAskModel(app: FastifyInstance) {
         });
         if (response.body) {
           for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
+            if (abortController.signal.aborted) break;
             reply.raw.write(chunk);
           }
         }
@@ -45,9 +54,13 @@ export function registerAskModel(app: FastifyInstance) {
 
       const value: unknown = await response.json();
       return reply.send(value);
-    } catch {
+    } catch (err) {
+      if (abortController.signal.aborted) return;
       req.log.warn("BYOK worker request failed");
       return reply.code(503).send({ error: "Worker unavailable" });
+    } finally {
+      req.raw.off("close", closeHandler);
+      reply.raw.off("close", closeHandler);
     }
   });
 }

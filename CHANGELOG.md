@@ -23,13 +23,19 @@
 - **外部搜尋服務配置化 (`packages/backend/src/providers/ask-search.ts`)**：
   - 將硬編碼搜尋端點重構為支援 `ASK_SEARCH_URL` 與 `URL2MD_BASE_URL` 環境變數配置，並提供 `ASK_WEB_SEARCH_ENABLED` 開關與平穩降級保護。
 
-### 🎨 前端互動與體驗全面升級 (`apps/web/app/routes/ask.tsx` & `local-state.ts`)
-- **Key 與偏好本機持久化**：
-  - 於 `local-state.ts` 新增 `byokConfig` 狀態管理器，使用者的 API Key、偏好服務商與自訂端點安全保留於瀏覽器 LocalStorage，重新整理或切換頁面不再丟失。
-  - 提供「記住金鑰」切換開關與「一鍵清除金鑰」隱私按鈕。
-- **結構化 Markdown 渲染與引用點擊跳轉**：
-  - 支援標題、項目清單、粗體、行內代碼格式化渲染，並將 `[1]`, `[2]` 引用編號自動解析為帶提示之高亮標籤，點擊直接連至本站新聞或原文。
-  - 提供快捷提問範例卡片、回答一鍵複製、生成中即時中斷按鈕與多輪續問上下文優化。
+### 🛡️ Dual Code Review 審查加固 (Codex & OpenCode 聯合修復)
+- **SSRF 轉址防禦與強制 HTTPS (`apps/worker/src/ask.ts`)**：
+  - 上游呼叫全面加入 `redirect: "error"`，徹底防止自訂端點透過 HTTP 30x 重新導向至雲端 Metadata（169.254.169.254）或內部私有網路。
+  - 自訂端點強制限制 `https://` 協議，杜絕透過明文 HTTP 外洩用戶 API Key。
+- **修復 React Router SSR Hydration 覆蓋 LocalStorage 缺陷 (`apps/web/app/routes/ask.tsx`)**：
+  - 增加客戶端 `mounted` 標記防護，避免 SSR 伺服器端空狀態在 Hydration 時被副作用效果（`useEffect`）誤存回 LocalStorage 導致已儲存金鑰被洗空。
+- **全鏈路連線中斷傳遞 (Abort Signal Propagation)**：
+  - API 與 Worker 監聽 `req.raw.on("close")` / `reply.raw.on("close")`，當讀者關閉分頁或點擊「停止等待」時，立即中斷對 LLM 供應商的即時請求，避免繼續耗費用戶 Token 與 Worker 併發槽位。
+- **DeepSeek-R1 思考鏈支援與互動優化**：
+  - 增加 `delta.reasoning_content` 解析與專屬思考展開抽屜（Thinking Box），解決推理模型思考期間無輸出被誤判逾時的問題。
+  - 送出提問時立即清空輸入欄位，避免回答串流期間讀者預打下一題在串流結束時被覆蓋。
+  - 支援 `Cmd/Ctrl + Enter` 鍵盤快速送出，支援 Ordered List 有序編號渲染，並將行動端設定區塊調整至下方避免佔滿首屏。
+
 
 
 ## [2026-10-31] — 🛡️ GitHub CodeQL 安全掃描全數清零（消除最後 1 項 Code Scanning Alert #31）

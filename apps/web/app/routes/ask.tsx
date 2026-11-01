@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router";
 import { pageMeta } from "../lib/seo";
 import { ReadingLayout } from "../components/ui/Page";
-import { useByokConfig, saveByokConfig, clearByokConfig, type ByokConfig } from "../lib/local-state";
+import { getByokConfig, saveByokConfig, clearByokConfig, type ByokConfig } from "../lib/local-state";
 import { IconCopy, IconCheck, IconExternal, IconClose, IconBolt } from "../components/icons";
 
 export function meta() {
@@ -11,14 +11,14 @@ export function meta() {
 
 type ProviderKey = "openai" | "groq" | "deepseek" | "openrouter" | "custom";
 type Source = { title: string; url: string; text: string; kind: string };
-type Turn = { question: string; answer: string; sources: Source[]; warning?: string };
+type Turn = { question: string; answer: string; reasoning?: string; sources: Source[]; warning?: string };
 
 const PROVIDERS: Record<ProviderKey, { label: string; defaultModel: string; hint: string }> = {
-  deepseek: { label: "DeepSeek (推薦，平價強大)", defaultModel: "deepseek-chat", hint: "支援 deepseek-chat, deepseek-reasoner" },
-  openai: { label: "OpenAI", defaultModel: "gpt-4o-mini", hint: "支援 gpt-4o, gpt-4o-mini 等" },
-  groq: { label: "Groq (超高速)", defaultModel: "llama-3.3-70b-versatile", hint: "極致響應速度" },
+  deepseek: { label: "DeepSeek (推薦，平價強大)", defaultModel: "deepseek-chat", hint: "支援 deepseek-chat, deepseek-reasoner (R1)" },
+  openai: { label: "OpenAI", defaultModel: "gpt-4o-mini", hint: "支援 gpt-4o, gpt-4o-mini, o3-mini 等" },
+  groq: { label: "Groq (超高速)", defaultModel: "llama-3.3-70b-versatile", hint: "極致推論與響應速度" },
   openrouter: { label: "OpenRouter", defaultModel: "openai/gpt-4o-mini", hint: "聚合全球頂級開源與商業模型" },
-  custom: { label: "自訂相容端點 (Custom API)", defaultModel: "default", hint: "支援 SiliconFlow, Moonshot, 本地 Ollama 等" },
+  custom: { label: "自訂端點 (OpenAI 相容)", defaultModel: "default", hint: "支援 SiliconFlow, Moonshot 或公網自建端點 (須 HTTPS)" },
 };
 
 const SUGGESTED_QUESTIONS = [
@@ -55,14 +55,27 @@ function FormattedAnswer({ text, sources }: { text: string; sources: Source[] })
           return <h3 key={bIdx} className="pt-2 text-lg font-bold text-ink">{renderInline(trimmed.slice(3), sources)}</h3>;
         }
 
-        // List
+        // Lists: distinguish numbered ordered lists from bulleted unordered lists
         const lines = trimmed.split("\n");
-        const isList = lines.every((l) => /^\s*([*\-+]|\d+\.)\s+/.test(l));
-        if (isList) {
+        const isOrderedList = lines.every((l) => /^\s*\d+\.\s+/.test(l));
+        const isBulletList = !isOrderedList && lines.every((l) => /^\s*([*\-+]|\d+\.)\s+/.test(l));
+
+        if (isOrderedList) {
           return (
-            <ul key={bIdx} className="space-y-1.5 pl-4 list-disc marker:text-ink-3">
+            <ol key={bIdx} className="space-y-1.5 pl-5 list-decimal marker:text-ink-3">
               {lines.map((line, lIdx) => {
-                const content = line.replace(/^\s*([*\-+]|\d+\.)\s+/, "");
+                const content = line.replace(/^\s*\d+\.\s+/, "");
+                return <li key={lIdx}>{renderInline(content, sources)}</li>;
+              })}
+            </ol>
+          );
+        }
+
+        if (isBulletList) {
+          return (
+            <ul key={bIdx} className="space-y-1.5 pl-5 list-disc marker:text-ink-3">
+              {lines.map((line, lIdx) => {
+                const content = line.replace(/^\s*([*\-+])\s+/, "");
                 return <li key={lIdx}>{renderInline(content, sources)}</li>;
               })}
             </ul>
@@ -76,7 +89,7 @@ function FormattedAnswer({ text, sources }: { text: string; sources: Source[] })
 }
 
 function renderInline(str: string, sources: Source[]) {
-  // Bold & citation matching
+  // Bold, code & citation matching
   const parts = str.split(/(\*\*[^*]+\*\*|\[\d+\]|`[^`]+`)/g);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
@@ -98,7 +111,7 @@ function renderInline(str: string, sources: Source[]) {
             target="_blank"
             rel="noopener noreferrer"
             title={src?.title || `來源 [${idx + 1}]`}
-            className="mx-0.5 inline-flex items-center gap-0.5 rounded px-1.5 py-0.2 text-[12px] font-medium text-accent hover:underline hover:bg-accent/10"
+            className="mx-0.5 inline-flex items-center gap-0.5 rounded px-1.5 py-[1px] text-[12px] font-medium text-accent hover:underline hover:bg-accent/10"
           >
             [{idx + 1}]
           </a>
@@ -112,17 +125,19 @@ function renderInline(str: string, sources: Source[]) {
 
 export default function AskPage() {
   const [searchParams] = useSearchParams();
-  const byok = useByokConfig();
+  const [mounted, setMounted] = useState(false);
 
-  const [provider, setProvider] = useState<ProviderKey>(byok.provider);
-  const [model, setModel] = useState(byok.model || PROVIDERS[byok.provider].defaultModel);
-  const [key, setKey] = useState(byok.key);
-  const [baseUrl, setBaseUrl] = useState(byok.baseUrl || "");
-  const [rememberKey, setRememberKey] = useState(byok.rememberKey);
+  const [provider, setProvider] = useState<ProviderKey>("openai");
+  const [model, setModel] = useState(PROVIDERS.openai.defaultModel);
+  const [key, setKey] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
+  const [rememberKey, setRememberKey] = useState(true);
 
   const [question, setQuestion] = useState(() => (searchParams.get("q") || "").slice(0, 2000));
+  const [activeQuestion, setActiveQuestion] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [currentAnswer, setCurrentAnswer] = useState("");
+  const [currentReasoning, setCurrentReasoning] = useState("");
   const [currentSources, setCurrentSources] = useState<Source[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -131,8 +146,20 @@ export default function AskPage() {
   const abort = useRef<AbortController | null>(null);
   const composing = useRef(false);
 
-  // Sync back to local storage when config changes
+  // Initialize from browser localStorage on client mount (prevents SSR hydration wipeout)
   useEffect(() => {
+    const cfg = getByokConfig();
+    setProvider(cfg.provider);
+    setModel(cfg.model || PROVIDERS[cfg.provider].defaultModel);
+    setKey(cfg.key);
+    setBaseUrl(cfg.baseUrl || "");
+    setRememberKey(cfg.rememberKey);
+    setMounted(true);
+  }, []);
+
+  // Sync to local storage only after client hydration is complete
+  useEffect(() => {
+    if (!mounted) return;
     saveByokConfig({
       provider,
       model,
@@ -140,7 +167,7 @@ export default function AskPage() {
       baseUrl,
       rememberKey,
     });
-  }, [provider, model, key, baseUrl, rememberKey]);
+  }, [mounted, provider, model, key, baseUrl, rememberKey]);
 
   function handleProviderChange(next: ProviderKey) {
     setProvider(next);
@@ -162,8 +189,8 @@ export default function AskPage() {
     } catch {}
   }
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
+  async function submit(event?: FormEvent) {
+    if (event) event.preventDefault();
     const q = question.trim();
     if (composing.current || !q || !key.trim() || !model.trim() || busy) return;
     if ([...q].length < 2 && turns.length === 0) {
@@ -171,11 +198,15 @@ export default function AskPage() {
       return;
     }
 
+    // Immediately preserve active question and clear input field so user can draft follow-up
+    setActiveQuestion(q);
+    setQuestion("");
     const controller = new AbortController();
     abort.current = controller;
     setBusy(true);
     setError("");
     setCurrentAnswer("");
+    setCurrentReasoning("");
     setCurrentSources([]);
 
     try {
@@ -248,6 +279,8 @@ export default function AskPage() {
       }
 
       let accumulatedAnswer = "";
+      let accumulatedReasoning = "";
+      let isStreamCompleted = false;
       const contentType = answerRes.headers.get("content-type") || "";
 
       if (contentType.includes("text/event-stream") && answerRes.body) {
@@ -266,12 +299,22 @@ export default function AskPage() {
             const trimmed = line.trim();
             if (!trimmed.startsWith("data:")) continue;
             const dataStr = trimmed.slice(5).trim();
-            if (dataStr === "[DONE]") continue;
+            if (dataStr === "[DONE]") {
+              isStreamCompleted = true;
+              continue;
+            }
             try {
               const parsed = JSON.parse(dataStr);
-              const delta = parsed.choices?.[0]?.delta?.content || "";
-              if (delta) {
-                accumulatedAnswer += delta;
+              // Support both standard content and DeepSeek-R1 reasoning_content
+              const reasoningDelta = parsed.choices?.[0]?.delta?.reasoning_content || "";
+              const contentDelta = parsed.choices?.[0]?.delta?.content || "";
+
+              if (reasoningDelta) {
+                accumulatedReasoning += reasoningDelta;
+                setCurrentReasoning(accumulatedReasoning);
+              }
+              if (contentDelta) {
+                accumulatedAnswer += contentDelta;
                 setCurrentAnswer(accumulatedAnswer);
               }
             } catch {}
@@ -280,16 +323,31 @@ export default function AskPage() {
       } else {
         const result = await answerRes.json() as { content?: string; error?: string };
         accumulatedAnswer = result.content || "";
+        isStreamCompleted = true;
       }
 
-      if (!accumulatedAnswer.trim()) {
+      if (!accumulatedAnswer.trim() && !accumulatedReasoning.trim()) {
         throw new Error("模型未產生回應內容，請檢查模型名稱與金鑰配額。");
       }
 
-      const warning = [data.siteError && "本站搜尋暫時異常", data.webError && "外網搜尋暫時無法使用"].filter(Boolean).join("；");
-      setTurns((prev) => [...prev, { question: q, answer: accumulatedAnswer, sources, warning }]);
-      setQuestion("");
+      const warnings: string[] = [];
+      if (data.siteError) warnings.push("本站搜尋暫時異常");
+      if (data.webError) warnings.push("外網搜尋暫時無法使用");
+      if (!isStreamCompleted && accumulatedAnswer.length < 50) warnings.push("連線中斷，回答可能不完整");
+
+      setTurns((prev) => [
+        ...prev,
+        {
+          question: q,
+          answer: accumulatedAnswer,
+          reasoning: accumulatedReasoning || undefined,
+          sources,
+          warning: warnings.length ? warnings.join("；") : undefined,
+        },
+      ]);
+      setActiveQuestion("");
       setCurrentAnswer("");
+      setCurrentReasoning("");
       setCurrentSources([]);
     } catch (err) {
       if (!(err instanceof DOMException && err.name === "AbortError")) {
@@ -303,7 +361,7 @@ export default function AskPage() {
 
   return (
     <ReadingLayout
-      asideClassName="order-first lg:order-none"
+      asideClassName="order-last lg:order-none"
       aside={
         <div className="space-y-4 border-t border-line pt-4 text-[14px]">
           <div className="flex items-center justify-between">
@@ -343,7 +401,7 @@ export default function AskPage() {
                 onChange={(e) => setBaseUrl(e.target.value)}
                 autoComplete="off"
               />
-              <p className="text-[12px] text-ink-3">需支援標準 OpenAI 格式 /chat/completions</p>
+              <p className="text-[12px] text-ink-3">需支援標準 OpenAI 格式 /chat/completions (限 HTTPS)</p>
             </label>
           )}
 
@@ -435,6 +493,17 @@ export default function AskPage() {
                 <p className="mt-2 text-[13px] text-amber-600 dark:text-amber-400">⚠️ {turn.warning}，回答參考資料可能不完整。</p>
               )}
 
+              {turn.reasoning && (
+                <details className="mt-3 rounded-card bg-surface-2 p-3 text-[13px] text-ink-3">
+                  <summary className="cursor-pointer font-medium select-none text-ink-2">
+                    🧠 思考過程（點擊展開）
+                  </summary>
+                  <div className="mt-2 text-ink-3 whitespace-pre-wrap leading-relaxed text-[13px]">
+                    {turn.reasoning}
+                  </div>
+                </details>
+              )}
+
               <div className="mt-4 border-t border-line/60 pt-4">
                 <FormattedAnswer text={turn.answer} sources={turn.sources} />
               </div>
@@ -469,8 +538,20 @@ export default function AskPage() {
 
           {/* Active Streaming Turn */}
           {busy && (
-            <section className="rounded-card border border-accent/40 bg-surface p-5 shadow-xs animate-pulse-none">
-              <h2 className="text-lg font-bold text-ink leading-snug">{question || "思考中…"}</h2>
+            <section className="rounded-card border border-accent/40 bg-surface p-5 shadow-xs">
+              <h2 className="text-lg font-bold text-ink leading-snug">{activeQuestion || "思考中…"}</h2>
+
+              {currentReasoning && (
+                <details open className="mt-3 rounded-card bg-surface-2 p-3 text-[13px] text-ink-3">
+                  <summary className="cursor-pointer font-medium select-none text-ink-2">
+                    🧠 正在推理思考中…
+                  </summary>
+                  <div className="mt-2 text-ink-3 whitespace-pre-wrap leading-relaxed text-[13px]">
+                    {currentReasoning}
+                  </div>
+                </details>
+              )}
+
               <div className="mt-4 border-t border-line/60 pt-4">
                 {currentAnswer ? (
                   <FormattedAnswer text={currentAnswer} sources={currentSources} />
@@ -495,10 +576,16 @@ export default function AskPage() {
             className={`${inputClass} min-h-28 resize-y leading-relaxed`}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                void submit();
+              }
+            }}
             onCompositionStart={() => { composing.current = true; }}
             onCompositionEnd={() => { composing.current = false; }}
             maxLength={2000}
-            placeholder={!key.trim() ? "請先在右側（或下方）設定填入你的 API Key" : "輸入你想探討的行業問題、事件背景或比較分析…"}
+            placeholder={!key.trim() ? "請在模型設定面板中填入你的 API Key (支援 Cmd/Ctrl+Enter 送出)" : "輸入你想探討的行業問題、事件背景或比較分析… (支援 Cmd/Ctrl+Enter 送出)"}
           />
 
           {error && (
@@ -529,7 +616,7 @@ export default function AskPage() {
             {turns.length > 0 && !busy && (
               <button
                 type="button"
-                onClick={() => { setTurns([]); setQuestion(""); }}
+                onClick={() => { setTurns([]); setQuestion(""); setActiveQuestion(""); }}
                 className="rounded-card border border-line px-3.5 py-2 text-[13px] text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
               >
                 清空對話

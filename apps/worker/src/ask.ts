@@ -3,7 +3,7 @@
 // Never written to the database or receipts table.
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { timingSafeEqual } from "node:crypto";
-import { credential } from "@aihot/backend/config";
+import { config, credential } from "@aihot/backend/config";
 import { askWorkerHost } from "@aihot/backend/lib/ask-network";
 import { assertPublicUrl } from "@aihot/backend/lib/url";
 
@@ -51,12 +51,18 @@ export function startAskBridge() {
         return reply(res, 403, { error: "Forbidden" });
       }
 
-      if (process.env.BYOK_ENABLED === "false") {
-        return reply(res, 503, { error: "BYOK service is disabled" });
+      // Honor the repository model safety switch and BYOK-specific toggle
+      if (!config.modelCallsEnabled || process.env.BYOK_ENABLED === "false") {
+        return reply(res, 503, { error: "Model calls or BYOK service are disabled" });
       }
 
       if (active >= 12) return reply(res, 503, { error: "Service busy" });
       active++;
+
+      const abortController = new AbortController();
+      const closeHandler = () => abortController.abort();
+      req.once("close", closeHandler);
+      res.once("close", closeHandler);
 
       try {
         let body: any;
@@ -96,7 +102,12 @@ export function startAskBridge() {
           if (typeof baseUrl !== "string" || !baseUrl.trim()) {
             return reply(res, 400, { error: "baseUrl is required for custom provider" });
           }
-          const rawUrl = baseUrl.trim().endsWith("/chat/completions") ? baseUrl.trim() : `${baseUrl.trim().replace(/\/+$/, "")}/chat/completions`;
+          const trimmed = baseUrl.trim();
+          // Strictly enforce HTTPS for custom endpoints to prevent cleartext token leakage
+          if (!trimmed.startsWith("https://")) {
+            return reply(res, 400, { error: "Custom endpoints must use HTTPS" });
+          }
+          const rawUrl = trimmed.endsWith("/chat/completions") ? trimmed : `${trimmed.replace(/\/+$/, "")}/chat/completions`;
           try {
             await assertPublicUrl(rawUrl, false);
             endpointUrl = rawUrl;
@@ -107,13 +118,16 @@ export function startAskBridge() {
           endpointUrl = DEFAULT_ENDPOINTS[provider]!;
         }
 
-        // Forward to LLM Provider
-        const signal = AbortSignal.timeout(90_000);
+        // Forward to LLM Provider with redirect: "error" to prevent SSRF bypass
+        const timeoutSignal = AbortSignal.timeout(90_000);
+        const combinedSignal = AbortSignal.any ? AbortSignal.any([abortController.signal, timeoutSignal]) : abortController.signal;
+
         let providerRes: Response;
         try {
           providerRes = await fetch(endpointUrl, {
             method: "POST",
-            signal,
+            redirect: "error", // Reject any redirects to prevent SSRF hopping to private/metadata IPs
+            signal: combinedSignal,
             headers: {
               "content-type": "application/json",
               authorization: `Bearer ${key}`,
@@ -126,6 +140,7 @@ export function startAskBridge() {
             }),
           });
         } catch (fetchErr: any) {
+          if (abortController.signal.aborted) return;
           return reply(res, 502, { error: `Model provider connection failed: ${fetchErr?.message || "timeout"}` });
         }
 
@@ -150,6 +165,7 @@ export function startAskBridge() {
           });
           if (providerRes.body) {
             for await (const chunk of providerRes.body as unknown as AsyncIterable<Uint8Array>) {
+              if (abortController.signal.aborted) break;
               res.write(chunk);
             }
           }
@@ -167,8 +183,12 @@ export function startAskBridge() {
           return reply(res, 200, { content, usage });
         }
       } catch (err: any) {
-        return reply(res, 500, { error: err?.message || "Internal server error" });
+        if (!abortController.signal.aborted) {
+          return reply(res, 500, { error: err?.message || "Internal server error" });
+        }
       } finally {
+        req.off("close", closeHandler);
+        res.off("close", closeHandler);
         active--;
       }
     })().catch(() => {
