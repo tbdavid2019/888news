@@ -38,10 +38,37 @@ function isChatModel(id: string): boolean {
     "davinci",
     "rerank",
     "guard",
+    "safeguard",
+    "prompt-guard",
+    "specdec",
+    "allam",
     "transcription",
     "audio-preview",
+    "vision-preview",
   ];
   return !nonChatSubstrings.some((term) => lower.includes(term));
+}
+
+function modelScore(id: string): number {
+  const lower = id.toLowerCase();
+  if (/llama-3\.[23]-70b/i.test(lower)) return 100;
+  if (/llama-3\.[123]-8b-instant/i.test(lower)) return 95;
+  if (/deepseek-r1/i.test(lower)) return 90;
+  if (/llama-3\.[123]/i.test(lower)) return 85;
+  if (/gemini-2\.[05]-flash/i.test(lower)) return 100;
+  if (/gemini-2\.[05]-pro/i.test(lower)) return 90;
+  if (/gemini-1\.5-flash/i.test(lower)) return 85;
+  if (/gpt-4\.1-mini/i.test(lower)) return 100;
+  if (/gpt-4o-mini/i.test(lower)) return 95;
+  if (/gpt-4\.1/i.test(lower)) return 90;
+  if (/gpt-4o/i.test(lower)) return 85;
+  if (/deepseek-chat/i.test(lower)) return 100;
+  if (/grok-2/i.test(lower)) return 100;
+  if (/gemma2-9b/i.test(lower)) return 80;
+  if (/mixtral/i.test(lower)) return 75;
+  if (/qwen/i.test(lower)) return 70;
+  if (/versatile|instant|flash|mini|chat/i.test(lower)) return 50;
+  return 10;
 }
 
 const MAX_BODY = 150_000;
@@ -190,11 +217,14 @@ async function handleAskModels(req: IncomingMessage, res: ServerResponse) {
       }
     }
 
-    const chatOnly = extracted.filter(isChatModel);
-    const finalModels = chatOnly.length > 0 ? chatOnly : extracted;
-    const uniqueModels = Array.from(new Set(finalModels)).sort((a, b) =>
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
-    );
+    const sanitized = extracted.filter((m) => !/allam|guard/i.test(m));
+    const chatOnly = sanitized.filter(isChatModel);
+    const finalModels = chatOnly.length > 0 ? chatOnly : sanitized;
+    const uniqueModels = Array.from(new Set(finalModels)).sort((a, b) => {
+      const scoreDiff = modelScore(b) - modelScore(a);
+      if (scoreDiff !== 0) return scoreDiff;
+      return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+    });
 
     return reply(res, 200, { models: uniqueModels });
   } catch (err: any) {
@@ -280,6 +310,7 @@ async function handleAskStream(req: IncomingMessage, res: ServerResponse) {
     const timeoutSignal = AbortSignal.timeout(90_000);
     const combinedSignal = AbortSignal.any ? AbortSignal.any([abortController.signal, timeoutSignal]) : abortController.signal;
 
+    const isReasoningModel = /r1|reasoner|o1|o3/i.test(model);
     let providerRes: Response;
     try {
       providerRes = await fetch(endpointUrl, {
@@ -294,7 +325,7 @@ async function handleAskStream(req: IncomingMessage, res: ServerResponse) {
           model,
           messages,
           stream: stream !== false,
-          max_tokens: 4096,
+          max_tokens: isReasoningModel ? 4096 : 2048,
         }),
       });
     } catch (fetchErr: any) {
@@ -314,6 +345,10 @@ async function handleAskStream(req: IncomingMessage, res: ServerResponse) {
         } catch {
           if (errText) errDetail = errText.slice(0, 200);
         }
+      }
+      const rawErr = `${errDetail} ${errText}`;
+      if (/reduce the length|context_length|context length|token limit/i.test(rawErr)) {
+        errDetail = "提問與內容長度超過該模型上限，請切換至大上下文模型（如 Llama-3.3-70b-versatile 或 Gemini Flash）或清空歷史對話後重試。";
       }
       return reply(res, providerRes.status >= 400 && providerRes.status < 600 ? providerRes.status : 502, { error: errDetail });
     }

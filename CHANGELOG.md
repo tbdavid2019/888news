@@ -2,6 +2,30 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-01] — ⚡ 修復 Groq 預設模型亂碼、建立智慧旗艦排序與 Token 預算防溢出優化
+
+### 🧠 智慧模型過濾與旗艦權重排序（根除特殊語種與安全模型誤選）
+- **排除非通用/專用模型**：
+  - 後端 `isChatModel` 與模型提取層硬性過濾 `allam`（阿拉伯語專用模型，缺乏中文詞表導致吐出字元亂碼）、`guard` / `safeguard` / `prompt-guard`（僅能判定安全性的專用分類器）、`specdec`（推測解碼草稿模型）等。
+- **建立模型權重評分機制 (`modelScore`)**：
+  - 徹底推翻單純字母排序造成 `allam-2-7b` 置頂的缺陷，按架構能力將真正主流的旗艦模型優先排在首位（如 Groq 的 `llama-3.3-70b-versatile`、`llama-3.1-8b-instant`、Google 的 `gemini-2.5-flash`、OpenAI 的 `gpt-4.1-mini`、DeepSeek 的 `deepseek-chat`）。
+- **前端智慧預設推薦 (`pickBestDefaultModel`)**：
+  - 前端導入階層式旗艦模式挑選器，在用戶初次載入或更新 Key 時，自動優先鎖定效能與上下文最佳之旗艦模型，並於本機記憶體中自動清洗過期或無效模型標籤。
+  - 嚴格校驗降級防線，杜絕非聊天模型（如 `allam`、`guard`）透過通用關鍵字命中或第一筆預設逃逸。
+
+### 📦 Token 預算管理與上下文防溢出截斷 (Context Length Guard)
+- **平衡輸出 Token 上限與動態推論支援**：
+  - 將後端請求的預設 `max_tokens` 由 4096 調整為 2048，保留充裕的輸入 Context 空間，徹底杜絕 Groq 的 `400 Bad Request: Please reduce the length of the messages or completion` 錯誤。
+  - 對思考型模型（如 `DeepSeek-R1`、`o1`、`o3-mini`）動態配給 4096 Token，兼顧推理思維鏈與完整結論。
+- **參考情報、對話歷史與提問字數智慧裁剪**：
+  - 前端檢索來源收斂至最相關的 5 則，每則文字摘要上限 400~500 字元。
+  - 當前文章摘要控制於 800 字元以內，歷史多輪對話保留最近 3 輪並適當截斷。
+  - 伴隨助手輸入框與當前提問加入 2,000 字元防線，使總體 Prompt Token 穩定維持在 2000~2500 左右，相容各大模型上下文視窗。
+- **錯誤友善提示優化**：
+  - 當模型服務商回傳 `reduce the length`、`context_length` 或 `token limit` 錯誤時，自動轉化為友善清晰的引導訊息，提示用戶切換至超長上下文模型或清空對話重試。
+
+---
+
 ## [2026-11-01] — 🎨 排版錯位修復與全站 Emoji 替換為 Lucide 專業圖示
 
 ### 📐 文章頁排版錯位修復 (Layout Misalignment Fix)

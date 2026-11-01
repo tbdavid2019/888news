@@ -5,6 +5,7 @@ import { ReadingLayout } from "../components/ui/Page";
 import { getByokConfig, saveByokConfig, clearByokConfig, subscribeByokConfig } from "../lib/local-state";
 import { IconCopy, IconCheck, IconBolt } from "../components/icons";
 import { RotateCw, AlertCircle, Lightbulb, Lock, Brain, ArrowRight } from "lucide-react";
+import { pickBestDefaultModel } from "../components/ask/AskCompanion";
 
 export function meta() {
   return pageMeta({ title: "情報問答 (BYOK)", description: "結合本站情報與全網資料的深度問答與續問", path: "/ask", noindex: true });
@@ -254,10 +255,8 @@ export default function AskPage() {
       lastFetchedSignature.current = signature;
       setAvailableModels(data.models);
       setModel((prev) => {
-        if (prev && data.models!.includes(prev)) return prev;
-        // Prioritize modern flagship / lightweight models
-        const preferred = data.models!.find((m) => /flash|mini|chat|versatile|pro/i.test(m)) || data.models![0] || "";
-        return preferred;
+        if (prev && data.models!.includes(prev) && !/allam|guard/i.test(prev)) return prev;
+        return pickBestDefaultModel(data.models!);
       });
     } catch (err: any) {
       if (ac.signal.aborted || err?.name === "AbortError") return;
@@ -274,8 +273,9 @@ export default function AskPage() {
   useEffect(() => {
     const cfg = getByokConfig();
     const activeKey = cfg.keys?.[cfg.provider] || cfg.key || "";
+    const cleanModel = cfg.model && !/allam|guard/i.test(cfg.model) ? cfg.model : "";
     setProvider(cfg.provider);
-    setModel(cfg.model || "");
+    setModel(cleanModel);
     setKey(activeKey);
     setProviderKeys(cfg.keys || {});
     setBaseUrl(cfg.baseUrl || "");
@@ -289,8 +289,9 @@ export default function AskPage() {
     const unsubscribe = subscribeByokConfig(() => {
       const updated = getByokConfig();
       const updatedActiveKey = updated.keys?.[updated.provider] || updated.key || "";
+      const updatedModel = updated.model && !/allam|guard/i.test(updated.model) ? updated.model : "";
       setProvider((p) => (p !== updated.provider ? updated.provider : p));
-      setModel((m) => (m !== (updated.model || "") ? updated.model || "" : m));
+      setModel((m) => (m !== updatedModel ? updatedModel : m));
       setKey((k) => (k !== updatedActiveKey ? updatedActiveKey : k));
       setBaseUrl((b) => (b !== (updated.baseUrl || "") ? updated.baseUrl || "" : b));
       setRememberKey((r) => (r !== updated.rememberKey ? updated.rememberKey : r));
@@ -441,22 +442,22 @@ export default function AskPage() {
       };
 
       const sources: Source[] = [];
-      for (const it of (data.items || []).slice(0, 8)) {
+      for (const it of (data.items || []).slice(0, 3)) {
         if (safeUrl(it.url)) {
           sources.push({
             title: it.title,
             url: it.url,
-            text: it.summary || "",
+            text: (it.summary || "").slice(0, 500),
             kind: "site",
           });
         }
       }
-      for (const w of (data.web || []).slice(0, 6)) {
+      for (const w of (data.web || []).slice(0, 2)) {
         if (safeUrl(w.url)) {
           sources.push({
             title: w.title,
             url: w.url,
-            text: w.description || "",
+            text: (w.description || "").slice(0, 400),
             kind: "web",
           });
         }
@@ -478,14 +479,15 @@ export default function AskPage() {
         { role: "system", content: systemPrompt },
       ];
 
-      // Keep only up to 5 most recent turns to stay within 30-message limits
-      const recentTurns = turns.slice(-5);
+      // Keep only up to 3 most recent turns to stay well within token limits
+      const recentTurns = turns.slice(-3);
       for (const t of recentTurns) {
-        promptMessages.push({ role: "user", content: t.question.slice(0, 2000) });
-        promptMessages.push({ role: "assistant", content: t.answer.slice(0, 6000) });
+        promptMessages.push({ role: "user", content: t.question.slice(0, 300) });
+        promptMessages.push({ role: "assistant", content: t.answer.slice(0, 800) });
       }
 
-      const currentTurnUserContent = `【參考情報來源】\n${contextText || "（暫無檢索資料，請基於自身常識回答）"}\n\n【讀者提問】\n${q}`;
+      const sanitizedQ = q.trim().slice(0, 2000);
+      const currentTurnUserContent = `【參考情報來源】\n${contextText || "（暫無檢索資料，請基於自身常識回答）"}\n\n【讀者提問】\n${sanitizedQ}`;
       promptMessages.push({ role: "user", content: currentTurnUserContent });
 
       // 3. Stream answer from worker proxy using BYOK

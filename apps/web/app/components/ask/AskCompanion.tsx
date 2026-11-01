@@ -67,6 +67,31 @@ function safeUrl(value: string): string | null {
   }
 }
 
+export function pickBestDefaultModel(models: string[]): string {
+  const clean = models.filter((m) => !/allam|guard/i.test(m));
+  const pool = clean.length > 0 ? clean : models;
+  if (!pool.length) return "";
+  const patterns = [
+    /llama-3\.[23]-70b/i,
+    /llama-3\.[123]-8b-instant/i,
+    /llama-3\.[123]/i,
+    /gemini-2\.[05]-flash/i,
+    /gemini-1\.5-flash/i,
+    /gpt-4\.1-mini/i,
+    /gpt-4o-mini/i,
+    /gpt-4\.1/i,
+    /gpt-4o/i,
+    /deepseek-chat/i,
+    /grok-2/i,
+    /versatile|instant|flash|mini|chat/i,
+  ];
+  for (const pat of patterns) {
+    const match = pool.find((m) => pat.test(m));
+    if (match) return match;
+  }
+  return pool[0] || "";
+}
+
 /** Lightweight, safe Markdown renderer with clickable [n] citations */
 function FormattedAnswer({ text, sources }: { text: string; sources: Source[] }) {
   const blocks = text.split(/\n{2,}/);
@@ -290,9 +315,8 @@ export function AskCompanion() {
       lastFetchedSignature.current = signature;
       setAvailableModels(data.models);
       setModel((prev) => {
-        if (prev && data.models!.includes(prev)) return prev;
-        const preferred = data.models!.find((m) => /flash|mini|chat|versatile|pro/i.test(m)) || data.models![0] || "";
-        return preferred;
+        if (prev && data.models!.includes(prev) && !/allam|guard/i.test(prev)) return prev;
+        return pickBestDefaultModel(data.models!);
       });
     } catch (err: any) {
       if (ac.signal.aborted || err?.name === "AbortError") return;
@@ -309,8 +333,9 @@ export function AskCompanion() {
   useEffect(() => {
     const cfg = getByokConfig();
     const activeKey = cfg.keys?.[cfg.provider] || cfg.key || "";
+    const cleanModel = cfg.model && !/allam|guard/i.test(cfg.model) ? cfg.model : "";
     setProvider(cfg.provider);
-    setModel(cfg.model || "");
+    setModel(cleanModel);
     setKey(activeKey);
     setProviderKeys(cfg.keys || {});
     setBaseUrl(cfg.baseUrl || "");
@@ -327,8 +352,9 @@ export function AskCompanion() {
     const unsubscribe = subscribeByokConfig(() => {
       const updated = getByokConfig();
       const updatedActiveKey = updated.keys?.[updated.provider] || updated.key || "";
+      const updatedModel = updated.model && !/allam|guard/i.test(updated.model) ? updated.model : "";
       setProvider((p) => (p !== updated.provider ? updated.provider : p));
-      setModel((m) => (m !== (updated.model || "") ? updated.model || "" : m));
+      setModel((m) => (m !== updatedModel ? updatedModel : m));
       setKey((k) => (k !== updatedActiveKey ? updatedActiveKey : k));
       setBaseUrl((b) => (b !== (updated.baseUrl || "") ? updated.baseUrl || "" : b));
       setRememberKey((r) => (r !== updated.rememberKey ? updated.rememberKey : r));
@@ -473,14 +499,14 @@ export function AskCompanion() {
       };
 
       const sources: Source[] = [];
-      for (const it of (data.items || []).slice(0, 6)) {
+      for (const it of (data.items || []).slice(0, 3)) {
         if (safeUrl(it.url)) {
-          sources.push({ title: it.title, url: it.url, text: it.summary || "", kind: "site" });
+          sources.push({ title: it.title, url: it.url, text: (it.summary || "").slice(0, 500), kind: "site" });
         }
       }
-      for (const w of (data.web || []).slice(0, 4)) {
+      for (const w of (data.web || []).slice(0, 2)) {
         if (safeUrl(w.url)) {
-          sources.push({ title: w.title, url: w.url, text: w.description || "", kind: "web" });
+          sources.push({ title: w.title, url: w.url, text: (w.description || "").slice(0, 400), kind: "web" });
         }
       }
       setCurrentSources(sources);
@@ -488,7 +514,7 @@ export function AskCompanion() {
       // If viewing a page, append page context (prefer explicit override, then bus context, then pageContext)
       let currentArticleNote = "";
       if (effectiveContext?.title) {
-        currentArticleNote = `【當前正在閱讀的頁面文章】\n《${effectiveContext.title}》\n${effectiveContext.summary || ""}\n\n`;
+        currentArticleNote = `【當前正在閱讀的頁面文章】\n《${effectiveContext.title}》\n${(effectiveContext.summary || "").slice(0, 800)}\n\n`;
       }
 
       const contextText = sources.map((s, idx) => `[${idx + 1}] 《${s.title}》\n${s.text}`).join("\n\n");
@@ -504,13 +530,14 @@ export function AskCompanion() {
         { role: "system", content: systemPrompt },
       ];
 
-      const recentTurns = turns.slice(-4);
+      const recentTurns = turns.slice(-3);
       for (const t of recentTurns) {
-        promptMessages.push({ role: "user", content: t.question.slice(0, 1500) });
-        promptMessages.push({ role: "assistant", content: t.answer.slice(0, 4000) });
+        promptMessages.push({ role: "user", content: t.question.slice(0, 300) });
+        promptMessages.push({ role: "assistant", content: t.answer.slice(0, 800) });
       }
 
-      const currentTurnUserContent = `${currentArticleNote}【參考情報來源】\n${contextText || "（無額外外部檢索）"}\n\n【讀者提問】\n${q}`;
+      const sanitizedQ = q.trim().slice(0, 2000);
+      const currentTurnUserContent = `${currentArticleNote}【參考情報來源】\n${contextText || "（無額外外部檢索）"}\n\n【讀者提問】\n${sanitizedQ}`;
       promptMessages.push({ role: "user", content: currentTurnUserContent });
 
       // Stream answer
@@ -1010,6 +1037,7 @@ export function AskCompanion() {
               <textarea
                 className="w-full resize-none rounded-xl border border-line bg-surface-2 px-3 py-2 text-[13.5px] text-ink outline-none focus:border-accent max-h-24 min-h-[42px] leading-relaxed"
                 rows={1}
+                maxLength={2000}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={(e) => {
