@@ -9,9 +9,11 @@ import { assertPublicUrl } from "@aihot/backend/lib/url";
 
 const DEFAULT_ENDPOINTS: Record<string, string> = {
   openai: "https://api.openai.com/v1/chat/completions",
+  gemini: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
   groq: "https://api.groq.com/openai/v1/chat/completions",
-  deepseek: "https://api.deepseek.com/chat/completions",
+  grok: "https://api.x.ai/v1/chat/completions",
   openrouter: "https://openrouter.ai/api/v1/chat/completions",
+  deepseek: "https://api.deepseek.com/chat/completions",
 };
 
 const MAX_BODY = 150_000;
@@ -75,7 +77,7 @@ export function startAskBridge() {
         const { provider, model, key, baseUrl, messages, stream = true } = body ?? {};
 
         // Validation
-        const validProvider = typeof provider === "string" && (Object.hasOwn(DEFAULT_ENDPOINTS, provider) || provider === "custom");
+        const validProvider = typeof provider === "string" && (Object.hasOwn(DEFAULT_ENDPOINTS, provider) || provider === "custom" || provider === "bedrock");
         if (!validProvider) return reply(res, 400, { error: "Invalid provider" });
 
         if (typeof model !== "string" || !/^[\w.\-/:]{1,120}$/.test(model)) {
@@ -98,7 +100,12 @@ export function startAskBridge() {
 
         // Determine destination endpoint
         let endpointUrl: string;
-        if (provider === "custom") {
+        if (provider === "bedrock") {
+          const region = (typeof baseUrl === "string" && /^[a-z]{2}(?:-[a-z]+)+-\d$/.test(baseUrl.trim()))
+            ? baseUrl.trim()
+            : "us-east-1";
+          endpointUrl = `https://bedrock-runtime.${region}.amazonaws.com/openai/v1/chat/completions`;
+        } else if (provider === "custom") {
           if (typeof baseUrl !== "string" || !baseUrl.trim()) {
             return reply(res, 400, { error: "baseUrl is required for custom provider" });
           }

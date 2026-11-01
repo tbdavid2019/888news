@@ -452,13 +452,26 @@ export function useIsPodcastEpisodeStarred(id: string): boolean {
 }
 
 // --- BYOK settings (stored in browser local storage only) ---
+export type ByokProvider = "openai" | "gemini" | "groq" | "grok" | "openrouter" | "bedrock" | "deepseek" | "custom";
+
 export interface ByokConfig {
-  provider: "openai" | "groq" | "deepseek" | "openrouter" | "custom";
+  provider: ByokProvider;
   model: string;
   key: string;
   baseUrl?: string;
   rememberKey: boolean;
 }
+
+export const BYOK_DEFAULT_MODELS: Record<ByokProvider, string> = {
+  openai: "gpt-4o-mini",
+  gemini: "gemini-2.5-flash",
+  groq: "llama-3.3-70b-versatile",
+  grok: "grok-2-latest",
+  openrouter: "openai/gpt-4o-mini",
+  bedrock: "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+  deepseek: "deepseek-chat",
+  custom: "default",
+};
 
 export const DEFAULT_BYOK_CONFIG: ByokConfig = {
   provider: "openai",
@@ -473,15 +486,15 @@ export function getByokConfig(): ByokConfig {
     const raw = readJson(KEYS.byokConfig);
     if (!raw || typeof raw !== "object") return DEFAULT_BYOK_CONFIG;
     const o = raw as Record<string, unknown>;
-    const provider = typeof o.provider === "string" && ["openai", "groq", "deepseek", "openrouter", "custom"].includes(o.provider)
-      ? (o.provider as ByokConfig["provider"])
+    const provider = typeof o.provider === "string" && (o.provider in BYOK_DEFAULT_MODELS)
+      ? (o.provider as ByokProvider)
       : "openai";
     const rememberKey = o.rememberKey !== false;
     return {
       provider,
-      model: typeof o.model === "string" && o.model.trim() ? o.model : (provider === "deepseek" ? "deepseek-chat" : provider === "groq" ? "llama-3.3-70b-versatile" : "gpt-4o-mini"),
+      model: typeof o.model === "string" && o.model.trim() ? o.model : BYOK_DEFAULT_MODELS[provider],
       key: rememberKey && typeof o.key === "string" ? o.key : "",
-      baseUrl: typeof o.baseUrl === "string" ? o.baseUrl : "",
+      baseUrl: typeof o.baseUrl === "string" ? o.baseUrl : (provider === "bedrock" ? "us-east-1" : ""),
       rememberKey,
     };
   });

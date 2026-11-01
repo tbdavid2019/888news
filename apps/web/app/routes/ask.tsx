@@ -9,16 +9,80 @@ export function meta() {
   return pageMeta({ title: "情報問答 (BYOK)", description: "結合本站情報與全網資料的深度問答與續問", path: "/ask", noindex: true });
 }
 
-type ProviderKey = "openai" | "groq" | "deepseek" | "openrouter" | "custom";
+type ProviderKey = "openai" | "gemini" | "groq" | "grok" | "openrouter" | "bedrock" | "deepseek" | "custom";
 type Source = { title: string; url: string; text: string; kind: string };
 type Turn = { question: string; answer: string; reasoning?: string; sources: Source[]; warning?: string };
 
-const PROVIDERS: Record<ProviderKey, { label: string; defaultModel: string; hint: string }> = {
-  deepseek: { label: "DeepSeek (推薦，平價強大)", defaultModel: "deepseek-chat", hint: "支援 deepseek-chat, deepseek-reasoner (R1)" },
-  openai: { label: "OpenAI", defaultModel: "gpt-4o-mini", hint: "支援 gpt-4o, gpt-4o-mini, o3-mini 等" },
-  groq: { label: "Groq (超高速)", defaultModel: "llama-3.3-70b-versatile", hint: "極致推論與響應速度" },
-  openrouter: { label: "OpenRouter", defaultModel: "openai/gpt-4o-mini", hint: "聚合全球頂級開源與商業模型" },
-  custom: { label: "自訂端點 (OpenAI 相容)", defaultModel: "default", hint: "支援 SiliconFlow, Moonshot 或公網自建端點 (須 HTTPS)" },
+interface ProviderDef {
+  label: string;
+  defaultModel: string;
+  hint: string;
+  keyPlaceholder: string;
+  popularModels: string[];
+}
+
+const PROVIDERS: Record<ProviderKey, ProviderDef> = {
+  openai: {
+    label: "ChatGPT / OpenAI",
+    defaultModel: "gpt-4o-mini",
+    hint: "支援 GPT-4o, GPT-4o-mini, o3-mini, o1 等",
+    keyPlaceholder: "sk-...",
+    popularModels: ["gpt-4o-mini", "gpt-4o", "o3-mini", "o1-mini"],
+  },
+  gemini: {
+    label: "Google Gemini",
+    defaultModel: "gemini-2.5-flash",
+    hint: "使用 Google AI Studio 金鑰，超低延遲與超長上下文",
+    keyPlaceholder: "AIzaSy...",
+    popularModels: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"],
+  },
+  groq: {
+    label: "Groq (極速推論)",
+    defaultModel: "llama-3.3-70b-versatile",
+    hint: "LPU 超低延遲硬體，極速生成回答",
+    keyPlaceholder: "gsk_...",
+    popularModels: ["llama-3.3-70b-versatile", "mixtral-8x7b-32768", "qwen-2.5-32b"],
+  },
+  grok: {
+    label: "xAI Grok",
+    defaultModel: "grok-2-latest",
+    hint: "Elon Musk 旗下 xAI，即時資訊與幽默深度分析",
+    keyPlaceholder: "xai-...",
+    popularModels: ["grok-2-latest", "grok-2", "grok-beta"],
+  },
+  openrouter: {
+    label: "OpenRouter",
+    defaultModel: "openai/gpt-4o-mini",
+    hint: "一站式聚合 Claude 3.5, GPT-4o, Llama 3 等全球頂級模型",
+    keyPlaceholder: "sk-or-...",
+    popularModels: ["openai/gpt-4o-mini", "anthropic/claude-3.5-sonnet", "deepseek/deepseek-chat"],
+  },
+  bedrock: {
+    label: "AWS Bedrock (OpenAI 相容)",
+    defaultModel: "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+    hint: "AWS 雲端託管模型 (需提供 Bedrock API Key 與區域代碼)",
+    keyPlaceholder: "Bedrock API Key (ABSK...)",
+    popularModels: [
+      "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "amazon.nova-pro-v1:0",
+      "amazon.nova-lite-v1:0",
+      "meta.llama3-3-70b-instruct-v1:0",
+    ],
+  },
+  deepseek: {
+    label: "DeepSeek (平價首選)",
+    defaultModel: "deepseek-chat",
+    hint: "開源大模型之光，支援 DeepSeek-V3 與 R1 推理模型",
+    keyPlaceholder: "sk-...",
+    popularModels: ["deepseek-chat", "deepseek-reasoner"],
+  },
+  custom: {
+    label: "自訂端點 (OpenAI 相容)",
+    defaultModel: "default",
+    hint: "支援 SiliconFlow, Moonshot 或公網自建端點 (須 HTTPS)",
+    keyPlaceholder: "sk-...",
+    popularModels: ["default"],
+  },
 };
 
 const SUGGESTED_QUESTIONS = [
@@ -172,6 +236,9 @@ export default function AskPage() {
   function handleProviderChange(next: ProviderKey) {
     setProvider(next);
     setModel(PROVIDERS[next].defaultModel);
+    if (next === "bedrock") {
+      if (!baseUrl || baseUrl.startsWith("http")) setBaseUrl("us-east-1");
+    }
   }
 
   function handleClearKey() {
@@ -266,7 +333,7 @@ export default function AskPage() {
           provider,
           model: model.trim(),
           key: key.trim(),
-          baseUrl: provider === "custom" ? baseUrl.trim() : undefined,
+          baseUrl: provider === "custom" || provider === "bedrock" ? baseUrl.trim() : undefined,
           messages,
           stream: true,
         }),
@@ -391,6 +458,32 @@ export default function AskPage() {
             <p className="text-[12px] text-ink-3">{PROVIDERS[provider].hint}</p>
           </label>
 
+          {provider === "bedrock" && (
+            <label className="block space-y-1.5 text-ink-2">
+              <span className="font-medium text-ink">AWS Region (區域代碼)</span>
+              <input
+                className={inputClass}
+                placeholder="us-east-1"
+                value={baseUrl || "us-east-1"}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                autoComplete="off"
+              />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {["us-east-1", "us-west-2", "ap-northeast-1", "eu-central-1"].map((reg) => (
+                  <button
+                    key={reg}
+                    type="button"
+                    onClick={() => setBaseUrl(reg)}
+                    className={`rounded px-1.5 py-0.5 text-[11px] border transition-colors ${baseUrl === reg || (!baseUrl && reg === "us-east-1") ? "border-accent bg-accent/10 text-accent font-medium" : "border-line text-ink-3 hover:text-ink"}`}
+                  >
+                    {reg}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[12px] text-ink-3">端點: https://bedrock-runtime.&#123;region&#125;.amazonaws.com/openai/v1</p>
+            </label>
+          )}
+
           {provider === "custom" && (
             <label className="block space-y-1.5 text-ink-2">
               <span className="font-medium text-ink">API Base URL</span>
@@ -413,6 +506,20 @@ export default function AskPage() {
               onChange={(e) => setModel(e.target.value)}
               autoComplete="off"
             />
+            {PROVIDERS[provider].popularModels.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {PROVIDERS[provider].popularModels.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setModel(m)}
+                    className={`rounded px-1.5 py-0.5 text-[11px] border transition-colors ${model === m ? "border-accent bg-accent/10 text-accent font-medium" : "border-line text-ink-3 hover:text-ink"}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            )}
           </label>
 
           <label className="block space-y-1.5 text-ink-2">
@@ -420,7 +527,7 @@ export default function AskPage() {
             <input
               className={inputClass}
               type="password"
-              placeholder="sk-..."
+              placeholder={PROVIDERS[provider].keyPlaceholder}
               value={key}
               onChange={(e) => setKey(e.target.value)}
               autoComplete="off"

@@ -13,7 +13,17 @@
   - 解除對後台批次流水線開關 `config.modelCallsEnabled` 的依賴（避免站長本地開發或暫停採集時誤殺前台用戶自費問答）；改設專屬獨立開關 `process.env.BYOK_ENABLED`（預設開啟）。
   - 移除全站共用的 `byok_llm` 後端集中式 Budget，避免單一使用者高頻調用導致全站其他讀者遭遇 DoS 熔斷阻擋；改由 API 層進行客戶端 IP 頻率防護。
 
-### 🚀 全鏈路 SSE 流式傳輸與自訂相容端點 (`apps/worker/src/ask.ts` & `apps/api/src/routes/ask-model.ts`)
+### 🌐 全面支援主流 LLM 供應商 (Groq / Gemini / ChatGPT / OpenRouter / AWS Bedrock / Grok)
+- **六大主流生態 + 自訂端點全面打通 (`apps/worker/src/ask.ts`, `apps/web/app/routes/ask.tsx`)**：
+  - **ChatGPT / OpenAI**：原生相容 `gpt-4o-mini`, `gpt-4o`, `o3-mini`, `o1-mini` 等。
+  - **Google Gemini**：支援 Google AI Studio 金鑰，直連 Gemini OpenAI 相容端點（`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.0-flash`）。
+  - **Groq**：整合 LPU 超低延遲極速端點（`llama-3.3-70b-versatile`, `mixtral-8x7b-32768`）。
+  - **xAI Grok**：支援 Elon Musk 旗下 xAI 官方端點（`grok-2-latest`, `grok-2`, `grok-beta`）。
+  - **OpenRouter**：一站式存取 Claude 3.5 Sonnet、GPT-4o 與開源大模型集群。
+  - **AWS Bedrock (OpenAI 相容)**：支援原生 Bedrock Runtime OpenAI 相容 API（`https://bedrock-runtime.{region}.amazonaws.com/openai/v1`），介面提供區域代碼快捷按鈕（`us-east-1`, `us-west-2`, `ap-northeast-1`, `eu-central-1`），支援 Claude 3.5 Sonnet 與 Amazon Nova 系列。
+  - **DeepSeek**：保留平價首選，支援 V3 與 R1 推理模型。
+  - **熱門模型快捷標籤**：切換服務商時自動列出該平台主流模型標籤，點擊立即帶入，免去手動輸入冗長模型 ID 的困擾。
+
 - **Server-Sent Events (SSE) 即時打字機串流**：
   - Worker 與 API 全面支援 `text/event-stream` 串流管線轉發，直接打通瀏覽器 Fetch `ReadableStream`。
   - 模型生成首字時間（TTFT）由原本 15~35 秒整包等待縮減至 1 秒以內，徹底根除長篇分析觸發反向代理（Cloudflare / Nginx 60s）超時斷線的問題。
