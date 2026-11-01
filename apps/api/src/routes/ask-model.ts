@@ -17,6 +17,7 @@ export function registerAskModel(app: FastifyInstance) {
       if (!response.ok) return reply.code(response.status >= 400 && response.status < 600 ? response.status : 503).send(value);
       return reply.send(value);
     } catch {
+      req.log.warn("BYOK worker request failed");
       return reply.code(503).send({ error: "Worker unavailable" });
     }
   });
