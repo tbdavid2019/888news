@@ -2,6 +2,42 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-01] — ⚡ BYOK 動態 Model List 即時獲取與情報問答全面升級（雙 AI 審查驗證）
+
+### 🚀 動態 Model List 即時獲取（廢除過期靜態模型，全面自動拉取）
+- **徹底廢除過期硬編碼模型**：
+  - 移除所有靜態寫死的預設模型清單與標籤，全面改為用戶填寫 API Key 後自動向服務商即時拉取最新可用模型清單。
+  - **八大供應商端點全面支援**：
+    - **OpenAI**：直連 `https://api.openai.com/v1/models`，支援帳戶最新開放權限之模型。
+    - **Google Gemini**：適配 Google AI Studio 原生端點 `https://generativelanguage.googleapis.com/v1beta/models` 與 `x-goog-api-key` 認證，解決 OpenAI 轉址 404 限制，自動去除 `models/` 前綴。
+    - **Groq**：直連 `https://api.groq.com/openai/v1/models`，自動過濾停用（`active: false`）的過期模型。
+    - **xAI Grok**：直連 `https://api.x.ai/v1/models`。
+    - **OpenRouter**：直連 `https://openrouter.ai/api/v1/models`，即時同步全球數百款最新模型。
+    - **AWS Bedrock**：直連區域性 OpenAI 相容端點 `https://bedrock-runtime.{region}.amazonaws.com/openai/v1/models`。
+    - **DeepSeek**：直連 `https://api.deepseek.com/models`。
+    - **Custom**：自訂端點自動推導 `${baseUrl}/models`，強制嚴格 HTTPS 與 `assertPublicUrl` SSRF 驗證。
+- **智慧過濾與搜尋體驗**：
+  - 自動過濾非對話模型（如 `embed`, `whisper`, `tts`, `dall-e`, `moderation`, `realtime`），防止使用者誤選導致 400 錯誤。
+  - 當模型數量 > 8 款時（如 OpenRouter、OpenAI），自動展示即時搜尋過濾框，支援打字即時篩選。
+  - 保留「手動自訂」切換按鈕，允許進階用戶手動輸入私有微調或非公開模型 ID。
+
+### 🛡️ Dual Code Review (Codex CLI & OpenCode CLI) 深度加固
+- **修復 Node.js 串流斷線檢測錯誤 (`apps/worker/src/ask.ts`)**：
+  - 修正原先監聽 `req.once("close")` 導致讀取完 POST 上傳 Body 後立即誤觸發 `abortController.abort()` 的缺陷；改為正確監聽 `res.once("close")`，僅在客戶端真正中途斷線時才中止上游請求。
+- **修復 API 代理層狀態碼覆蓋 Bug (`apps/api/src/routes/ask-model.ts`)**：
+  - 修正 `/api/site/ask-models` 遺漏 `response.ok` 判斷導致成功回傳 200 時被三元運算子誤覆蓋為 503 的嚴重問題。
+- **跨服務商金鑰嚴格隔離 (`apps/web/app/lib/local-state.ts`, `apps/web/app/routes/ask.tsx`)**：
+  - LocalStorage 支援 `keys: Partial<Record<ByokProvider, string>>` 獨立鍵值快取，切換服務商時絕不把舊服務商的金鑰傳遞給新服務商（尤其是切換至 Custom 端點時的憑證外洩風險）。
+- **SSE 串流中止與循環釋放優化 (`apps/web/app/routes/ask.tsx`)**：
+  - 遇到 `[DONE]` 標記時透過 `streamLoop` 標籤完全跳出外層 `while` 迴圈並關閉 Reader，解決上游 keep-alive 導致讀取掛起的邊界問題。
+- **檢索上下文與安全防禦邊界強化**：
+  - 修復外網檢索資料讀取欄位（修正 `w.snippet` 誤判為 `w.description`）。
+  - 對多輪問答上下文進行截斷限制（保留最近 5 輪、單則回答上限 6000 字），防止超出 Worker 30 則訊息與 12 萬字限制。
+  - 提示詞注入防禦：在 System Prompt 注入嚴格不可信邊界指令，防止外部網頁內容越權操控模型。
+  - 介面來源標籤台灣在地化（「本站精選」/「網路搜尋」）與 URL 協議安全過濾。
+
+---
+
 ## [2026-11-01] — ⚡ BYOK 情報問答架構重構（純無狀態記憶體串流、隱私零落盤、自訂 Base URL 與即時 SSE 打字機體驗）
 
 ### 🔒 隱私安全與架構原則重構 (`apps/worker/src/ask.ts` & `packages/backend/src/providers/receipts.ts`)

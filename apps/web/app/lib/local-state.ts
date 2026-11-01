@@ -458,25 +458,27 @@ export interface ByokConfig {
   provider: ByokProvider;
   model: string;
   key: string;
+  keys?: Partial<Record<ByokProvider, string>>;
   baseUrl?: string;
   rememberKey: boolean;
 }
 
-export const BYOK_DEFAULT_MODELS: Record<ByokProvider, string> = {
-  openai: "gpt-4o-mini",
-  gemini: "gemini-2.5-flash",
-  groq: "llama-3.3-70b-versatile",
-  grok: "grok-2-latest",
-  openrouter: "openai/gpt-4o-mini",
-  bedrock: "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-  deepseek: "deepseek-chat",
-  custom: "default",
-};
+export const VALID_BYOK_PROVIDERS: readonly ByokProvider[] = [
+  "openai",
+  "gemini",
+  "groq",
+  "grok",
+  "openrouter",
+  "bedrock",
+  "deepseek",
+  "custom",
+] as const;
 
 export const DEFAULT_BYOK_CONFIG: ByokConfig = {
   provider: "openai",
-  model: "gpt-4o-mini",
+  model: "",
   key: "",
+  keys: {},
   baseUrl: "",
   rememberKey: true,
 };
@@ -486,14 +488,38 @@ export function getByokConfig(): ByokConfig {
     const raw = readJson(KEYS.byokConfig);
     if (!raw || typeof raw !== "object") return DEFAULT_BYOK_CONFIG;
     const o = raw as Record<string, unknown>;
-    const provider = typeof o.provider === "string" && (o.provider in BYOK_DEFAULT_MODELS)
+    const provider = typeof o.provider === "string" && (VALID_BYOK_PROVIDERS as readonly string[]).includes(o.provider)
       ? (o.provider as ByokProvider)
       : "openai";
     const rememberKey = o.rememberKey !== false;
+
+    // Read per-provider keys mapping
+    const rawKeys = o.keys && typeof o.keys === "object" ? (o.keys as Record<string, unknown>) : null;
+    const keys: Partial<Record<ByokProvider, string>> = {};
+    if (rawKeys && rememberKey) {
+      for (const p of VALID_BYOK_PROVIDERS) {
+        if (typeof rawKeys[p] === "string" && rawKeys[p]) {
+          keys[p] = rawKeys[p] as string;
+        }
+      }
+    }
+
+    // Active key: prefer keys[provider], fall back to legacy o.key
+    let key = "";
+    if (rememberKey) {
+      if (keys[provider]) {
+        key = keys[provider]!;
+      } else if (typeof o.key === "string" && o.key) {
+        key = o.key;
+        keys[provider] = key;
+      }
+    }
+
     return {
       provider,
-      model: typeof o.model === "string" && o.model.trim() ? o.model : BYOK_DEFAULT_MODELS[provider],
-      key: rememberKey && typeof o.key === "string" ? o.key : "",
+      model: typeof o.model === "string" ? o.model.trim() : "",
+      key,
+      keys,
       baseUrl: typeof o.baseUrl === "string" ? o.baseUrl : (provider === "bedrock" ? "us-east-1" : ""),
       rememberKey,
     };
@@ -501,10 +527,18 @@ export function getByokConfig(): ByokConfig {
 }
 
 export function saveByokConfig(cfg: ByokConfig): void {
+  const keys: Partial<Record<ByokProvider, string>> = { ...(cfg.keys || {}) };
+  if (cfg.rememberKey && cfg.key) {
+    keys[cfg.provider] = cfg.key;
+  } else if (!cfg.key) {
+    delete keys[cfg.provider];
+  }
+
   const toStore: ByokConfig = {
     provider: cfg.provider,
     model: cfg.model,
     key: cfg.rememberKey ? cfg.key : "",
+    keys: cfg.rememberKey ? keys : {},
     baseUrl: cfg.baseUrl || "",
     rememberKey: cfg.rememberKey !== false,
   };
