@@ -31,6 +31,7 @@ export default [
   route("more", "routes/more.tsx"),
   route("starred", "routes/starred.tsx"),
   route("agent", "routes/agent.tsx"),
+  route("ask", "routes/ask.tsx"),
   route("codex-reset", "routes/codex-reset.tsx"),
   route("codex-reset/history/:date", "routes/codex-reset.tsx", { id: "codex-reset-day" }),
   layout("routes/leaderboard-boards.tsx", [

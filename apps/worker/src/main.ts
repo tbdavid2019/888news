@@ -10,6 +10,7 @@ import { registerNotifyJobs } from "@aihot/backend/jobs/notify";
 import { registerPublicationJobs } from "@aihot/backend/jobs/publication";
 import { registerSchedules } from "./schedules.ts";
 import { ensureContentTargets } from "@aihot/backend/notify/deliver";
+import { startAskBridge } from "./ask.ts";
 import { startHeartbeat } from "@aihot/backend/operations/heartbeat";
 
 assertProductionSecrets([["auth", "IMG_PROXY_SIGN_SECRET"]]);
@@ -27,6 +28,12 @@ if (FEATURES.leaderboard) {
   const [published] = await sql`SELECT 1 FROM lb_runs WHERE status = 'published' LIMIT 1`;
   if (!published) await boss.send("cron.leaderboard.round", {}, { singletonKey: "first-round" });
 }
+// Older Compose deployments may update the image without rerunning setup/migrations.
+// Keep existing operator limits and create only the missing BYOK budget.
+await sql`INSERT INTO budgets (service, per_minute, per_hour, per_day, note)
+  VALUES ('byok_llm', 30, 300, 1000, 'Reader BYOK question request limit')
+  ON CONFLICT (service) DO NOTHING`;
+const askBridge = startAskBridge();
 const heartbeat = startHeartbeat("worker");
 console.log(JSON.stringify({ level: "info", msg: "worker started", pid: process.pid }));
 
@@ -36,6 +43,7 @@ const shutdown = async () => {
   stopping = true;
   console.log(JSON.stringify({ level: "info", msg: "worker stopping" }));
   clearInterval(heartbeat);
+  await new Promise<void>((resolve) => askBridge.close(() => resolve()));
   await stopBoss();
   await closeDb();
   process.exit(0);

@@ -4,6 +4,7 @@ import rateLimit from "@fastify/rate-limit";
 import { randomUUID } from "node:crypto";
 import { OAUTH_PROBE_PATHS, resolveRedirect } from "@aihot/contracts/http-policy";
 import { sql } from "@aihot/backend/db";
+import { registerAskModel } from "./routes/ask-model.ts";
 import { registerSite } from "./routes/site.ts";
 import { registerPodcast } from "./routes/podcast.ts";
 import { registerLeaderboard } from "./routes/leaderboard.ts";
@@ -67,6 +68,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     return reply.header("Cache-Control", "no-store").send({ ok: true, db: "ok", ms: Date.now() - started, release: process.env.AIHOT_RELEASE ?? "dev" });
   });
 
+  registerAskModel(app);
   registerSite(app);
   registerPodcast(app);
   if (FEATURES.leaderboard) registerLeaderboard(app);

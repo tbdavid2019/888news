@@ -17,6 +17,8 @@ import { loadSiteStats } from "@aihot/backend/site/stats";
 import { itemAvailability } from "@aihot/backend/publication/availability";
 import { listTopicSummaries, loadTopicPage } from "@aihot/backend/publication/topics";
 import { registerFeedback } from "./feedback.ts";
+import { searchAskItems } from "@aihot/backend/publication/ask";
+import { searchAskWeb } from "@aihot/backend/providers/ask-search";
 
 import { loadHot, loadStoryDetail, resolveStory } from "@aihot/backend/publication/stories";
 import { listReports, loadReport, reportNavigation, loadReportNavigation, loadReportMonth, type ReportKind } from "@aihot/backend/publication/reports";
@@ -82,6 +84,16 @@ export async function parseFilters(q: Record<string, string>): Promise<FilterPar
 }
 
 export function registerSite(app: FastifyInstance) {
+  app.post("/api/site/ask-context", { bodyLimit: 4096, config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, siteHandler(async (req, reply) => {
+    const body = req.body;
+    if (!body || typeof body !== "object" || typeof (body as { q?: unknown }).q !== "string") throw new BadRequest("q must be a string");
+    const query = (body as { q: string }).q.trim();
+    if ([...query].length < 2 || [...query].length > 200) throw new BadRequest("q must contain 2 to 200 characters");
+    const [items, web] = await Promise.allSettled([searchAskItems(query), searchAskWeb(query)]);
+    reply.header("Cache-Control", "no-store");
+    return { items: items.status === "fulfilled" ? items.value : [], web: web.status === "fulfilled" ? web.value : [], siteError: items.status === "rejected", webError: web.status === "rejected" };
+  }));
+
   app.get("/api/site/captcha-token", siteHandler(async (req, reply) => {
     const q = looseQuery(req);
     const action = String(q.action || "general").slice(0, 32);

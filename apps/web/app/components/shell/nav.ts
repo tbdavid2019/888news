@@ -31,6 +31,7 @@ export function getSidebar(t: (key: TranslationKey) => string, locale: string = 
         { to: "/", label: t("nav.featured"), icon: IconBolt, end: true },
         { to: "/all", label: allLabel, icon: IconList },
         { to: "/hot", label: t("nav.hot"), icon: IconFlame },
+        { to: "/ask", label: isEn ? "Ask" : "情報問答", icon: IconMessage },
         { to: "/daily", label: dailyLabel, icon: IconDoc },
         { to: "/topics", label: t("nav.topics"), icon: IconGrid },
         { to: "/podcast/recommend", label: "Podcast", icon: IconMic },
@@ -75,7 +76,7 @@ export const SIDEBAR = getSidebar((k) => k);
 export const TABBAR = getTabBar((k) => k);
 
 /** Pages reached from the mobile "更多" tab keep that tab highlighted. */
-export const MORE_PATHS = ["/more", "/hot", "/topics", "/starred", "/leaderboard", "/agent", "/about", "/feedback", "/terms", "/privacy"];
+export const MORE_PATHS = ["/more", "/ask", "/hot", "/topics", "/starred", "/leaderboard", "/agent", "/about", "/feedback", "/terms", "/privacy"];
 
 export function tabIsActive(item: NavItem, pathname: string): boolean {
   if (item.end) return pathname === item.to;

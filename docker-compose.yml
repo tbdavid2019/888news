@@ -51,12 +51,16 @@ services:
       <<: *app-env
       API_HOST: 0.0.0.0
       API_PORT: "3001"
+      ASK_WORKER_URL: http://worker:3002
     depends_on:
       setup:
         condition: service_completed_successfully
 
   worker:
     <<: *app
+    environment:
+      <<: *app-env
+      ASK_WORKER_HOST: 0.0.0.0
     command: ["node", "apps/worker/src/main.ts"]
     # On stop the worker lets a paid call in flight finish (STOP_TIMEOUT_MS, 195 s); Docker's default
     # 10 s would kill it mid-call and leave "outcome unknown" receipts that are paid for again.
