@@ -68,6 +68,8 @@ jobs:
       # After the smoke check, which reads an empty database: these write their own rows.
       - name: Backend tests
         run: npm test
+      - name: Worker tests
+        run: node --test apps/worker/tests/*.test.ts
       - name: Server logs
         if: failure()
         run: tail -n 60 "$RUNNER_TEMP/api.log" "$RUNNER_TEMP/web.log" 2>/dev/null || true
