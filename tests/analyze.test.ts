@@ -27,7 +27,7 @@ type Step = "prefilter" | "score" | "understand" | "summarize" | "structure";
 interface Req { step: Step; marker: string; system: string; user: string; body: Record<string, any> }
 const requests: Req[] = [];
 const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "VAGUE", "THIN", "SENSITIVE", "INFOSEC", "INFOSLOW", "CLEFSEC", "SECGUIDE", "推文"];
-const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [70, 70], SENSITIVE: [80, 80], INFOSEC: [84, 78], INFOSLOW: [30, 32], CLEFSEC: [84, 78], SECGUIDE: [30, 32], 推文: [40, 40], BARE: [30, 34], VAGUE: [60, 62] };
+const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [74, 74], SENSITIVE: [80, 80], INFOSEC: [84, 78], INFOSLOW: [30, 32], CLEFSEC: [84, 78], SECGUIDE: [30, 32], 推文: [40, 40], BARE: [30, 34], VAGUE: [72, 74] };
 
 const stepOf = (system: string, user: string): Step =>
   system === PREFILTER_SYSTEM ? "prefilter" : system.includes("事件注意力评分器") ? "score"
@@ -245,7 +245,7 @@ test("the prefilter's BLOCK stops everything; UNKNOWN goes on like PASS", async 
   const off = await analyzeArticle(await article("OFFTOPIC"));
   assert.deepEqual([off!.output!.relevance, off!.output!.selected], ["block", false]);
   assert.deepEqual(calls("OFFTOPIC"), ["prefilter"]);
-  // An UNKNOWN with material is judged and written like a PASS, up to 精选 (60 + 62 ≥ 2 × 60).
+  // An UNKNOWN with material is judged and written like a PASS, up to 精选 (72 + 74 ≥ 2 × 72).
   const vagueId = await article("VAGUE");
   const vague = await analyzeArticle(vagueId);
   assert.deepEqual([vague!.output!.relevance, vague!.output!.selected, vague!.output!.titleZh], ["pass", true, "理解标题 VAGUE"]);
