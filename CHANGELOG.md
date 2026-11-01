@@ -2,6 +2,34 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-01] — 🎨 排版錯位修復與全站 Emoji 替換為 Lucide 專業圖示
+
+### 📐 文章頁排版錯位修復 (Layout Misalignment Fix)
+- **右側操作欄（Right Rail Actions）單行佈局復原**：
+  - 修復文章頁面頂部按鈕列因為塞入過多元件而將「開啟原文」擠壓至每字強制折行成直排「開 / 啟 / 原 / 文」的排版錯位問題。
+  - 將「伴隨 AI 提問」收納至三點選單（`moreMenu`）中，維持右側操作欄僅保留「開啟原文」、「收藏」、「更多選單」三項，保持純淨單行佈局。
+  - 為「開啟原文」連結添加 `whitespace-nowrap`，從根源杜絕文字折行破版。
+  - 於文章導讀下方提供獨立、醒目的「AI 伴隨問答」卡片，提供快捷提問入口與橫向滾動支援，桌面與行動端皆保持嚴整視覺層次。
+
+### 🎨 全面移除 Emoji，導入 `lucide-react` 專業向量圖示庫
+- **零裝飾性 Emoji 規範落實**：
+  - 安裝 `@aihot/web` 專案依賴 `lucide-react`，全面替換 `AskCompanion.tsx`、`ask.tsx`、`item.tsx`、`story.tsx` 中的所有裝飾性 Emoji。
+  - **精確圖示替換對照**：
+    - 助理機器人 (`🤖`) ➔ `<Bot size={...} />`
+    - 設定面板 (`⚙️`) ➔ `<Settings size={15} />`
+    - 清空對話 (`🗑️`) ➔ `<Trash2 size={15} />`
+    - 重新整理/載入中 (`🔄`) ➔ `<RotateCw size={...} className="..." />`
+    - 錯誤與警示 (`⚠️`, `❌`) ➔ `<AlertCircle size={...} />`
+    - 本地金鑰安全承諾 (`🔒`) ➔ `<Lock size={...} />`
+    - 推薦/快捷提問靈感 (`💡`) ➔ `<Lightbulb size={...} />`
+    - 文章導讀上下文標籤 (`📰`) ➔ `<FileText size={13} />`
+    - 思考過程/思考鏈 (`🧠`) ➔ `<Brain size={...} />`
+    - 助理歡迎意圖 (`👋`) ➔ `<Sparkles size={16} />`
+    - 彈窗關閉按鈕 ➔ `<X size={16} />`
+    - 播客導讀 (`🎙️`) ➔ `<Mic size={24} />`
+
+---
+
 ## [2026-11-01] — 🤖 全站文章「伴隨式 AI 問答」（Floating Copilot）正式上線與核心錯誤修復
 
 ### 🌟 全站伴隨式 AI Copilot（In-Page Accompanying Assistant）

@@ -12,6 +12,7 @@ import { Badge, SelectedBadge } from "../components/ui/Badge";
 import { PillTabs } from "../components/ui/Tabs";
 import { Select } from "../components/ui/Controls";
 import { IconArrowLeft, IconChevronRight, IconClock, IconDoc, IconUsers } from "../components/icons";
+import { Bot } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 import { formatArticleSummary, renderMarkdown, stripMarkdown } from "../lib/markdown";
 import { openCompanion } from "../lib/companion-bus";
@@ -246,7 +247,7 @@ export default function StoryPage() {
           })}
           className="mt-5 inline-flex items-center gap-2 rounded-card border border-line bg-surface px-4 py-2.5 text-[16px] font-semibold text-accent transition-colors hover:border-accent cursor-pointer"
         >
-          🤖 針對這個事件伴隨提問 <IconChevronRight size={16} />
+          <Bot size={17} /> <span>針對這個事件伴隨提問</span> <IconChevronRight size={16} />
         </button>
       </header>
 

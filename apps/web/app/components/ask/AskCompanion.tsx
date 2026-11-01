@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "react-router";
 import { getByokConfig, saveByokConfig, clearByokConfig, subscribeByokConfig, type ByokProvider, type ByokConfig } from "../../lib/local-state";
 import { useCompanionState, setCompanionContext, closeCompanion, toggleCompanion, clearPendingQuestion, type CompanionContext } from "../../lib/companion-bus";
-import { IconCopy, IconCheck, IconClose, IconBolt, IconMessage } from "../icons";
+import { Bot, Settings, Trash2, RotateCw, AlertCircle, Lock, FileText, Lightbulb, Sparkles, Brain, X } from "lucide-react";
 
 type Source = { title: string; url: string; text: string; kind: "site" | "web" };
 type Turn = { question: string; answer: string; reasoning?: string; sources: Source[]; warning?: string };
@@ -645,7 +645,7 @@ export function AskCompanion() {
           aria-label="打開 AI 伴隨問答"
           className="fixed bottom-[calc(76px+env(safe-area-inset-bottom))] right-4 z-40 flex items-center gap-2 rounded-full border border-accent/40 bg-accent px-4 py-2.5 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 lg:bottom-6 lg:right-6"
         >
-          <span className="text-base">🤖</span>
+          <Bot size={18} className="text-white shrink-0" />
           <span className="text-[13.5px] font-semibold tracking-wide hidden sm:inline">AI 伴隨問答</span>
         </button>
       )}
@@ -661,7 +661,7 @@ export function AskCompanion() {
           {/* Header */}
           <div className="flex shrink-0 items-center justify-between border-b border-line bg-surface-2 px-3.5 py-2.5">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-lg">🤖</span>
+              <Bot size={19} className="text-accent shrink-0" />
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[14px] font-bold text-ink truncate">AI 伴隨助手 (BYOK)</span>
@@ -685,8 +685,9 @@ export function AskCompanion() {
                 onClick={() => setShowSettings(!showSettings)}
                 className={`rounded p-1 text-[12px] transition-colors ${showSettings ? "bg-accent text-white" : "text-ink-3 hover:text-ink hover:bg-surface"}`}
                 title="模型設定"
+                aria-label="模型設定"
               >
-                ⚙️
+                <Settings size={15} />
               </button>
               {turns.length > 0 && !busy && (
                 <button
@@ -694,8 +695,9 @@ export function AskCompanion() {
                   onClick={() => { setTurns([]); setQuestion(""); setActiveQuestion(""); }}
                   className="rounded p-1 text-[12px] text-ink-3 hover:text-ink hover:bg-surface transition-colors"
                   title="清空對話"
+                  aria-label="清空對話"
                 >
-                  🗑️
+                  <Trash2 size={15} />
                 </button>
               )}
               <button
@@ -703,8 +705,9 @@ export function AskCompanion() {
                 onClick={closeCompanion}
                 className="rounded p-1 text-ink-3 hover:text-ink hover:bg-surface transition-colors ml-0.5"
                 title="關閉"
+                aria-label="關閉"
               >
-                <IconClose size={16} />
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -794,9 +797,10 @@ export function AskCompanion() {
                         type="button"
                         disabled={loadingModels}
                         onClick={() => void fetchModelList(key, provider, baseUrl, true)}
-                        className="text-[11px] text-ink-3 hover:text-accent disabled:opacity-50"
+                        className="inline-flex items-center gap-1 text-[11px] text-ink-3 hover:text-accent disabled:opacity-50"
                       >
-                        {loadingModels ? "載入中..." : "🔄 重新取得"}
+                        <RotateCw size={11} className={loadingModels ? "animate-spin" : ""} />
+                        <span>{loadingModels ? "載入中..." : "重新取得"}</span>
                       </button>
                     )}
                   </div>
@@ -810,8 +814,11 @@ export function AskCompanion() {
                 )}
 
                 {modelError && (
-                  <div className="rounded bg-red-500/10 px-2 py-1 text-[11.5px] text-red-600 dark:text-red-400 flex items-center justify-between">
-                    <span>⚠️ {modelError}</span>
+                  <div className="rounded bg-red-500/10 px-2 py-1 text-[11.5px] text-red-600 dark:text-red-400 flex items-center justify-between gap-1">
+                    <span className="inline-flex items-center gap-1">
+                      <AlertCircle size={13} className="shrink-0 text-current" />
+                      <span>{modelError}</span>
+                    </span>
                     <button type="button" onClick={() => void fetchModelList(key, provider, baseUrl, true)} className="underline shrink-0 ml-1">重試</button>
                   </div>
                 )}
@@ -829,7 +836,7 @@ export function AskCompanion() {
                     {availableModels.length > 8 && (
                       <input
                         className="w-full rounded border border-line bg-surface px-2 py-0.5 text-[12px] text-ink outline-none"
-                        placeholder={`🔍 篩選 ${availableModels.length} 款模型...`}
+                        placeholder={`篩選 ${availableModels.length} 款模型...`}
                         value={modelSearch}
                         onChange={(e) => setModelSearch(e.target.value)}
                       />
@@ -853,7 +860,10 @@ export function AskCompanion() {
                 >
                   確認收起設定
                 </button>
-                <span className="text-[11px] text-ink-4">🔒 Key 僅存本地，無狀態串流</span>
+                <span className="inline-flex items-center gap-1 text-[11px] text-ink-4">
+                  <Lock size={12} />
+                  <span>Key 僅存本地，無狀態串流</span>
+                </span>
               </div>
             </div>
           )}
@@ -865,8 +875,9 @@ export function AskCompanion() {
               <div className="space-y-3 pt-1">
                 {pageContext?.title ? (
                   <div className="rounded-xl border border-accent/20 bg-accent/5 p-3">
-                    <div className="text-[12px] font-bold text-accent mb-1 flex items-center gap-1">
-                      <span>📰 當前文章伴隨導讀</span>
+                    <div className="text-[12px] font-bold text-accent mb-1 flex items-center gap-1.5">
+                      <FileText size={13} className="text-accent" />
+                      <span>當前文章伴隨導讀</span>
                     </div>
                     <p className="text-[13.5px] font-semibold text-ink leading-snug">
                       {pageContext.title}
@@ -876,39 +887,44 @@ export function AskCompanion() {
                     </p>
                     <div className="flex flex-col gap-1.5">
                       {[
-                        "💡 總結這篇文章的核心論點與精華重點",
-                        "💡 剖析文章提到的具體技術實現細節與數據",
-                        "💡 這對我們的工程實踐與決策有何借鑒啟發？",
+                        "總結這篇文章的核心論點與精華重點",
+                        "剖析文章提到的具體技術實現細節與數據",
+                        "這對我們的工程實踐與決策有何借鑒啟發？",
                       ].map((prompt, i) => (
                         <button
                           key={i}
                           type="button"
                           onClick={() => void submitWithQuestion(prompt)}
-                          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-[12.5px] text-ink-2 hover:border-accent hover:text-accent transition-colors text-left"
+                          className="inline-flex items-start gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-[12.5px] text-ink-2 hover:border-accent hover:text-accent transition-colors text-left"
                         >
-                          {prompt}
+                          <Lightbulb size={13} className="text-accent shrink-0 mt-0.5" />
+                          <span>{prompt}</span>
                         </button>
                       ))}
                     </div>
                   </div>
                 ) : (
                   <div className="rounded-xl border border-line bg-surface-2 p-3 text-center">
-                    <p className="text-[14px] font-bold text-ink">👋 888news 伴隨式情報 Copilot</p>
+                    <p className="inline-flex items-center justify-center gap-1.5 text-[14px] font-bold text-ink">
+                      <Sparkles size={16} className="text-accent shrink-0" />
+                      <span>888news 伴隨式情報 Copilot</span>
+                    </p>
                     <p className="text-[12.5px] text-ink-3 mt-1">
                       支援閱讀任意文章時隨時發問、深入探討或多輪追問。
                     </p>
                     <div className="mt-3 flex flex-col gap-1.5 text-left">
                       {[
-                        "💡 最近科技與大模型領域有哪些最新動態？",
-                        "💡 AI Agent 在工程研發上有哪些落地突破？",
+                        "最近科技與大模型領域有哪些最新動態？",
+                        "AI Agent 在工程研發上有哪些落地突破？",
                       ].map((sq, i) => (
                         <button
                           key={i}
                           type="button"
                           onClick={() => void submitWithQuestion(sq)}
-                          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-[12px] text-ink-2 hover:border-accent hover:text-accent transition-colors"
+                          className="inline-flex items-start gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-[12px] text-ink-2 hover:border-accent hover:text-accent transition-colors text-left"
                         >
-                          {sq}
+                          <Lightbulb size={13} className="text-accent shrink-0 mt-0.5" />
+                          <span>{sq}</span>
                         </button>
                       ))}
                     </div>
@@ -938,7 +954,10 @@ export function AskCompanion() {
 
                 {turn.reasoning && (
                   <details className="rounded bg-surface-2 p-2 text-[12px] text-ink-3">
-                    <summary className="cursor-pointer font-medium select-none text-ink-2">🧠 思考過程</summary>
+                    <summary className="inline-flex items-center gap-1.5 cursor-pointer font-medium select-none text-ink-2 list-none [&::-webkit-details-marker]:hidden">
+                      <Brain size={13} className="text-accent shrink-0" />
+                      <span>思考過程</span>
+                    </summary>
                     <div className="mt-1.5 whitespace-pre-wrap leading-relaxed text-[12px] text-ink-3">{turn.reasoning}</div>
                   </details>
                 )}
@@ -956,7 +975,10 @@ export function AskCompanion() {
 
                 {currentReasoning && (
                   <details open className="rounded bg-surface-2 p-2 text-[12px] text-ink-3">
-                    <summary className="cursor-pointer font-medium select-none text-ink-2">🧠 思考中…</summary>
+                    <summary className="inline-flex items-center gap-1.5 cursor-pointer font-medium select-none text-ink-2 list-none [&::-webkit-details-marker]:hidden">
+                      <Brain size={13} className="text-accent shrink-0 animate-pulse" />
+                      <span>思考中…</span>
+                    </summary>
                     <div className="mt-1.5 whitespace-pre-wrap leading-relaxed text-[12px] text-ink-3">{currentReasoning}</div>
                   </details>
                 )}
@@ -978,7 +1000,10 @@ export function AskCompanion() {
           {/* Input Footer */}
           <form onSubmit={submit} className="shrink-0 border-t border-line bg-surface p-2.5">
             {error && (
-              <p className="mb-1 text-[12px] text-red-500 font-medium">❌ {error}</p>
+              <p role="alert" className="mb-1 inline-flex items-center gap-1 text-[12px] text-red-500 font-medium">
+                <AlertCircle size={13} className="shrink-0 text-current" />
+                <span>{error}</span>
+              </p>
             )}
 
             <div className="relative flex items-end gap-1.5">
@@ -998,7 +1023,7 @@ export function AskCompanion() {
                 onCompositionEnd={() => { composing.current = false; }}
                 placeholder={
                   !key.trim()
-                    ? "請先點右上角 ⚙️ 填寫 API Key..."
+                    ? "請先點右上角設定圖示填寫 API Key..."
                     : pageContext?.title
                     ? `針對這篇文章發問... (Cmd/Ctrl+Enter)`
                     : "輸入問題向 AI 發問... (Cmd/Ctrl+Enter)"

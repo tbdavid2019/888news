@@ -4,6 +4,7 @@ import { pageMeta } from "../lib/seo";
 import { ReadingLayout } from "../components/ui/Page";
 import { getByokConfig, saveByokConfig, clearByokConfig, subscribeByokConfig } from "../lib/local-state";
 import { IconCopy, IconCheck, IconBolt } from "../components/icons";
+import { RotateCw, AlertCircle, Lightbulb, Lock, Brain, ArrowRight } from "lucide-react";
 
 export function meta() {
   return pageMeta({ title: "情報問答 (BYOK)", description: "結合本站情報與全網資料的深度問答與續問", path: "/ask", noindex: true });
@@ -720,8 +721,8 @@ export default function AskPage() {
                     className="inline-flex items-center gap-1 text-[12px] text-ink-3 hover:text-accent disabled:opacity-50"
                     title="向服務商重新整理模型清單"
                   >
-                    <span className={loadingModels ? "animate-spin" : ""}>🔄</span>
-                    {loadingModels ? "取得中..." : "重新取得"}
+                    <RotateCw size={12} className={loadingModels ? "animate-spin" : ""} />
+                    <span>{loadingModels ? "取得中..." : "重新取得"}</span>
                   </button>
                 )}
               </div>
@@ -737,7 +738,10 @@ export default function AskPage() {
             {modelError && (
               <div className="rounded-card border border-red-500/30 bg-red-500/10 px-3 py-2 text-[12px] text-red-600 dark:text-red-400">
                 <div className="flex items-start justify-between gap-1">
-                  <span>⚠️ {modelError}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <AlertCircle size={14} className="shrink-0 text-red-500" />
+                    <span>{modelError}</span>
+                  </span>
                   <button
                     type="button"
                     onClick={() => void fetchModelList(key, provider, baseUrl, true)}
@@ -750,8 +754,9 @@ export default function AskPage() {
             )}
 
             {!key.trim() && (
-              <div className="rounded-card border border-line bg-surface-2 px-3 py-2 text-[12px] text-ink-3">
-                💡 填入 API Key 後將自動向服務商取得你的可用模型清單。
+              <div className="flex items-center gap-1.5 rounded-card border border-line bg-surface-2 px-3 py-2 text-[12px] text-ink-3">
+                <Lightbulb size={13} className="text-accent shrink-0" />
+                <span>填入 API Key 後將自動向服務商取得你的可用模型清單。</span>
               </div>
             )}
 
@@ -768,9 +773,10 @@ export default function AskPage() {
                   <button
                     type="button"
                     onClick={() => void fetchModelList(key, provider, baseUrl, true)}
-                    className="text-[12px] text-accent underline mt-1 block"
+                    className="inline-flex items-center gap-1 text-[12px] text-accent underline mt-1"
                   >
-                    👉 點此連線取得可用模型清單
+                    <ArrowRight size={13} />
+                    <span>點此連線取得可用模型清單</span>
                   </button>
                 )}
               </div>
@@ -779,7 +785,7 @@ export default function AskPage() {
                 {availableModels.length > 8 && (
                   <input
                     className="w-full rounded border border-line bg-surface px-2.5 py-1 text-[13px] text-ink outline-none focus:border-accent"
-                    placeholder={`🔍 搜尋 ${availableModels.length} 款模型...`}
+                    placeholder={`搜尋 ${availableModels.length} 款模型...`}
                     value={modelSearch}
                     onChange={(e) => setModelSearch(e.target.value)}
                   />
@@ -808,8 +814,11 @@ export default function AskPage() {
           </div>
 
           <div className="rounded-card border border-line bg-surface-2 p-3 text-[12px] text-ink-3 leading-relaxed">
-            <strong className="block text-ink font-semibold mb-1">🔒 零伺服器儲存承諾</strong>
-            你的 API Key 僅存於瀏覽器 LocalStorage，提問與模型查詢均由無狀態記憶體轉發，本站伺服器絕不落盤、絕不保存你的金鑰與對話。
+            <strong className="inline-flex items-center gap-1.5 text-ink font-semibold mb-1">
+              <Lock size={13} className="text-accent shrink-0" />
+              <span>零伺服器儲存承諾</span>
+            </strong>
+            <p>你的 API Key 僅存於瀏覽器 LocalStorage，提問與模型查詢均由無狀態記憶體轉發，本站伺服器絕不落盤、絕不保存你的金鑰與對話。</p>
           </div>
         </div>
       }
@@ -833,9 +842,10 @@ export default function AskPage() {
                   key={i}
                   type="button"
                   onClick={() => setQuestion(sq)}
-                  className="rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] text-ink-2 hover:border-accent hover:text-accent transition-colors text-left"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] text-ink-2 hover:border-accent hover:text-accent transition-colors text-left"
                 >
-                  💡 {sq}
+                  <Lightbulb size={13} className="text-accent shrink-0" />
+                  <span>{sq}</span>
                 </button>
               ))}
             </div>
@@ -860,13 +870,17 @@ export default function AskPage() {
               </div>
 
               {turn.warning && (
-                <p className="mt-2 text-[13px] text-amber-600 dark:text-amber-400">⚠️ {turn.warning}，回答參考資料可能不完整。</p>
+                <p className="mt-2 inline-flex items-center gap-1 text-[13px] text-amber-600 dark:text-amber-400">
+                  <AlertCircle size={14} className="shrink-0 text-current" />
+                  <span>{turn.warning}，回答參考資料可能不完整。</span>
+                </p>
               )}
 
               {turn.reasoning && (
                 <details className="mt-3 rounded-card bg-surface-2 p-3 text-[13px] text-ink-3">
-                  <summary className="cursor-pointer font-medium select-none text-ink-2">
-                    🧠 思考過程（點擊展開）
+                  <summary className="inline-flex items-center gap-1.5 cursor-pointer font-medium select-none text-ink-2 list-none [&::-webkit-details-marker]:hidden">
+                    <Brain size={14} className="text-accent shrink-0" />
+                    <span>思考過程（點擊展開）</span>
                   </summary>
                   <div className="mt-2 text-ink-3 whitespace-pre-wrap leading-relaxed text-[13px]">
                     {turn.reasoning}
@@ -913,8 +927,9 @@ export default function AskPage() {
 
               {currentReasoning && (
                 <details open className="mt-3 rounded-card bg-surface-2 p-3 text-[13px] text-ink-3">
-                  <summary className="cursor-pointer font-medium select-none text-ink-2">
-                    🧠 思考過程中…
+                  <summary className="inline-flex items-center gap-1.5 cursor-pointer font-medium select-none text-ink-2 list-none [&::-webkit-details-marker]:hidden">
+                    <Brain size={14} className="text-accent shrink-0 animate-pulse" />
+                    <span>思考過程中…</span>
                   </summary>
                   <div className="mt-2 text-ink-3 whitespace-pre-wrap leading-relaxed text-[13px]">
                     {currentReasoning}
@@ -965,8 +980,9 @@ export default function AskPage() {
           />
 
           {error && (
-            <p role="alert" className="mt-2 text-[14px] text-red-500 font-medium">
-              ❌ {error}
+            <p role="alert" className="mt-2 inline-flex items-center gap-1 text-[14px] text-red-500 font-medium">
+              <AlertCircle size={15} className="shrink-0 text-red-500" />
+              <span>{error}</span>
             </p>
           )}
 
@@ -1000,13 +1016,15 @@ export default function AskPage() {
             )}
 
             {!key.trim() && (
-              <span className="text-[13px] text-amber-600 dark:text-amber-400">
-                ⚠️ 請先在設定面板填寫 API Key
+              <span className="inline-flex items-center gap-1 text-[13px] text-amber-600 dark:text-amber-400">
+                <AlertCircle size={14} className="shrink-0 text-current" />
+                <span>請先在設定面板填寫 API Key</span>
               </span>
             )}
             {key.trim() && !model.trim() && (
-              <span className="text-[13px] text-amber-600 dark:text-amber-400">
-                ⚠️ 請在設定面板選擇模型
+              <span className="inline-flex items-center gap-1 text-[13px] text-amber-600 dark:text-amber-400">
+                <AlertCircle size={14} className="shrink-0 text-current" />
+                <span>請在設定面板選擇模型</span>
               </span>
             )}
           </div>
