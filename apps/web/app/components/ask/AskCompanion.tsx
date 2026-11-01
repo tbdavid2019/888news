@@ -660,7 +660,7 @@ export function AskCompanion() {
     ? availableModels.filter((m) => m.toLowerCase().includes(modelSearch.trim().toLowerCase()))
     : availableModels;
 
-  if (!mounted || location.pathname === "/ask") return null;
+  if (!mounted) return null;
 
   return (
     <>

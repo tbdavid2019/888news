@@ -2,6 +2,20 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-01] — 🗑️ 徹底移除獨立 `/ask` 頁面與導航，全面收斂為隨選文章「伴隨式浮動 Copilot」
+
+### 🧹 移除離散式獨立頁面與導航（Clean up Standalone Route & Navigation）
+- **徹底刪除獨立問答頁面 (`apps/web/app/routes/ask.tsx`)**：
+  - 響應用戶「伴隨提問、不離本頁」的設計目標，徹底刪除先前離散的獨立 `/ask` 頁面程式碼（1,000+ 行），杜絕割裂文章閱讀脈絡的獨立問答體驗。
+- **清除全域路由與導航連結**：
+  - 於 `apps/web/app/routes.ts` 中移除 `route("ask", ...)` 路由註冊。
+  - 於側邊導航列 (`apps/web/app/components/shell/nav.ts`) 移除「情報問答 (/ask)」選單項，並自 `MORE_PATHS` 中剔除 `/ask`。
+  - 於行動端「更多」頁面 (`apps/web/app/routes/more.tsx`) 移除「情報問答」入口。
+- **伴隨浮動助理清理 (`apps/web/app/components/ask/AskCompanion.tsx`)**：
+  - 移除先前面對 `/ask` 路由時的特殊隱藏判斷，全站文章與事件頁統一由右下角伴隨助理懸浮球與文章導讀內快捷按鈕直接呼叫，不再保留任何獨立區塊。
+
+---
+
 ## [2026-11-01] — ⚡ 修復 Groq 預設模型亂碼、建立智慧旗艦排序與 Token 預算防溢出優化
 
 ### 🧠 智慧模型過濾與旗艦權重排序（根除特殊語種與安全模型誤選）
