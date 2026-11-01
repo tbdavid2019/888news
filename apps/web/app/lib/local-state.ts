@@ -11,6 +11,7 @@ export const KEYS = {
   feedbackDraft: "aihot-feedback-draft-v1",
   followedPodcasts: "aihot-followed-podcasts",
   starredPodcasts: "aihot-starred-podcasts",
+  byokConfig: "aihot-byok-config-v1",
 } as const;
 
 export const STARRED_LIMIT = 500;
@@ -103,6 +104,7 @@ const subscribeTheme = subscribeKey(KEYS.theme);
 const subscribeChangelog = subscribeKey(KEYS.changelogSeen);
 const subscribeFollowedPodcasts = subscribeKey(KEYS.followedPodcasts);
 const subscribeStarredPodcasts = subscribeKey(KEYS.starredPodcasts);
+const subscribeByokConfig = subscribeKey(KEYS.byokConfig);
 
 // Snapshot cache so useSyncExternalStore gets stable references between changes.
 const cache = new Map<string, unknown>();
@@ -448,4 +450,68 @@ export function useIsPodcastEpisodeStarred(id: string): boolean {
     () => false
   );
 }
+
+// --- BYOK settings (stored in browser local storage only) ---
+export interface ByokConfig {
+  provider: "openai" | "groq" | "deepseek" | "openrouter" | "custom";
+  model: string;
+  key: string;
+  baseUrl?: string;
+  rememberKey: boolean;
+}
+
+export const DEFAULT_BYOK_CONFIG: ByokConfig = {
+  provider: "openai",
+  model: "gpt-4o-mini",
+  key: "",
+  baseUrl: "",
+  rememberKey: true,
+};
+
+export function getByokConfig(): ByokConfig {
+  return cached(KEYS.byokConfig, () => {
+    const raw = readJson(KEYS.byokConfig);
+    if (!raw || typeof raw !== "object") return DEFAULT_BYOK_CONFIG;
+    const o = raw as Record<string, unknown>;
+    const provider = typeof o.provider === "string" && ["openai", "groq", "deepseek", "openrouter", "custom"].includes(o.provider)
+      ? (o.provider as ByokConfig["provider"])
+      : "openai";
+    const rememberKey = o.rememberKey !== false;
+    return {
+      provider,
+      model: typeof o.model === "string" && o.model.trim() ? o.model : (provider === "deepseek" ? "deepseek-chat" : provider === "groq" ? "llama-3.3-70b-versatile" : "gpt-4o-mini"),
+      key: rememberKey && typeof o.key === "string" ? o.key : "",
+      baseUrl: typeof o.baseUrl === "string" ? o.baseUrl : "",
+      rememberKey,
+    };
+  });
+}
+
+export function saveByokConfig(cfg: ByokConfig): void {
+  const toStore: ByokConfig = {
+    provider: cfg.provider,
+    model: cfg.model,
+    key: cfg.rememberKey ? cfg.key : "",
+    baseUrl: cfg.baseUrl || "",
+    rememberKey: cfg.rememberKey !== false,
+  };
+  writeRaw(KEYS.byokConfig, JSON.stringify(toStore));
+  invalidate(KEYS.byokConfig);
+}
+
+export function clearByokConfig(): void {
+  try {
+    storage("local")?.removeItem(KEYS.byokConfig);
+  } catch {}
+  invalidate(KEYS.byokConfig);
+}
+
+export function useByokConfig(): ByokConfig {
+  return useSyncExternalStore(
+    subscribeByokConfig,
+    getByokConfig,
+    () => DEFAULT_BYOK_CONFIG
+  );
+}
+
 

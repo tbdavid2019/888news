@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 
 // No model or external service is contacted by this test.
-test("BYOK bridge requires internal authentication and honors the model safety switch", async () => {
-  process.env.MODEL_CALLS_ENABLED = "false";
+test("BYOK bridge requires internal authentication and honors the byok safety switch", async () => {
+  process.env.BYOK_ENABLED = "false";
   process.env.IMG_PROXY_SIGN_SECRET = "test-internal-secret";
   process.env.ASK_WORKER_PORT = "0";
   const { startAskBridge } = await import("../src/ask.ts");
@@ -16,8 +16,9 @@ test("BYOK bridge requires internal authentication and honors the model safety s
     assert.equal(forbidden.status, 403);
     const disabled = await fetch(url, { method: "POST", headers: { "x-worker-secret": "test-internal-secret" }, body: "{}" });
     assert.equal(disabled.status, 503);
-    assert.deepEqual(await disabled.json(), { error: "Model calls are disabled" });
+    assert.deepEqual(await disabled.json(), { error: "BYOK service is disabled" });
   } finally {
+    delete process.env.BYOK_ENABLED;
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
 });

@@ -2,6 +2,36 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-01] — ⚡ BYOK 情報問答架構重構（純無狀態記憶體串流、隱私零落盤、自訂 Base URL 與即時 SSE 打字機體驗）
+
+### 🔒 隱私安全與架構原則重構 (`apps/worker/src/ask.ts` & `packages/backend/src/providers/receipts.ts`)
+- **根除用戶問答資料庫落盤風險**：
+  - 徹底移除先前對 `paidRequest` 與 `receipts` 資料表的濫用，實踐嚴格的「無狀態記憶體流轉即焚」架構。
+  - 用戶自備 Key（BYOK）發起的任何提問與模型回答，**絕不寫入資料庫收據表、絕不記錄在後台日誌**，完全捍衛本站「公開內容匿名、讀者隱私留在本地瀏覽器」的鐵律。
+  - 恢復 `packages/backend/src/providers/receipts.ts` 的乾淨職責，僅保留給後台編輯自動化流水線，消除收據未知狀態（`unknown`）對管理員監控看板的噪音污染。
+- **解耦採集安全閥與預算限制**：
+  - 解除對後台批次流水線開關 `config.modelCallsEnabled` 的依賴（避免站長本地開發或暫停採集時誤殺前台用戶自費問答）；改設專屬獨立開關 `process.env.BYOK_ENABLED`（預設開啟）。
+  - 移除全站共用的 `byok_llm` 後端集中式 Budget，避免單一使用者高頻調用導致全站其他讀者遭遇 DoS 熔斷阻擋；改由 API 層進行客戶端 IP 頻率防護。
+
+### 🚀 全鏈路 SSE 流式傳輸與自訂相容端點 (`apps/worker/src/ask.ts` & `apps/api/src/routes/ask-model.ts`)
+- **Server-Sent Events (SSE) 即時打字機串流**：
+  - Worker 與 API 全面支援 `text/event-stream` 串流管線轉發，直接打通瀏覽器 Fetch `ReadableStream`。
+  - 模型生成首字時間（TTFT）由原本 15~35 秒整包等待縮減至 1 秒以內，徹底根除長篇分析觸發反向代理（Cloudflare / Nginx 60s）超時斷線的問題。
+- **支援自訂 OpenAI 相容端點與 SSRF 防護**：
+  - 支援 DeepSeek、OpenAI、Groq、OpenRouter 及自訂端點（`custom`）。
+  - 針對自訂 API 端點加入 `assertPublicUrl` 網路安全校驗，防範內網穿透與 SSRF 探針；最大生成 Token 提升至 4096，全面適配推理模型（如 DeepSeek-R1、o3-mini）。
+- **外部搜尋服務配置化 (`packages/backend/src/providers/ask-search.ts`)**：
+  - 將硬編碼搜尋端點重構為支援 `ASK_SEARCH_URL` 與 `URL2MD_BASE_URL` 環境變數配置，並提供 `ASK_WEB_SEARCH_ENABLED` 開關與平穩降級保護。
+
+### 🎨 前端互動與體驗全面升級 (`apps/web/app/routes/ask.tsx` & `local-state.ts`)
+- **Key 與偏好本機持久化**：
+  - 於 `local-state.ts` 新增 `byokConfig` 狀態管理器，使用者的 API Key、偏好服務商與自訂端點安全保留於瀏覽器 LocalStorage，重新整理或切換頁面不再丟失。
+  - 提供「記住金鑰」切換開關與「一鍵清除金鑰」隱私按鈕。
+- **結構化 Markdown 渲染與引用點擊跳轉**：
+  - 支援標題、項目清單、粗體、行內代碼格式化渲染，並將 `[1]`, `[2]` 引用編號自動解析為帶提示之高亮標籤，點擊直接連至本站新聞或原文。
+  - 提供快捷提問範例卡片、回答一鍵複製、生成中即時中斷按鈕與多輪續問上下文優化。
+
+
 ## [2026-10-31] — 🛡️ GitHub CodeQL 安全掃描全數清零（消除最後 1 項 Code Scanning Alert #31）
 
 ### 🔒 CodeQL 靜態安全分析修復 (`tests/leaderboard-admission.test.ts`)

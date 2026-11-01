@@ -19,10 +19,6 @@ export class BudgetExceededError extends Error {
   }
 }
 
-export class BudgetNotConfiguredError extends Error {
-  constructor(service: string) { super(`Budget for ${service} is not configured`); }
-}
-
 export class ReceiptBusyError extends Error {}
 
 export class ReceiptUnknownError extends Error {
@@ -53,8 +49,6 @@ export interface CallOutcome {
 
 export interface ReceiptRequest {
   service: string;
-  /** Refuse paid calls if this service has no configured budget. */
-  requireBudget?: boolean;
   model?: string | null;
   purpose: string;
   subject?: string | null;
@@ -87,13 +81,10 @@ interface ReceiptRow {
   updated_at: Date;
 }
 
-async function checkBudget(tx: Db, service: string, required = false): Promise<void> {
+async function checkBudget(tx: Db, service: string): Promise<void> {
   const [budget] = await tx<{ per_minute: number; per_hour: number; per_day: number }[]>`
     SELECT per_minute, per_hour, per_day FROM budgets WHERE service = ${service}`;
-  if (!budget) {
-    if (required) throw new BudgetNotConfiguredError(service);
-    return; // Existing services retain their established unlimited-when-absent behavior.
-  }
+  if (!budget) return; // default rows come with the migrations; a service an operator removed is unlimited
   // Every request sent counts, retries of the same logical request included.
   const [counts] = await tx<{ minute: number; hour: number; day: number }[]>`
     SELECT
@@ -132,13 +123,13 @@ export async function paidRequest(req: ReceiptRequest, call: () => Promise<CallO
       }
       if (existing.status === "unknown") return { kind: "unknown" as const, row: existing };
       // failed: the provider did not take the request, or its answer was unusable; a new attempt is allowed.
-      await checkBudget(tx, req.service, req.requireBudget);
+      await checkBudget(tx, req.service);
       const [r] = await tx<{ attempts: number }[]>`
         UPDATE receipts SET status = 'pending', attempts = attempts + 1, error = NULL, updated_at = now() WHERE id = ${existing.id} RETURNING attempts`;
       const attemptId = await startAttempt(tx, existing.id, r!.attempts, req);
       return { kind: "call" as const, id: existing.id, attemptId };
     }
-    await checkBudget(tx, req.service, req.requireBudget);
+    await checkBudget(tx, req.service);
     const [row] = await tx<{ id: number }[]>`
       INSERT INTO receipts (logical_key, service, model, purpose, subject, status, request, attempts)
       VALUES (${logicalKey}, ${req.service}, ${req.model ?? null}, ${req.purpose}, ${req.subject ?? null}, 'pending',

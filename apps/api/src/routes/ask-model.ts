@@ -1,20 +1,49 @@
-// Forward BYOK requests to the worker without persisting or logging the key or prompt.
+// Forward reader-initiated BYOK requests to the worker without persisting or logging the key or prompt.
 import type { FastifyInstance } from "fastify";
 import { askWorkerUrl } from "@aihot/backend/lib/ask-network";
 import { credential } from "@aihot/backend/config";
 
 export function registerAskModel(app: FastifyInstance) {
-  app.post("/api/site/ask-model", { bodyLimit: 100_000, config: { rateLimit: { max: 15, timeWindow: "1 minute" } } }, async (req, reply) => {
+  app.post("/api/site/ask-model", { bodyLimit: 150_000, config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (req, reply) => {
     reply.header("Cache-Control", "no-store");
-    const secret = credential("auth", "IMG_PROXY_SIGN_SECRET");
+    const secret = process.env.ASK_WORKER_SECRET || credential("auth", "IMG_PROXY_SIGN_SECRET");
     if (!secret) return reply.code(503).send({ error: "Worker authentication is not configured" });
+
     const body = req.body;
     if (!body || typeof body !== "object" || Array.isArray(body)) return reply.code(400).send({ error: "Invalid request" });
+
     try {
       const endpoint = new URL("/ask", askWorkerUrl());
-      const response = await fetch(endpoint, { method: "POST", redirect: "error", signal: AbortSignal.timeout(70_000), headers: { "content-type": "application/json", "x-worker-secret": secret }, body: JSON.stringify(body) });
+      const response = await fetch(endpoint, {
+        method: "POST",
+        redirect: "error",
+        signal: AbortSignal.timeout(100_000),
+        headers: { "content-type": "application/json", "x-worker-secret": secret },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const value: unknown = await response.json().catch(() => ({ error: "Model request failed" }));
+        return reply.code(response.status >= 400 && response.status < 600 ? response.status : 503).send(value);
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      if (contentType.includes("text/event-stream")) {
+        reply.raw.writeHead(200, {
+          "content-type": "text/event-stream; charset=utf-8",
+          "cache-control": "no-store",
+          "x-accel-buffering": "no",
+          connection: "keep-alive",
+        });
+        if (response.body) {
+          for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
+            reply.raw.write(chunk);
+          }
+        }
+        return reply.raw.end();
+      }
+
       const value: unknown = await response.json();
-      if (!response.ok) return reply.code(response.status >= 400 && response.status < 600 ? response.status : 503).send(value);
       return reply.send(value);
     } catch {
       req.log.warn("BYOK worker request failed");

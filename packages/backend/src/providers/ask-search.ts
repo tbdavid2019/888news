@@ -1,4 +1,4 @@
-// Search 2md's fixed search endpoint; no user-supplied URL is fetched.
+// Search web endpoint for public question context; configurable and bounded.
 import { guardedFetch } from "../lib/http-fetch.ts";
 
 export interface AskWebResult { title: string; description: string; url: string }
@@ -22,14 +22,20 @@ export function parseAskSearch(value: unknown): AskWebResult[] {
 
 let running = 0;
 export async function searchAskWeb(query: string): Promise<AskWebResult[]> {
+  if (process.env.ASK_WEB_SEARCH_ENABLED === "false") return [];
   if (running >= 4) throw new Error("Search capacity exhausted");
   running++;
   try {
-    const url = new URL("https://2md.aiurl.tw/search");
+    const rawBase = process.env.ASK_SEARCH_URL || process.env.URL2MD_BASE_URL || "https://2md.aiurl.tw";
+    const endpoint = rawBase.endsWith("/search") ? rawBase : `${rawBase.replace(/\/+$/, "")}/search`;
+    const url = new URL(endpoint);
     url.searchParams.set("q", query);
     const res = await guardedFetch(url.href, { headers: { accept: "application/json" }, timeoutMs: 10_000, maxBytes: 256 * 1024, maxRedirects: 0 });
     if (res.status !== 200) throw new Error("Search unavailable");
     return parseAskSearch(JSON.parse(res.text()));
+  } catch (error) {
+    console.warn(JSON.stringify({ level: "warn", msg: "web search failed", error: String(error).slice(0, 200) }));
+    throw error;
   } finally {
     running--;
   }
