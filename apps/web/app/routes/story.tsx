@@ -13,6 +13,7 @@ import { PillTabs } from "../components/ui/Tabs";
 import { Select } from "../components/ui/Controls";
 import { IconArrowLeft, IconChevronRight, IconClock, IconDoc, IconUsers } from "../components/icons";
 import { Bot } from "lucide-react";
+import { Comments } from "../components/comments/Comments";
 import { useI18n } from "../lib/i18n";
 import { formatArticleSummary, renderMarkdown, stripMarkdown } from "../lib/markdown";
 import { openCompanion } from "../lib/companion-bus";
@@ -390,6 +391,15 @@ export default function StoryPage() {
               </ul>
             </Panel>
           )}
+
+          <Panel id="story-comments" title="讀者討論" sub="針對此事件的各方觀點與即時反饋" className="order-7">
+            <Comments
+              slug={`story:${story.publicId}`}
+              title={story.title}
+              url={`https://news2.david888.com/story/${story.publicId}`}
+              published={story.firstReportAt ?? undefined}
+            />
+          </Panel>
         </div>
 
         <aside className="order-2 flex min-w-0 flex-col gap-4 lg:order-none lg:gap-5">

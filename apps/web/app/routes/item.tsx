@@ -20,10 +20,11 @@ import { StoryFollowups } from "../features/item/StoryFollowups";
 import { MediaGallery } from "../features/item/MediaGallery";
 import { QuotedPost } from "../features/item/QuotedPost";
 import { TweetCard } from "../features/item/TweetCard";
-import { IconArrowLeft, IconCopy, IconDownload, IconExternal, IconImage, IconMenu, IconShare } from "../components/icons";
+import { IconArrowLeft, IconCopy, IconDownload, IconExternal, IconImage, IconMenu, IconShare, IconMessage } from "../components/icons";
 import { Bot, Lightbulb, Search, MessageSquare, Mic } from "lucide-react";
 import { useMermaid } from "../lib/use-mermaid";
 import { openCompanion } from "../lib/companion-bus";
+import { Comments } from "../components/comments/Comments";
 
 const PosterSheet = lazy(() => import("../features/item/PosterSheet"));
 
@@ -574,6 +575,27 @@ export default function ItemPage() {
               </ul>
             </section>
           )}
+
+          {/* Reader Discussion / Comments Section */}
+          <section className="mt-12 border-t border-line pt-8">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                  <IconMessage size={16} />
+                </div>
+                <h2 className="text-[17px] font-bold text-ink">讀者討論</h2>
+              </div>
+              <span className="text-[12px] text-ink-4">
+                理性交流 · 即時討論
+              </span>
+            </div>
+            <Comments
+              slug={`news:${item.id}`}
+              title={item.title}
+              url={`https://news2.david888.com/items/${item.id}`}
+              published={publishedIso}
+            />
+          </section>
         </article>
       </ArticleLayout>
 
