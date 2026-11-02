@@ -17,13 +17,13 @@ test("resolveGarrulLang correctly maps locales", () => {
 
 test("buildGarrulDataset formats required attributes for Garrul embed", () => {
   const dataset = buildGarrulDataset({
-    slug: "news:test-123",
+    slug: "news-test-123",
     title: "Test News Title",
     url: "https://news2.david888.com/items/test-123",
   });
 
   assert.equal(dataset["data-api"], DEFAULT_GARRUL_API);
-  assert.equal(dataset["data-slug"], "news:test-123");
+  assert.equal(dataset["data-slug"], "news-test-123");
   assert.equal(dataset["data-title"], "Test News Title");
   assert.equal(dataset["data-url"], "https://news2.david888.com/items/test-123");
   assert.equal(dataset["data-lang"], "zh-Hant");
@@ -35,7 +35,7 @@ test("buildGarrulDataset supports optional published date and custom api origin"
   const customApi = "https://comments.custom.org/";
   const dataset = buildGarrulDataset(
     {
-      slug: "story:event-456",
+      slug: "story-event-456",
       title: "Major Story",
       url: "https://news2.david888.com/story/event-456",
       published: publishedIso,
@@ -46,7 +46,7 @@ test("buildGarrulDataset supports optional published date and custom api origin"
   );
 
   assert.equal(dataset["data-api"], "https://comments.custom.org");
-  assert.equal(dataset["data-slug"], "story:event-456");
+  assert.equal(dataset["data-slug"], "story-event-456");
   assert.equal(dataset["data-title"], "Major Story");
   assert.equal(dataset["data-url"], "https://news2.david888.com/story/event-456");
   assert.equal(dataset["data-published"], publishedIso);

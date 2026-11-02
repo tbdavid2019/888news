@@ -394,7 +394,7 @@ export default function StoryPage() {
 
           <Panel id="story-comments" title="讀者討論" sub="針對此事件的各方觀點與即時反饋" className="order-7">
             <Comments
-              slug={`story:${story.publicId}`}
+              slug={`story-${story.publicId}`}
               title={story.title}
               url={`https://news2.david888.com/story/${story.publicId}`}
               published={story.firstReportAt ?? undefined}

@@ -52,7 +52,7 @@ export function Sidebar({ changelogVersion }: { changelogVersion: string | null 
       <Link to="/" className="mb-4 flex h-[50px] items-center px-1 text-ink" aria-label={`${SITE.name}`}>
         <Wordmark size={36} />
       </Link>
-      <nav className="-mx-1 flex-1 overflow-y-auto px-1" aria-label="Sidebar navigation">
+      <nav className="-mx-1 flex-1 overflow-y-auto px-1 scrollbar-none" aria-label="Sidebar navigation">
         {sidebar.map((section) => (
           <div key={section.title}>
             <div className="px-2.5 pb-1 pt-3.5 text-[11px] text-ink-4">{section.title}</div>

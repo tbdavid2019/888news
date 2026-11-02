@@ -590,7 +590,7 @@ export default function ItemPage() {
               </span>
             </div>
             <Comments
-              slug={`news:${item.id}`}
+              slug={`news-${item.id}`}
               title={item.title}
               url={`https://news2.david888.com/items/${item.id}`}
               published={publishedIso}
