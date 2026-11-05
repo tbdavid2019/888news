@@ -47,7 +47,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 export function meta({ matches, loaderData }: Route.MetaArgs) {
   // Only the tab is part of the address (mcp is the default and not written).
   const path = listPath("/agent", { tab: loaderData && loaderData.tab !== "mcp" ? loaderData.tab : null });
-  return pageMeta({ title: "Agent 接入", description: `讓 Agent 直接使用 ${SITE.name}：MCP、RSS、REST API v1，匿名只讀。`, path, image: "/og/pages/agent.png", matches });
+  return pageMeta({ title: "Agent 接入", description: `讓 Agent 直接使用 ${SITE.name}：MCP、RSS、REST API v1，匿名只讀。`, path, image: "/og/pages/agent-tw.png", matches });
 }
 
 function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {

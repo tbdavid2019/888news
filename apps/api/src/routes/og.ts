@@ -16,20 +16,21 @@ import { posterEtag, renderPoster, type Poster } from "../og/poster.ts";
 const S = SITE.subject;
 const PAGES: Record<string, OgCard> = {
   site: { kicker: SITE.name, title: SITE.tagline, subtitle: SITE.description },
-  all: { kicker: `全部${withSubject("动态")}`, title: "所有信源的最新动态，一站看完", subtitle: "按时间汇总各信源的最新动态，可按类别与标签筛选。" },
-  hot: { kicker: "热点榜", title: `过去 48 小时，大家在讨论什么`, subtitle: "热度指数、趋势与组成热度的公开来源。", accent: "hot" },
-  daily: { kicker: withSubject("日报"), title: `每天 8 点，一份读得完的${withSubject("日报")}`, subtitle: `前一天值得关注的${S}动态。` },
-  weekly: { kicker: withSubject("周报"), title: "一周大事，一次看清", subtitle: "本周的主线、重要发布与值得回看的讨论。" },
-  monthly: { kicker: withSubject("月报"), title: "一个月的变化", subtitle: "月度主线与关键事件回顾。" },
-  topics: { kicker: "主题", title: "长期追踪的方向", subtitle: "公司与机构、专题方向、内容形态。" },
-  leaderboard: { kicker: "AI 模型排行榜", title: "多家公开评测的共识排名", subtitle: "综合、编程、推理、知识、专业办公；缺测不补零，价格不影响排名。" },
-  "codex-reset": { kicker: "Tibo 重置监控", title: "Codex 额度重置什么时候生效", subtitle: "推算的台北时间窗口、适用范围与 Tibo 原话。", accent: "amber" },
-  about: { kicker: "关于", title: `关于 ${SITE.name}`, subtitle: SITE.description },
-  terms: { kicker: "使用规则", title: `${SITE.name} 使用规则`, subtitle: "网站、API、RSS 与 MCP 的使用范围。" },
-  privacy: { kicker: "隐私说明", title: `${SITE.name} 隐私说明`, subtitle: "访问日志、浏览器本地数据与反馈资料的处理方式。" },
-  changelog: { kicker: "更新日志", title: `${SITE.name} 更新日志`, subtitle: "功能更新、优化、公告与下线记录。" },
-  feedback: { kicker: "反馈", title: "告诉我们哪里可以更好", subtitle: "内容、功能、接入，或来源方的更正与下架请求。" },
-  agent: { kicker: "Agent 接入", title: `让 Agent 直接使用 ${SITE.name}`, subtitle: "MCP、RSS 与 REST API v1，匿名只读。" },
+  all: { kicker: `全部${withSubject("動態")}`, title: "所有信源的最新動態，一站看完", subtitle: "按時間彙整各信源的最新動態，可按類別與標籤篩選。" },
+  hot: { kicker: "熱門排行", title: "過去 48 小時，大家在討論什麼", subtitle: "熱度指數、趨勢與公開來源。", accent: "hot" },
+  daily: { kicker: withSubject("日報"), title: `每天 8 點，一份讀得完的${withSubject("日報")}`, subtitle: `前一天值得關注的${S}動態。` },
+  weekly: { kicker: withSubject("週報"), title: "一週大事，一次看清", subtitle: "本週主線、重要發布與值得回看的討論。" },
+  monthly: { kicker: withSubject("月報"), title: "一個月的變化", subtitle: "月度主線與關鍵事件回顧。" },
+  topics: { kicker: "主題", title: "長期追蹤的方向", subtitle: "公司與機構、專題方向、內容形式。" },
+  leaderboard: { kicker: "AI 模型排行榜", title: "多家公開評測的共識排名", subtitle: "綜合、程式設計、推理、知識、專業辦公；缺測不補零，價格不影響排名。" },
+  "codex-reset": { kicker: "Tibo 重置監控", title: "Codex 額度重置時間", subtitle: "推算的台北時間區間、適用範圍與 Tibo 原話。", accent: "amber" },
+  about: { kicker: "關於", title: `關於 ${SITE.name}`, subtitle: SITE.description },
+  terms: { kicker: "使用規則", title: `${SITE.name} 使用規則`, subtitle: "網站、API、RSS 與 MCP 的使用範圍。" },
+  privacy: { kicker: "隱私說明", title: `${SITE.name} 隱私說明`, subtitle: "存取紀錄、瀏覽器本機資料與意見回饋的處理方式。" },
+  changelog: { kicker: "更新日誌", title: `${SITE.name} 更新日誌`, subtitle: "功能更新、最佳化、公告與下架紀錄。" },
+  feedback: { kicker: "意見回饋", title: "告訴我們哪些地方可以更好", subtitle: "內容、功能、接入，或來源方的更正與下架請求。" },
+  agent: { kicker: "Agent 接入", title: `讓 Agent 直接使用 ${SITE.name}`, subtitle: "MCP、RSS 與 REST API v1，匿名唯讀。" },
+  "agent-tw": { kicker: "Agent 接入", title: `讓 Agent 直接使用 ${SITE.name}`, subtitle: "MCP、RSS 與 REST API v1，匿名唯讀。" },
 };
 
 /**
@@ -108,7 +109,7 @@ export function registerOg(app: FastifyInstance) {
       kicker: `${REPORT_NAMES[r.kind]} · ${r.key}`,
       title: r.lead?.title ?? r.title,
       subtitle: r.lead?.leadParagraph ?? r.overview,
-      meta: `${r.stories.length} 条核心新闻 · 约 ${r.readingMinutes} 分钟读完`,
+      meta: `${r.stories.length} 則核心新聞 · 約 ${r.readingMinutes} 分鐘讀完`,
     }, 86400);
   });
 
@@ -127,7 +128,7 @@ export function registerOg(app: FastifyInstance) {
     const s = await loadStoryDetail(found.storyId);
     if (!s) return notFound(reply);
     return send(req, reply, {
-      kicker: s.whyHot.rank ? `热点第 ${s.whyHot.rank} · 事件` : "事件",
+      kicker: s.whyHot.rank ? `熱門第 ${s.whyHot.rank} · 事件` : "事件",
       title: s.title,
       subtitle: s.latest ?? s.digest,
       meta: `${s.sourceCount} 个来源 · ${s.reportCount} 篇报道`,
