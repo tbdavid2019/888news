@@ -311,7 +311,10 @@ function modelRef(view: RunView, m: ModelRow): LbModelRef {
 }
 
 export async function loadBoard(key: LeaderboardBoardKey): Promise<LbBoardResponse | null> {
-  const view = await runView();
+  const [view, openrouter] = await Promise.all([
+    runView(),
+    loadOpenRouterRankings().catch(() => new Map<string, LbMarketStats>()),
+  ]);
   const board = view.boards.get(key);
   if (!board) return null;
   const entries: LbBoardEntry[] = board.entries
@@ -325,7 +328,7 @@ export async function loadBoard(key: LeaderboardBoardKey): Promise<LbBoardRespon
         coverage: e.coverage ?? 0,
         price: view.prices.get(m.id) ?? null,
         access: modelAccess(m),
-        market: matchMarketStats(view.openrouter, m.slug),
+        market: matchMarketStats(openrouter, m.slug),
       };
     });
   return {
@@ -400,7 +403,11 @@ function usageLabel(status: string | undefined) {
 }
 
 export async function loadModel(slug: string): Promise<LbModelDetail | null> {
-  let view = await runView();
+  const [initialView, openrouter] = await Promise.all([
+    runView(),
+    loadOpenRouterRankings().catch(() => new Map<string, LbMarketStats>()),
+  ]);
+  let view = initialView;
   let historical = false;
   // A published model URL survives both dropping below the display limit and later losing
   // eligibility. Historical reads keep their original date and never replace the current-run cache.
@@ -509,7 +516,7 @@ export async function loadModel(slug: string): Promise<LbModelDetail | null> {
     historical,
     model: { ...modelRef(view, m), contextWindowTokens: m.context_window_tokens, weightsUrl: modelAccess(m).weightsUrl },
     price: view.prices.get(m.id) ?? null,
-    market: matchMarketStats(view.openrouter, slug),
+    market: matchMarketStats(openrouter, slug),
     overall: {
       rank: overallEntry?.rank ?? null,
       score: rating(overallEntry),

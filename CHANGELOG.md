@@ -2,6 +2,35 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-06] — 📊 模型榜 OpenRouter 調用熱度與排名全情境保底呈現優化
+
+### 🛠️ OpenRouter 種子路徑與雙層保底策略 (Baseline Foundation + DB Overlay)
+- **修正種子檔案載入路徑**：
+  - 改用 `REPO_ROOT` from `config.ts` 解析 `database/seeds/lb-openrouter-rankings.json` 絕對路徑，解決不同工作目錄或打包路徑下的尋址問題。
+  - 在 `loadSeedRankings()` 發生讀取異常時輸出詳細錯誤記錄，杜絕無聲吞掉。
+- **重構 `loadOpenRouterRankings()` 載入架構**：
+  - **底層保底策略 (Baseline Foundation)**：初始化時必定預先載入本地種子資料（1,170+ 款模型），保證任何環境（包括資料庫冷啟動或無外部網路連線）均能即時取得完整排名。
+  - **資料庫增量覆蓋 (DB Overlay)**：若資料庫 `settings` 表具備最新調用資料，自動更新/覆蓋底層種子資料。
+  - **非同步種子寫入**：若資料庫尚未存在相關紀錄，背景非同步寫入種子資料，確保後續查詢高效能。
+- **解耦 `read.ts` 快取限制**：
+  - 於 `loadBoard()` 與 `loadModel()` 中平行載入 `runView()` 與 `loadOpenRouterRankings()`，避免市場數據受限於評測 Run 的記憶體長快取。
+  - 確保公開榜單、分類榜單、模型詳情頁與 MCP 查詢皆能 100% 穩定輸出 OpenRouter 排名與 Token 調用資訊。
+
+### 🌱 種子腳本資料庫預載與效能快取 (`scripts/seed.ts` & `openrouter-rankings.ts`)
+- 在初始化 `if (FEATURES.leaderboard)` 階段，同步執行官方價格校驗 (`importOfficialPrices`) 與 OpenRouter 排名種子寫入 (`syncOpenRouterRankings({ forceSeed: false })`)，保障資料庫冷啟動基礎數據，同時不覆蓋線上 Worker 已取得之最新排名。
+- 於 `loadOpenRouterRankings()` 加入 60 秒記憶體 TTL 快取機制，高頻榜單查詢免去重複 JSON 反序列化與 DB 查詢開銷。
+
+### 🎨 前端標籤視覺、Hover 浮動資訊卡與 RWD 強化 (`BoardTable.tsx`)
+- 徹底解決縮寫含義不明（「什麼叫做 OR?」）與字級折行問題：
+  - **清晰品牌識別**：標籤完整標示 `OpenRouter #名次`，取代晦澀的 `OR` 簡寫。
+  - **行內緊湊整潔**：移除行內龐大代幣文字（如 `(2966.8 億)`），徹底消除多行折行與高度抖動。
+  - **豐富 Hover 浮動卡片**：滑鼠懸停於標籤時，即時彈出精緻資訊卡，展示完整市場排名、累計代幣消耗量（如 `1.3 兆 Token`）及累計請求次數。
+  - **防止遮擋自適應定位**：前 3 列模型向下彈出 (`top-full mt-1.5`)，其餘向上彈出 (`bottom-full mb-1.5`)，避免遭外層 `overflow-hidden` 邊界遮蔽。
+  - **無障礙與原生 Tooltip 衝突修復**：以 `aria-label` 取代原生 `title`，卡片加上 `aria-hidden="true"`，防止瀏覽器原生黑色方框重疊遮擋。
+  - **行動端 RWD 適配**：修正 `py-0.5` 內邊距，彈性換行與文字截斷保護，確保在 375px–1440px+ 螢幕下均優雅呈現。
+
+---
+
 ## [2026-11-01] — 🗑️ 徹底移除獨立 `/ask` 頁面與導航，全面收斂為隨選文章「伴隨式浮動 Copilot」
 
 ### 🧹 移除離散式獨立頁面與導航（Clean up Standalone Route & Navigation）

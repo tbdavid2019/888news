@@ -10,6 +10,8 @@ import { closeDb, sql } from "@aihot/backend/db";
 import { importModelDirectory } from "@aihot/backend/leaderboard/directory";
 import { seedTopics } from "@aihot/backend/publication/topics";
 import { assertSupportedConfig } from "@aihot/backend/sources/config-keys";
+import { syncOpenRouterRankings } from "@aihot/backend/leaderboard/openrouter-rankings";
+import { importOfficialPrices } from "@aihot/backend/leaderboard/prices";
 
 interface SeedSource {
   id: string;
@@ -55,6 +57,10 @@ console.log(`sources: ${added} added, ${sources.length - added} already there`);
 if (FEATURES.leaderboard) {
   const { models, aliases } = await importModelDirectory();
   console.log(`leaderboard directory: ${models} models, ${aliases} names added`);
+  const { written: pricesWritten } = await importOfficialPrices({ overwrite: false });
+  console.log(`leaderboard prices: ${pricesWritten} official prices verified/seeded`);
+  const market = await syncOpenRouterRankings({ forceSeed: false });
+  console.log(`leaderboard openrouter: ${market.modelsIndexed} models seeded (${market.date})`);
 }
 const { seedPodcastCatalog } = await import("./seed-podcasts.ts");
 const podcastStats = await seedPodcastCatalog();

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import type { LbBoardEntry } from "@aihot/contracts/leaderboard";
 import { SITE } from "@aihot/industry/site";
 import { BrandMark } from "./BrandMark";
-import { formatPrice, formatTokensVolume, getPriceValue, modelHref, noOfficialApi, score, type LbCurrency } from "./format";
+import { formatPrice, formatRequestsCount, formatTokensVolume, getPriceValue, modelHref, noOfficialApi, score, type LbCurrency } from "./format";
 import { monthDay } from "../../lib/format";
 import { IconChevronDown } from "../../components/icons";
 
@@ -156,7 +156,7 @@ export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet, cur
         </tr>
       </thead>
       <tbody ref={body}>
-        {rows.map((e) => (
+        {rows.map((e, idx) => (
           <tr
             key={e.model.slug}
             data-slug={e.model.slug}
@@ -187,26 +187,49 @@ export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet, cur
                       </a>
                     )}
                   </span>
-                  <small className="hidden items-center gap-2 text-[12px] leading-[18px] text-ink-4 lg:flex">
+                  <small className="hidden flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] leading-[18px] text-ink-4 lg:flex">
                     <span>{e.model.provider ?? "—"}</span>
                     {e.market?.openrouterRank != null && (
-                      <span
-                        className="inline-flex items-center gap-1 rounded bg-[rgba(28,39,51,0.05)] px-1.5 py-0.5 text-[11px] font-medium text-ink-3 dark:bg-white/[0.06] dark:text-ink-2"
-                        title={`OpenRouter 市場調用第 ${e.market.openrouterRank} 名 · 累計消耗 ${formatTokensVolume(e.market.totalTokens)} Token`}
-                      >
-                        <span className="font-semibold text-accent">OR</span>
-                        <span className="num">#{e.market.openrouterRank}</span>
-                        {e.market.totalTokens ? (
-                          <span className="text-[10px] text-ink-4">({formatTokensVolume(e.market.totalTokens)})</span>
-                        ) : null}
+                      <span className="relative group/or inline-flex items-center">
+                        <span
+                          className="inline-flex shrink-0 items-center gap-1 rounded bg-[rgba(28,39,51,0.04)] px-1.5 py-0.5 text-[10.5px] font-medium text-ink-3 transition-colors hover:bg-accent/10 hover:text-accent cursor-help dark:bg-white/[0.05] dark:text-ink-3"
+                          aria-label={`OpenRouter 全球開發者調用第 ${e.market.openrouterRank} 名${e.market.totalTokens ? ` · 累計消耗 ${formatTokensVolume(e.market.totalTokens)} Token` : ""}`}
+                        >
+                          <span>OpenRouter</span>
+                          <span className="num font-semibold">#{e.market.openrouterRank}</span>
+                        </span>
+                        {/* Rich Floating Tooltip Card on Hover */}
+                        <span
+                          className={`pointer-events-none absolute left-0 z-50 hidden w-max max-w-xs flex-col gap-1 rounded-lg border border-line bg-bg-raised p-2.5 text-[11.5px] leading-relaxed text-ink shadow-xl backdrop-blur-md group-hover/or:flex dark:bg-bg-sunk ${
+                            idx < 3 ? "top-full mt-1.5" : "bottom-full mb-1.5"
+                          }`}
+                          aria-hidden="true"
+                        >
+                          <span className="font-bold text-accent">OpenRouter 全球開發者調用熱度</span>
+                          <span className="text-ink-2">市場調用名次：<strong className="num text-ink">第 #{e.market.openrouterRank} 名</strong></span>
+                          {e.market.totalTokens ? (
+                            <span className="text-ink-2">累計代幣消耗：<strong className="num text-ink">{formatTokensVolume(e.market.totalTokens)} Token</strong></span>
+                          ) : null}
+                          {e.market.totalRequests ? (
+                            <span className="text-ink-2">累計請求次數：<strong className="num text-ink">{formatRequestsCount(e.market.totalRequests)} 次</strong></span>
+                          ) : null}
+                        </span>
                       </span>
                     )}
                   </small>
-                  {/* Phones: maker and release in one line under the name. */}
-                  <small className="block truncate text-[12px] leading-[18px] text-ink-4 lg:hidden">
-                    {e.model.provider ?? "—"} · <span className="num">{e.model.releasedAt ? monthDay(e.model.releasedAt) : "—"}</span>上線
+                  {/* Phones & Tablets (< 1024px): maker, release and compact OpenRouter rank */}
+                  <small className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] leading-[18px] text-ink-4 lg:hidden">
+                    <span className="max-w-[110px] truncate">{e.model.provider ?? "—"}</span>
+                    <span>·</span>
+                    <span className="num shrink-0">{e.model.releasedAt ? monthDay(e.model.releasedAt) : "—"}上線</span>
                     {e.market?.openrouterRank != null && (
-                      <span className="ml-1.5 font-medium text-accent">OR #{e.market.openrouterRank}</span>
+                      <span
+                        className="inline-flex shrink-0 items-center rounded bg-[rgba(28,39,51,0.04)] px-1.5 py-0.5 text-[10.5px] font-medium text-ink-3 dark:bg-white/[0.05] dark:text-ink-3"
+                        title={`OpenRouter 全球開發者調用第 ${e.market.openrouterRank} 名${e.market.totalTokens ? ` · 累計消耗 ${formatTokensVolume(e.market.totalTokens)} Token` : ""}`}
+                      >
+                        <span>OpenRouter</span>
+                        <span className="num ml-0.5 font-semibold">#{e.market.openrouterRank}</span>
+                      </span>
                     )}
                   </small>
                 </span>

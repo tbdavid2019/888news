@@ -2,14 +2,15 @@
 // Fetched periodically (4x daily alongside leaderboard refresh) and cached in settings.
 // Read-only on leaderboard views; never influences capability consensus scores.
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import path from "node:path";
 import type { LbMarketStats } from "@aihot/contracts/leaderboard";
+import { REPO_ROOT } from "../config.ts";
 import { sql } from "../db.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { modelSlug } from "./fetch/identity.ts";
 
 const SETTINGS_KEY = "leaderboard.openrouter_rankings";
-export const SEED_FILE = new URL("../../../../database/seeds/lb-openrouter-rankings.json", import.meta.url);
+export const SEED_FILE = path.join(REPO_ROOT, "database/seeds/lb-openrouter-rankings.json");
 
 interface OpenRouterRankingItem {
   date?: string;
@@ -39,14 +40,15 @@ let cachedSeedRankings: Record<string, LbMarketStats> | null = null;
 export function loadSeedRankings(): Record<string, LbMarketStats> {
   if (cachedSeedRankings) return cachedSeedRankings;
   try {
-    const raw = readFileSync(fileURLToPath(SEED_FILE), "utf8");
+    const raw = readFileSync(SEED_FILE, "utf8");
     const body = JSON.parse(raw) as { data?: OpenRouterRankingItem[] };
     const items = Array.isArray(body.data) ? body.data : [];
     if (!items.length) return {};
     const sampleDate = items[0]?.date ? items[0].date.slice(0, 10) : null;
     cachedSeedRankings = indexOpenRouterRankings(items, sampleDate);
     return cachedSeedRankings;
-  } catch {
+  } catch (err) {
+    console.error("Failed to load OpenRouter seed rankings:", err);
     return {};
   }
 }
@@ -126,6 +128,7 @@ export async function syncOpenRouterRankings(options?: { forceSeed?: boolean }):
         ON CONFLICT (key) DO UPDATE
         SET value = EXCLUDED.value, updated_at = now()`;
 
+      invalidateOpenRouterRankings();
       return { modelsIndexed: Object.keys(models).length, date: sampleDate };
     }
   }
@@ -157,6 +160,7 @@ export async function syncOpenRouterRankings(options?: { forceSeed?: boolean }):
       ON CONFLICT (key) DO NOTHING`;
   }
 
+  invalidateOpenRouterRankings();
   return { modelsIndexed: count, date: sampleDate };
 }
 
@@ -176,39 +180,52 @@ async function persistSeedToDb(models: Record<string, LbMarketStats>): Promise<v
     ON CONFLICT (key) DO NOTHING`;
 }
 
+let cachedRankingsMap: { map: Map<string, LbMarketStats>; checkedAt: number } | null = null;
+
+export function invalidateOpenRouterRankings(): void {
+  cachedRankingsMap = null;
+}
+
 export async function loadOpenRouterRankings(): Promise<Map<string, LbMarketStats>> {
+  if (cachedRankingsMap && Date.now() - cachedRankingsMap.checkedAt < 60_000) {
+    return cachedRankingsMap.map;
+  }
+
+  const out = new Map<string, LbMarketStats>();
+
+  // Baseline foundation: seed rankings ensure at least 1,170+ models are always present
+  const seed = loadSeedRankings();
+  for (const [key, v] of Object.entries(seed)) {
+    out.set(key, v);
+  }
+
   let row: { value: StoredOpenRouterRankings } | undefined;
   try {
     const rows = await sql<{ value: StoredOpenRouterRankings }[]>`SELECT value FROM settings WHERE key = ${SETTINGS_KEY}`;
     row = rows[0];
   } catch {
-    // DB query failed
+    // DB query failed (e.g. cold start, offline, testing without db)
   }
 
-  const out = new Map<string, LbMarketStats>();
-  if (row?.value?.models) {
-    for (const [key, v] of Object.entries(row.value.models)) {
+  const dbModels = row?.value?.models;
+  const hasDbModels = dbModels && Object.keys(dbModels).length > 0;
+
+  if (hasDbModels) {
+    // DB Overlay: overlay baseline with latest database rankings
+    const dbDate = row?.value?.date ?? null;
+    for (const [key, v] of Object.entries(dbModels)) {
       const rawRank = (v as { openrouterRank?: unknown; rank?: unknown }).openrouterRank ?? (v as { openrouterRank?: unknown; rank?: unknown }).rank ?? null;
       out.set(key, {
         openrouterRank: rawRank != null && Number.isFinite(Number(rawRank)) ? Number(rawRank) : null,
         totalTokens: v.totalTokens != null && Number.isFinite(Number(v.totalTokens)) ? Number(v.totalTokens) : null,
         totalRequests: v.totalRequests != null && Number.isFinite(Number(v.totalRequests)) ? Number(v.totalRequests) : null,
         permaslug: v.permaslug,
-        date: row.value.date ?? (v as { date?: string | null }).date ?? null,
+        date: dbDate ?? (v as { date?: string | null }).date ?? null,
       });
     }
   }
 
-  if (out.size === 0) {
-    const seed = loadSeedRankings();
-    for (const [key, v] of Object.entries(seed)) {
-      out.set(key, v);
-    }
-    if (out.size > 0) {
-      persistSeedToDb(seed).catch(() => {});
-    }
-  }
-
+  cachedRankingsMap = { map: out, checkedAt: Date.now() };
   return out;
 }
 

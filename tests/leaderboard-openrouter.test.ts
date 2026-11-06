@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { test } from "node:test";
-import { indexOpenRouterRankings, loadSeedRankings, matchMarketStats } from "@aihot/backend/leaderboard/openrouter-rankings";
+import { indexOpenRouterRankings, loadOpenRouterRankings, loadSeedRankings, matchMarketStats, SEED_FILE } from "@aihot/backend/leaderboard/openrouter-rankings";
 
 test("indexOpenRouterRankings correctly orders by token volume and matches dated or undated model slugs", () => {
   const items = [
@@ -79,10 +80,61 @@ test("indexOpenRouterRankings correctly orders by token volume and matches dated
 });
 
 test("loadSeedRankings loads fallback market stats from local seed JSON", () => {
+  assert.ok(existsSync(SEED_FILE), `SEED_FILE should exist at ${SEED_FILE}`);
   const seed = loadSeedRankings();
-  assert.ok(Object.keys(seed).length > 0, "seed file should yield indexed rankings");
+  const count = Object.keys(seed).length;
+  assert.ok(count >= 1100, `seed file should yield at least 1100 indexed entries, got ${count}`);
+
   const map = new Map(Object.entries(seed));
+
+  // Claude Fable 5
   const fable = matchMarketStats(map, "claude-fable-5");
   assert.ok(fable, "seed should match claude-fable-5");
   assert.equal(fable.permaslug, "anthropic/claude-5-fable-20260609");
+  assert.equal(fable.openrouterRank, 133);
+
+  // Gemini 4 Argon
+  const argon = matchMarketStats(map, "gemini-4-argon");
+  assert.ok(argon, "seed should match gemini-4-argon");
+  assert.equal(argon.permaslug, "google/gemini-4-argon-20261013");
+  assert.equal(argon.openrouterRank, 29);
+
+  // Claude Opus 5.5
+  const opus = matchMarketStats(map, "claude-opus-5-5");
+  assert.ok(opus, "seed should match claude-opus-5-5");
+  assert.equal(opus.permaslug, "anthropic/claude-opus-5.5-20260921");
+  assert.equal(opus.openrouterRank, 7);
+
+  // GPT-6 Astra
+  const astra = matchMarketStats(map, "gpt-6-astra");
+  assert.ok(astra, "seed should match gpt-6-astra");
+  assert.equal(astra.permaslug, "openai/gpt-6-astra-20260903");
+  assert.equal(astra.openrouterRank, 49);
+
+  // DeepSeek V4.1 Flash
+  const deepseek = matchMarketStats(map, "deepseek-v4-1-flash");
+  assert.ok(deepseek, "seed should match deepseek-v4-1-flash");
+  assert.equal(deepseek.permaslug, "deepseek/deepseek-v4.1-flash-20261017");
+  assert.equal(deepseek.openrouterRank, 1);
+});
+
+test("loadOpenRouterRankings returns map with baseline seed models guaranteed", async () => {
+  const map = await loadOpenRouterRankings();
+  assert.ok(map.size >= 1100, `loadOpenRouterRankings should return map with at least 1100 items, got ${map.size}`);
+
+  const argon = matchMarketStats(map, "gemini-4-argon");
+  assert.ok(argon, "loadOpenRouterRankings map must include gemini-4-argon");
+  assert.ok(argon.openrouterRank != null && argon.openrouterRank > 0);
+
+  const opus = matchMarketStats(map, "claude-opus-5-5");
+  assert.ok(opus, "loadOpenRouterRankings map must include claude-opus-5-5");
+  assert.ok(opus.openrouterRank != null && opus.openrouterRank > 0);
+
+  const astra = matchMarketStats(map, "gpt-6-astra");
+  assert.ok(astra, "loadOpenRouterRankings map must include gpt-6-astra");
+  assert.ok(astra.openrouterRank != null && astra.openrouterRank > 0);
+
+  const fable = matchMarketStats(map, "claude-fable-5");
+  assert.ok(fable, "loadOpenRouterRankings map must include claude-fable-5");
+  assert.ok(fable.openrouterRank != null && fable.openrouterRank > 0);
 });
