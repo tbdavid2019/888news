@@ -16,8 +16,9 @@ if (unknown.length) console.warn(`not on the leaderboard yet: ${unknown.join(", 
 if (!offline && !file) {
   const synced = await syncLeaderboardCatalog();
   console.log(`catalog synced: ${synced.pricesWritten} prices, ${synced.modelsUpdated} models (${synced.contextFilled} context windows)`);
-  const market = await syncOpenRouterRankings().catch((err: Error) => ({ error: err.message }));
-  console.log("openrouter rankings synced:", market);
 }
+
+const market = await syncOpenRouterRankings({ forceSeed: offline }).catch((err: Error) => ({ error: err.message }));
+console.log("openrouter rankings synced:", market);
 
 await closeDb();

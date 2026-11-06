@@ -1,12 +1,15 @@
 // OpenRouter developer usage rankings: tracks real-world token consumption and popularity.
 // Fetched periodically (4x daily alongside leaderboard refresh) and cached in settings.
 // Read-only on leaderboard views; never influences capability consensus scores.
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import type { LbMarketStats } from "@aihot/contracts/leaderboard";
 import { sql } from "../db.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { modelSlug } from "./fetch/identity.ts";
 
 const SETTINGS_KEY = "leaderboard.openrouter_rankings";
+export const SEED_FILE = new URL("../../../../database/seeds/lb-openrouter-rankings.json", import.meta.url);
 
 interface OpenRouterRankingItem {
   date?: string;
@@ -29,6 +32,23 @@ interface StoredOpenRouterRankings {
     totalRequests: number | null;
     permaslug: string;
   }>;
+}
+
+let cachedSeedRankings: Record<string, LbMarketStats> | null = null;
+
+export function loadSeedRankings(): Record<string, LbMarketStats> {
+  if (cachedSeedRankings) return cachedSeedRankings;
+  try {
+    const raw = readFileSync(fileURLToPath(SEED_FILE), "utf8");
+    const body = JSON.parse(raw) as { data?: OpenRouterRankingItem[] };
+    const items = Array.isArray(body.data) ? body.data : [];
+    if (!items.length) return {};
+    const sampleDate = items[0]?.date ? items[0].date.slice(0, 10) : null;
+    cachedSeedRankings = indexOpenRouterRankings(items, sampleDate);
+    return cachedSeedRankings;
+  } catch {
+    return {};
+  }
 }
 
 export function indexOpenRouterRankings(data: OpenRouterRankingItem[], asOfDate?: string | null): Record<string, LbMarketStats> {
@@ -59,8 +79,10 @@ export function indexOpenRouterRankings(data: OpenRouterRankingItem[], asOfDate?
     const s2 = s1.replace(/-20\d{2}-?\d{2}-?\d{2}$/, "").replace(/-20\d{6}$/, "").replace(/-\d{8}$/, "");
     const s3 = s2.replace(/-v-(\d)/g, "-v$1");
     const s4 = s1.replace(/-v-(\d)/g, "-v$1");
+    const s5 = s2.replace(/^claude-(\d+(?:-\d+)?)-([a-z]+)/, "claude-$2-$1");
+    const s6 = s2.replace(/^claude-([a-z]+)-(\d+(?:-\d+)?)/, "claude-$2-$1");
 
-    for (const key of [s1, s2, s3, s4]) {
+    for (const key of [s1, s2, s3, s4, s5, s6]) {
       if (key && !indexed[key]) indexed[key] = stats;
     }
   }
@@ -68,52 +90,125 @@ export function indexOpenRouterRankings(data: OpenRouterRankingItem[], asOfDate?
   return indexed;
 }
 
-export async function syncOpenRouterRankings(): Promise<{ modelsIndexed: number; date: string | null }> {
-  const res = await guardedFetch("https://openrouter.ai/api/frontend/v1/rankings/models", {
-    timeoutMs: 30_000,
-    maxBytes: 16 * 1024 * 1024,
-  });
-  if (res.status !== 200) throw new Error(`OpenRouter rankings HTTP ${res.status}`);
+export async function syncOpenRouterRankings(options?: { forceSeed?: boolean }): Promise<{ modelsIndexed: number; date: string | null }> {
+  if (!options?.forceSeed) {
+    let fetchedItems: OpenRouterRankingItem[] | null = null;
+    try {
+      const res = await guardedFetch("https://openrouter.ai/api/frontend/v1/rankings/models", {
+        timeoutMs: 30_000,
+        maxBytes: 16 * 1024 * 1024,
+      });
+      if (res.status === 200) {
+        const body = JSON.parse(res.text()) as { data?: OpenRouterRankingItem[] };
+        if (Array.isArray(body.data) && body.data.length > 0) {
+          fetchedItems = body.data;
+        }
+      }
+    } catch {
+      // Network fetch failure: fallback to seed below
+    }
 
-  const body = JSON.parse(res.text()) as { data?: OpenRouterRankingItem[] };
-  const items = Array.isArray(body.data) ? body.data : [];
-  if (!items.length) throw new Error("OpenRouter rankings: empty data");
+    if (fetchedItems) {
+      const sampleDate = fetchedItems[0]?.date ? fetchedItems[0].date.slice(0, 10) : null;
+      const models = indexOpenRouterRankings(fetchedItems, sampleDate);
+      const now = new Date().toISOString();
 
-  const sampleDate = items[0]?.date ? items[0].date.slice(0, 10) : null;
-  const models = indexOpenRouterRankings(items, sampleDate);
-  const now = new Date().toISOString();
+      const record: StoredOpenRouterRankings = {
+        at: now,
+        date: sampleDate,
+        count: fetchedItems.length,
+        models: models as never,
+      };
 
+      await sql`
+        INSERT INTO settings (key, value, updated_by)
+        VALUES (${SETTINGS_KEY}, ${sql.json(record as never)}, 'worker')
+        ON CONFLICT (key) DO UPDATE
+        SET value = EXCLUDED.value, updated_at = now()`;
+
+      return { modelsIndexed: Object.keys(models).length, date: sampleDate };
+    }
+  }
+
+  // Fallback to local seed file if network fetch fails or forceSeed is requested
+  const seed = loadSeedRankings();
+  const count = Object.keys(seed).length;
+  if (!count) throw new Error("OpenRouter rankings: fetch failed and seed data unavailable");
+
+  const sampleDate = Object.values(seed)[0]?.date ?? null;
   const record: StoredOpenRouterRankings = {
-    at: now,
+    at: new Date().toISOString(),
     date: sampleDate,
-    count: items.length,
-    models: models as never,
+    count,
+    models: seed as never,
   };
 
+  if (options?.forceSeed) {
+    await sql`
+      INSERT INTO settings (key, value, updated_by)
+      VALUES (${SETTINGS_KEY}, ${sql.json(record as never)}, 'seed')
+      ON CONFLICT (key) DO UPDATE
+      SET value = EXCLUDED.value, updated_at = now()`;
+  } else {
+    // Graceful fallback on network failure: only seed if empty to preserve newer DB records
+    await sql`
+      INSERT INTO settings (key, value, updated_by)
+      VALUES (${SETTINGS_KEY}, ${sql.json(record as never)}, 'seed')
+      ON CONFLICT (key) DO NOTHING`;
+  }
+
+  return { modelsIndexed: count, date: sampleDate };
+}
+
+async function persistSeedToDb(models: Record<string, LbMarketStats>): Promise<void> {
+  const count = Object.keys(models).length;
+  if (count === 0) return;
+  const sampleDate = Object.values(models)[0]?.date ?? null;
+  const record: StoredOpenRouterRankings = {
+    at: new Date().toISOString(),
+    date: sampleDate,
+    count,
+    models: models as never,
+  };
   await sql`
     INSERT INTO settings (key, value, updated_by)
-    VALUES (${SETTINGS_KEY}, ${sql.json(record as never)}, 'worker')
-    ON CONFLICT (key) DO UPDATE
-    SET value = EXCLUDED.value, updated_at = now()`;
-
-  return { modelsIndexed: Object.keys(models).length, date: sampleDate };
+    VALUES (${SETTINGS_KEY}, ${sql.json(record as never)}, 'seed')
+    ON CONFLICT (key) DO NOTHING`;
 }
 
 export async function loadOpenRouterRankings(): Promise<Map<string, LbMarketStats>> {
-  const [row] = await sql<{ value: StoredOpenRouterRankings }[]>`SELECT value FROM settings WHERE key = ${SETTINGS_KEY}`;
-  const out = new Map<string, LbMarketStats>();
-  if (!row?.value?.models) return out;
-
-  for (const [key, v] of Object.entries(row.value.models)) {
-    const rawRank = (v as { openrouterRank?: unknown; rank?: unknown }).openrouterRank ?? (v as { openrouterRank?: unknown; rank?: unknown }).rank ?? null;
-    out.set(key, {
-      openrouterRank: rawRank != null && Number.isFinite(Number(rawRank)) ? Number(rawRank) : null,
-      totalTokens: v.totalTokens != null && Number.isFinite(Number(v.totalTokens)) ? Number(v.totalTokens) : null,
-      totalRequests: v.totalRequests != null && Number.isFinite(Number(v.totalRequests)) ? Number(v.totalRequests) : null,
-      permaslug: v.permaslug,
-      date: row.value.date,
-    });
+  let row: { value: StoredOpenRouterRankings } | undefined;
+  try {
+    const rows = await sql<{ value: StoredOpenRouterRankings }[]>`SELECT value FROM settings WHERE key = ${SETTINGS_KEY}`;
+    row = rows[0];
+  } catch {
+    // DB query failed
   }
+
+  const out = new Map<string, LbMarketStats>();
+  if (row?.value?.models) {
+    for (const [key, v] of Object.entries(row.value.models)) {
+      const rawRank = (v as { openrouterRank?: unknown; rank?: unknown }).openrouterRank ?? (v as { openrouterRank?: unknown; rank?: unknown }).rank ?? null;
+      out.set(key, {
+        openrouterRank: rawRank != null && Number.isFinite(Number(rawRank)) ? Number(rawRank) : null,
+        totalTokens: v.totalTokens != null && Number.isFinite(Number(v.totalTokens)) ? Number(v.totalTokens) : null,
+        totalRequests: v.totalRequests != null && Number.isFinite(Number(v.totalRequests)) ? Number(v.totalRequests) : null,
+        permaslug: v.permaslug,
+        date: row.value.date ?? (v as { date?: string | null }).date ?? null,
+      });
+    }
+  }
+
+  if (out.size === 0) {
+    const seed = loadSeedRankings();
+    for (const [key, v] of Object.entries(seed)) {
+      out.set(key, v);
+    }
+    if (out.size > 0) {
+      persistSeedToDb(seed).catch(() => {});
+    }
+  }
+
   return out;
 }
 

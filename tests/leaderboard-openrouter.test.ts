@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { indexOpenRouterRankings, matchMarketStats } from "@aihot/backend/leaderboard/openrouter-rankings";
+import { indexOpenRouterRankings, loadSeedRankings, matchMarketStats } from "@aihot/backend/leaderboard/openrouter-rankings";
 
 test("indexOpenRouterRankings correctly orders by token volume and matches dated or undated model slugs", () => {
   const items = [
@@ -21,6 +21,12 @@ test("indexOpenRouterRankings correctly orders by token volume and matches dated
       model_permaslug: "openai/gpt-6.1-sol-20260929",
       rankingMetricValue: 3_619_089_890_898,
       count: 144_288_510,
+    },
+    {
+      date: "2026-11-05 00:00:00",
+      model_permaslug: "anthropic/claude-5-fable-20260609",
+      rankingMetricValue: 800_000_000_000,
+      count: 10_000_000,
     },
   ];
 
@@ -57,6 +63,26 @@ test("indexOpenRouterRankings correctly orders by token volume and matches dated
   assert.ok(datedArgon);
   assert.equal(datedArgon.openrouterRank, 3);
 
+  // #4 must be claude-fable-5, matching OpenRouter claude-5-fable alias
+  const claudeFable = matchMarketStats(map, "claude-fable-5");
+  assert.ok(claudeFable, "claude-fable-5 should match OpenRouter claude-5-fable alias");
+  assert.equal(claudeFable.openrouterRank, 4);
+  assert.equal(claudeFable.permaslug, "anthropic/claude-5-fable-20260609");
+
+  // Bidirectional check: claude-5-fable should also match
+  const claude5Fable = matchMarketStats(map, "claude-5-fable");
+  assert.ok(claude5Fable, "claude-5-fable should also match bidirectionally");
+  assert.equal(claude5Fable.openrouterRank, 4);
+
   // Non-existent model returns null
   assert.equal(matchMarketStats(map, "non-existent-model"), null);
+});
+
+test("loadSeedRankings loads fallback market stats from local seed JSON", () => {
+  const seed = loadSeedRankings();
+  assert.ok(Object.keys(seed).length > 0, "seed file should yield indexed rankings");
+  const map = new Map(Object.entries(seed));
+  const fable = matchMarketStats(map, "claude-fable-5");
+  assert.ok(fable, "seed should match claude-fable-5");
+  assert.equal(fable.permaslug, "anthropic/claude-5-fable-20260609");
 });
