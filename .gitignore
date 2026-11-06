@@ -15,5 +15,7 @@ apps/web/.react-router/
 package/
 fontsource-noto-sans-sc-*.tgz
 scratch/
+logs/
+cache/
 .impeccable/
 CLAUDE.md

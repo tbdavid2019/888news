@@ -1,0 +1,12 @@
+{
+  "_note": "Official API prices per million tokens, in each vendor's listed currency, from vendor official pricing pages (checked on 2026-11-06).",
+  "verifiedOn": "2026-11-06",
+  "prices": {
+    "gemini-4-argon": ["USD", 2, 10, 0.1, "https://ai.google.dev/gemini-api/docs/pricing"],
+    "gpt-6-1-sol": ["USD", 2, 10, 0.1, "https://openai.com/api/pricing/"],
+    "gpt-6-1-terra": ["USD", 1, 5, 0.05, "https://openai.com/api/pricing/"],
+    "claude-sonnet-5-5": ["USD", 2, 10, 0.1, "https://platform.claude.com/docs/en/about-claude/pricing"],
+    "kimi-k-3-1-pro": ["USD", 2, 10, 0.2, "https://platform.moonshot.cn/"],
+    "minimax-m-3-1-flash": ["USD", 0.15, 0.6, 0.03, "https://platform.minimaxi.com/"]
+  }
+}

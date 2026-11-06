@@ -8,6 +8,7 @@ import type {
   LbComparison,
   LbEvidenceGroup,
   LbEvidenceItem,
+  LbMarketStats,
   LbModelDetail,
   LbModelRef,
   LbPrice,
@@ -24,7 +25,8 @@ import { SCORE_VERSION } from "./method/score.ts";
 import { admissionOf } from "./fetch/admission.ts";
 import { cloakedModel } from "./fetch/identity.ts";
 import { boardSubset, modelAccess } from "./access.ts";
-import { providerSlugOf } from "./providers.ts";
+import { loadOpenRouterRankings, matchMarketStats } from "./openrouter-rankings.ts";
+import { providerNameOf, providerSlugOf } from "./providers.ts";
 import {
   BOARD_COPY,
   BOARD_LIMIT,
@@ -117,6 +119,7 @@ interface RunView {
   sourceWeights: Map<string, number>;
   budgets: LbRulesData["budgets"];
   anchors: string[];
+  openrouter: Map<string, LbMarketStats>;
 }
 
 export class NoLeaderboardRun extends Error {}
@@ -257,6 +260,8 @@ async function buildRunView(runId: string): Promise<RunView> {
     (unitsBySlug.get(slug) ?? unitsBySlug.set(slug, []).get(slug)!).push(key.slice(0, at));
   }
 
+  const openrouter = await loadOpenRouterRankings().catch(() => new Map<string, LbMarketStats>());
+
   return {
     info,
     snapshotIds: run.source_snapshot_ids ?? [],
@@ -271,6 +276,7 @@ async function buildRunView(runId: string): Promise<RunView> {
     sourceWeights,
     budgets,
     anchors: inputs.get("overall")?.anchors ?? [],
+    openrouter,
   };
 }
 
@@ -298,7 +304,7 @@ function modelRef(view: RunView, m: ModelRow): LbModelRef {
   return {
     slug: m.slug,
     name: m.name,
-    provider: m.provider === "其他" ? null : m.provider,
+    provider: providerNameOf(m),
     releasedAt: m.released_at ? m.released_at.toISOString().slice(0, 10) : null,
     brand: modelBrand(m.slug, m.provider_slug, m.provider, m.name),
   };
@@ -319,6 +325,7 @@ export async function loadBoard(key: LeaderboardBoardKey): Promise<LbBoardRespon
         coverage: e.coverage ?? 0,
         price: view.prices.get(m.id) ?? null,
         access: modelAccess(m),
+        market: matchMarketStats(view.openrouter, m.slug),
       };
     });
   return {
@@ -502,6 +509,7 @@ export async function loadModel(slug: string): Promise<LbModelDetail | null> {
     historical,
     model: { ...modelRef(view, m), contextWindowTokens: m.context_window_tokens, weightsUrl: modelAccess(m).weightsUrl },
     price: view.prices.get(m.id) ?? null,
+    market: matchMarketStats(view.openrouter, slug),
     overall: {
       rank: overallEntry?.rank ?? null,
       score: rating(overallEntry),

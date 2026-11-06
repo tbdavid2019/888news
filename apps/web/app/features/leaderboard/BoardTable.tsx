@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import type { LbBoardEntry } from "@aihot/contracts/leaderboard";
 import { SITE } from "@aihot/industry/site";
 import { BrandMark } from "./BrandMark";
-import { formatPrice, getPriceValue, modelHref, noOfficialApi, score, type LbCurrency } from "./format";
+import { formatPrice, formatTokensVolume, getPriceValue, modelHref, noOfficialApi, score, type LbCurrency } from "./format";
 import { monthDay } from "../../lib/format";
 import { IconChevronDown } from "../../components/icons";
 
@@ -187,10 +187,27 @@ export function BoardTable({ entries, board, sort, dir, onSort, onSortSheet, cur
                       </a>
                     )}
                   </span>
-                  <small className="hidden text-[12px] leading-[18px] text-ink-4 lg:block">{e.model.provider ?? "—"}</small>
+                  <small className="hidden items-center gap-2 text-[12px] leading-[18px] text-ink-4 lg:flex">
+                    <span>{e.model.provider ?? "—"}</span>
+                    {e.market?.openrouterRank != null && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded bg-[rgba(28,39,51,0.05)] px-1.5 py-0.5 text-[11px] font-medium text-ink-3 dark:bg-white/[0.06] dark:text-ink-2"
+                        title={`OpenRouter 市場調用第 ${e.market.openrouterRank} 名 · 累計消耗 ${formatTokensVolume(e.market.totalTokens)} Token`}
+                      >
+                        <span className="font-semibold text-accent">OR</span>
+                        <span className="num">#{e.market.openrouterRank}</span>
+                        {e.market.totalTokens ? (
+                          <span className="text-[10px] text-ink-4">({formatTokensVolume(e.market.totalTokens)})</span>
+                        ) : null}
+                      </span>
+                    )}
+                  </small>
                   {/* Phones: maker and release in one line under the name. */}
                   <small className="block truncate text-[12px] leading-[18px] text-ink-4 lg:hidden">
-                    {e.model.provider ?? "—"} · <span className="num">{shortDate(e.model.releasedAt)}</span>上線
+                    {e.model.provider ?? "—"} · <span className="num">{e.model.releasedAt ? monthDay(e.model.releasedAt) : "—"}</span>上線
+                    {e.market?.openrouterRank != null && (
+                      <span className="ml-1.5 font-medium text-accent">OR #{e.market.openrouterRank}</span>
+                    )}
                   </small>
                 </span>
               </span>

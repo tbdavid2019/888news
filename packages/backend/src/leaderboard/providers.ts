@@ -35,6 +35,10 @@ const BY_ORGANIZATION: Array<[RegExp, string, string]> = [
   [/inclusion\s*ai/i, "InclusionAI", "inclusionai"],
   [/iflytek|讯飞/i, "iFlytek", "iflytek"],
   [/stability/i, "Stability AI", "stability-ai"],
+  [/liquid/i, "Liquid AI", "liquid"],
+  [/inception/i, "Inception", "inception"],
+  [/perplexity/i, "Perplexity", "perplexity"],
+  [/ai21/i, "AI21 Labs", "ai21"],
 ];
 
 const BY_MODEL: Array<[RegExp, string, string]> = [
@@ -61,7 +65,13 @@ const BY_MODEL: Array<[RegExp, string, string]> = [
   [/^step(?:fun)?\b/i, "StepFun", "stepfun"],
   [/^longcat\b/i, "Meituan", "meituan"],
   [/^ling\b|^ring\b/i, "InclusionAI", "inclusionai"],
+  [/^lfm(?:\b|[-.\d])/i, "Liquid AI", "liquid"],
+  [/^mercury\b/i, "Inception", "inception"],
+  [/^sonar\b/i, "Perplexity", "perplexity"],
+  [/^jamba\b/i, "AI21 Labs", "ai21"],
 ];
+
+const NAME_BY_SLUG = new Map<string, string>([...BY_ORGANIZATION, ...BY_MODEL].map(([, name, slug]) => [slug, name]));
 
 export function inferProvider(modelName: string, organization?: string | null): Provider | null {
   const hit = BY_ORGANIZATION.find(([re]) => re.test(organization?.trim() ?? "")) ?? BY_MODEL.find(([re]) => re.test(modelName.trim()));
@@ -72,4 +82,14 @@ export function inferProvider(modelName: string, organization?: string | null): 
 export function providerSlugOf(m: { name: string; provider: string | null; provider_slug: string | null }): string | null {
   if (m.provider_slug && m.provider_slug !== "other") return m.provider_slug;
   return inferProvider(m.name, m.provider === "其他" || m.provider === "Other" ? null : m.provider)?.slug ?? null;
+}
+
+/** The stored provider display name, or the inferred one when a row still says "其他" / "Other" / null. */
+export function providerNameOf(m: { name: string; provider: string | null; provider_slug: string | null }): string | null {
+  if (m.provider && m.provider !== "其他" && m.provider !== "Other") return m.provider;
+  if (m.provider_slug && m.provider_slug !== "other") {
+    const known = NAME_BY_SLUG.get(m.provider_slug);
+    if (known) return known;
+  }
+  return inferProvider(m.name)?.name ?? null;
 }

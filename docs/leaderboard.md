@@ -18,7 +18,7 @@
 
 **模型名录**：模型的显示名、厂商、发布日期，以及每家评测对同一个模型的不同叫法，放在 `database/seeds/` 的模型名录里，首次启动时导入（`scripts/seed.ts`）。这样新站抓到的成绩会归到和 AIHOT 一样的模型上。名录里没有的新模型，会按评测给出的名字自动建立，名字和厂商可能不够规整。
 
-**价格**：表格里的官方 API 价格来自 `database/seeds/` 里的价格文件，每次刷新会给还没有价格的模型补上。厂商调价或者上了新模型，改这个文件后运行：
+**价格与模型信息自动同步**：本地手工核验价格放在 `database/seeds/lb-official-prices-YYYY-MM-DD.json`（最高优先级）；本地未收录的新模型会在每次排程刷新（以及 worker 启动补齐）时，自动从 `models.dev` 各厂商第一方目录与 OpenRouter 公开目录同步 API 价格、上下文窗口、规范显示名与厂商归属（仅开放权重而无官方 API 的模型自动记为“无官方价”）。手工更新本地种子或立即触发同步可运行：
 
 ```bash
 node --env-file=.env scripts/import-leaderboard-prices.ts

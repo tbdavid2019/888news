@@ -73,6 +73,14 @@ export interface LbBoardMeta {
   operatorCount: number;
 }
 
+export interface LbMarketStats {
+  openrouterRank: number | null;
+  totalTokens: number | null;
+  totalRequests?: number | null;
+  permaslug?: string | null;
+  date?: string | null;
+}
+
 export interface LbBoardEntry {
   rank: number;
   /** The site's 0–100 relative index; null for a run without the current scoring method. */
@@ -82,6 +90,7 @@ export interface LbBoardEntry {
   coverage: number;
   price: LbPrice | null;
   access: { domestic: boolean; weightsUrl: string | null };
+  market?: LbMarketStats | null;
 }
 
 export interface LbBoardResponse {
@@ -159,6 +168,7 @@ export interface LbModelDetail {
   historical: boolean;
   model: LbModelRef & { contextWindowTokens: number | null; weightsUrl: string | null };
   price: LbPrice | null;
+  market?: LbMarketStats | null;
   overall: {
     rank: number | null;
     score: number | null;

@@ -66,6 +66,21 @@ export function tokensWan(n: number | null): string {
   return `${Number(w >= 100 ? w.toFixed(1) : w.toFixed(1))}萬`.replace(".0萬", "萬");
 }
 
+export function formatTokensVolume(tokens: number | null | undefined): string {
+  if (tokens == null || !Number.isFinite(tokens) || tokens <= 0) return "—";
+  if (tokens >= 1e12) return `${(tokens / 1e12).toFixed(1)} 兆`;
+  if (tokens >= 1e8) return `${(tokens / 1e8).toFixed(1)} 億`;
+  if (tokens >= 1e4) return `${(tokens / 1e4).toFixed(1)} 萬`;
+  return `${tokens.toLocaleString("en-US")}`;
+}
+
+export function formatRequestsCount(count: number | null | undefined): string {
+  if (count == null || !Number.isFinite(count) || count <= 0) return "—";
+  if (count >= 1e8) return `${(count / 1e8).toFixed(1)} 億`;
+  if (count >= 1e4) return `${(count / 1e4).toFixed(1)} 萬`;
+  return `${count.toLocaleString("en-US")}`;
+}
+
 export function boardHref(key: string): string {
   return key === "overall" ? "/leaderboard" : `/leaderboard/category/${key}`;
 }

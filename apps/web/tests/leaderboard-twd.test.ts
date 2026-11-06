@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { formatPrice, getPriceValue, listPrice, yuan } from "../app/features/leaderboard/format.ts";
+import { formatPrice, formatRequestsCount, formatTokensVolume, getPriceValue, listPrice, yuan } from "../app/features/leaderboard/format.ts";
 import type { LbPrice } from "@aihot/contracts/leaderboard";
 
 test("formatPrice formats prices in TWD with NT$ prefix and USD with $ prefix", () => {
@@ -100,4 +100,17 @@ test("getPriceValue calculates values correctly across TWD and USD", () => {
 test("listPrice formats USD properly", () => {
   assert.equal(listPrice(1.5, "USD"), "$1.5");
   assert.equal(listPrice(null, "USD"), "—");
+});
+
+test("formatTokensVolume and formatRequestsCount format large numbers into readable units", () => {
+  assert.equal(formatTokensVolume(1.304e12), "1.3 兆");
+  assert.equal(formatTokensVolume(3.878e11), "3878.0 億");
+  assert.equal(formatTokensVolume(50_000_000), "5000.0 萬");
+  assert.equal(formatTokensVolume(null), "—");
+  assert.equal(formatTokensVolume(0), "—");
+
+  assert.equal(formatRequestsCount(144_288_510), "1.4 億");
+  assert.equal(formatRequestsCount(28_222_834), "2822.3 萬");
+  assert.equal(formatRequestsCount(5_000), "5,000");
+  assert.equal(formatRequestsCount(null), "—");
 });

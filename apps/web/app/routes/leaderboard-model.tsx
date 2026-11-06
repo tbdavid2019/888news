@@ -10,7 +10,7 @@ import { edgeTtl, loadOr404 } from "../lib/api.server";
 import { monthDay } from "../lib/format";
 import { breadcrumbLd, pageMeta, siteUrl, titled } from "../lib/seo";
 import { BrandMark } from "../features/leaderboard/BrandMark";
-import { boardHref, formatPrice, getPriceValue, listPrice, noOfficialApi, pctFixed, score, shortStamp, tokensWan, type LbCurrency } from "../features/leaderboard/format";
+import { boardHref, formatPrice, formatRequestsCount, formatTokensVolume, getPriceValue, listPrice, noOfficialApi, pctFixed, score, shortStamp, tokensWan, type LbCurrency } from "../features/leaderboard/format";
 import { IconArrowLeft, IconArrowRight, IconArrowUpRight, IconChevronDown, IconExternal } from "../components/icons";
 import { PhoneBar } from "../components/shell/PhoneBar";
 import type { Screen } from "../components/shell/screens";
@@ -345,7 +345,12 @@ export default function LeaderboardModelPage() {
                 </button>
                 {price.officialUrl && (
                   <a href={price.officialUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-accent hover:text-accent-ink">
-                    {noOfficialApi(price) ? "來源" : "廠商官方價格"} <IconArrowUpRight size={12} />
+                    {noOfficialApi(price)
+                      ? "來源"
+                      : price.officialUrl.includes("openrouter.ai") || price.officialUrl.includes("models.dev")
+                        ? "公開價格來源"
+                        : "廠商官方價格"}{" "}
+                    <IconArrowUpRight size={12} />
                   </a>
                 )}
               </span>
@@ -361,6 +366,39 @@ export default function LeaderboardModelPage() {
           )}
         </Stat>
       </section>
+
+      {d.market?.openrouterRank != null && (
+        <section className="mt-6 rounded-card border border-line bg-card p-4 sm:p-5" aria-label="市場調用熱度">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3.5">
+              <span className="grid size-10 shrink-0 place-items-center rounded-control bg-accent/10 font-bold tracking-tight text-accent">
+                OR
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <h3 className="text-[14px] font-semibold text-ink">OpenRouter 全網調用熱度</h3>
+                  <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent">
+                    市場調用第 {d.market.openrouterRank} 名
+                  </span>
+                </div>
+                <p className="mt-1 text-[12.5px] text-ink-3">
+                  全網真實開發者累計消耗：約 <strong className="text-ink">{formatTokensVolume(d.market.totalTokens)}</strong> Token
+                  {d.market.totalRequests ? ` · 約 ${formatRequestsCount(d.market.totalRequests)} 次請求` : ""}
+                  {d.market.date ? `（截至 ${d.market.date}）` : ""}
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://openrouter.ai/rankings"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[12.5px] font-medium text-accent hover:underline sm:self-center"
+            >
+              查看 OpenRouter 調用榜 <IconArrowUpRight size={13} />
+            </a>
+          </div>
+        </section>
+      )}
 
       <Capability d={d} from={from} />
       {d.comparisons.length > 0 && <section className="mt-12"><Comparisons d={d} /></section>}

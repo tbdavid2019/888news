@@ -6,8 +6,8 @@
 import { sql } from "../../db.ts";
 import { guardedFetch } from "../../lib/http-fetch.ts";
 import { runLeaderboardRound, type RoundResult } from "../method/run.ts";
-import { importOfficialPrices } from "../prices.ts";
-import { modelSlug } from "./identity.ts";
+import { syncOpenRouterRankings } from "../openrouter-rankings.ts";
+import { importOfficialPrices, syncLeaderboardCatalog } from "../prices.ts";
 import { FETCHERS } from "./index.ts";
 import { storeSnapshot } from "./store.ts";
 import type { FetchResult, Fetcher } from "./types.ts";
@@ -92,41 +92,22 @@ export async function refreshFx(): Promise<{ asOf: string; rate: number }> {
   return { asOf: d.date, rate };
 }
 
-/**
- * Context windows for models that have none (a model a source introduces arrives without one), from
- * OpenRouter's public catalog. Only empty values are filled; names are matched by slug, and a dated
- * snapshot ("…-2025-08-07") falls back to its undated name.
- */
 export async function fillContextWindows(): Promise<{ filled: number }> {
-  const missing = await sql<{ id: string; slug: string }[]>`SELECT id, slug FROM lb_models WHERE context_window_tokens IS NULL`;
-  if (!missing.length) return { filled: 0 };
-  const res = await guardedFetch("https://openrouter.ai/api/v1/models", { timeoutMs: 30_000, maxBytes: 16 * 1024 * 1024 });
-  if (res.status !== 200) throw new Error(`openrouter HTTP ${res.status}`);
-  const catalog = new Map<string, number>();
-  for (const m of (JSON.parse(res.text()) as { data?: Array<{ id?: string; name?: string; context_length?: number }> }).data ?? []) {
-    // Routing variants (":free", "~latest", "(batch)") are not separate models.
-    if (!m.id || !m.name || m.id.startsWith("~") || m.id.includes(":") || /\((?:batch|fast|free|online)\)\s*$/i.test(m.name)) continue;
-    const context = Number(m.context_length);
-    if (!Number.isInteger(context) || context <= 0) continue;
-    const slug = modelSlug(m.name.replace(/^[^:]{1,40}:\s*/, ""));
-    if (slug && !catalog.has(slug)) catalog.set(slug, context);
-  }
-  let filled = 0;
-  for (const m of missing) {
-    const context = catalog.get(m.slug) ?? catalog.get(m.slug.replace(/-20\d{2}-?\d{2}-?\d{2}$/, ""));
-    if (!context) continue;
-    await sql`UPDATE lb_models SET context_window_tokens = ${context}, metadata_source = 'OpenRouter', metadata_updated_at = now(), updated_at = now()
-              WHERE id = ${m.id} AND context_window_tokens IS NULL`;
-    filled += 1;
-  }
-  return { filled };
+  const { contextFilled } = await syncLeaderboardCatalog();
+  return { filled: contextFilled };
 }
 
-export async function refreshLeaderboard(): Promise<{ sources: { ok: number; changed: string[]; failed: Array<{ key: string; error?: string }> }; context: unknown; fx: unknown; prices: unknown; round: Pick<RoundResult, "status" | "runId" | "reason"> }> {
+export async function refreshLeaderboard(): Promise<{ sources: { ok: number; changed: string[]; failed: Array<{ key: string; error?: string }> }; context: unknown; fx: unknown; prices: unknown; market: unknown; round: Pick<RoundResult, "status" | "runId" | "reason"> }> {
   const states = await fetchSources();
-  const context = await fillContextWindows().catch((e: Error) => ({ error: e.message }));
   const fx = await refreshFx().catch((e: Error) => ({ error: e.message }));
-  const prices = await importOfficialPrices().then(({ written }) => ({ written }), (e: Error) => ({ error: e.message }));
+  const seeded = await importOfficialPrices().then(({ written }) => ({ written }), (e: Error) => ({ error: e.message }));
+  const catalog = await syncLeaderboardCatalog().catch((e: Error) => ({ error: e.message }));
+  const market = await syncOpenRouterRankings().catch((e: Error) => ({ error: e.message }));
+  const context = "error" in catalog ? catalog : { filled: catalog.contextFilled, modelsUpdated: catalog.modelsUpdated };
+  const prices = {
+    seeded: "error" in seeded ? seeded : seeded.written,
+    synced: "error" in catalog ? catalog : catalog.pricesWritten,
+  };
   const round = await runLeaderboardRound();
   const entries = Object.entries(states);
   return {
@@ -138,6 +119,7 @@ export async function refreshLeaderboard(): Promise<{ sources: { ok: number; cha
     context,
     fx,
     prices,
+    market,
     round: { status: round.status, runId: round.runId, reason: round.reason },
   };
 }

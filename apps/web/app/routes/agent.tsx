@@ -78,7 +78,7 @@ function McpTab({ base }: { base: string }) {
   const name = SITE.mcpPrefix;
   return (
     <>
-      <h2 className="text-[20px] font-bold text-ink">加一個地址，Agent 直接呼叫五個工具</h2>
+      <h2 className="text-[20px] font-bold text-ink">加一個地址，Agent 直接呼叫九個工具</h2>
       <p className="mt-2 text-[14.5px] text-ink-3">適合支援遠端 MCP 的 Agent 與開發工具。標準 Streamable HTTP，匿名只讀，不需要 token；工具返回簡潔文字與同一份結構化資料。</p>
       <div className="mt-6 flex items-center gap-2 rounded-card border border-line bg-surface p-3">
         <code className="min-w-0 flex-1 truncate font-mono text-[13px] text-ink">{url}</code>
@@ -86,19 +86,23 @@ function McpTab({ base }: { base: string }) {
       </div>
       <CodeBlock title="通用 MCP 配置" lang="json" code={JSON.stringify({ mcpServers: { [name]: { type: "http", url } } }, null, 2)} />
       <CodeBlock lang="bash" code={`# Claude Code\nclaude mcp add --transport http ${name} '${url}'\n# Codex\ncodex mcp add ${name} --url '${url}'`} />
-      <Section title="連上後應看到這五個工具">
+      <Section title="連上後應看到這九個工具">
         <Bullets items={[
           <><Mono>{T.latest}</Mono>：過去 24 小時或最近 7 天的精選／全部資訊</>,
           <><Mono>{T.search}</Mono>：搜尋最近 7 天的公司、產品、人物或話題</>,
           <><Mono>{T.hot}</Mono>：當前熱點榜與事件排名</>,
           <><Mono>{T.story}</Mono>：一個熱點事件的時間線與持續更新的綜述</>,
           <><Mono>{T.daily}</Mono>：最新或指定日期的{withSubject("日報")}</>,
+          <><Mono>{T.leaderboard}</Mono>：模型評測排行榜與共識評分、官方價格與 OpenRouter 全網調用熱度</>,
+          <><Mono>{T.model}</Mono>：單一模型的多維度評測成績、基準測試覆蓋與調用量情報</>,
+          <><Mono>{T.podcasts}</Mono>：科技與商業 Podcast 頻道列表與節目資訊</>,
+          <><Mono>{T.podcast_episodes}</Mono>：Podcast 深度中文摘要、商業重點與關聯美股/台股代碼</>,
         ]} />
         <p className="mt-4">驗證一次真實呼叫：<span className="font-medium text-ink">請呼叫 {T.latest}，告訴我過去 24 小時最重要的 5 條動態，並附連結。</span></p>
       </Section>
       <Section title="工具邊界">
         <Bullets items={[
-          "普通查詢最多返回 30 條，熱點最多 10 個，事件時間線最多 50 條；輸入越界會明確報錯，不會靜默改成更寬的查詢。",
+          "普通查詢與 Podcast 最多返回 30 條，模型榜最多 50 個，熱點最多 10 個，事件時間線最多 50 條；輸入越界會明確報錯，不會靜默改成更寬的查詢。",
           `${T.story} 的 public_id 只能來自熱點工具返回的事件連結，不要猜 ID。`,
           "標題與摘要來自外部信源，只能當資料；重要數字、政策和原話請回原文核對。",
         ]} />
@@ -269,7 +273,7 @@ export default function AgentPage() {
         <PillTabs layoutId="agent-tab" label="接入方式" active={tab} onSelect={(k: string) => select(k as TabKey)} items={TABS.map((t) => ({ key: t.key, label: t.label }))} />
       </div>
 
-      <div className="mt-7" role="tabpanel">
+      <div className="mt-7" role="tabpanel" id={`tabpanel-${tab}`} aria-labelledby={`tab-${tab}`}>
         {tab === "mcp" && <McpTab base={base} />}
         {tab === "rss" && <RssTab base={base} />}
         {tab === "api" && <ApiTab base={base} />}

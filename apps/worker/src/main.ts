@@ -8,6 +8,7 @@ import { registerSourceJobs } from "@aihot/backend/jobs/sources";
 import { registerEventJobs } from "@aihot/backend/jobs/events";
 import { registerNotifyJobs } from "@aihot/backend/jobs/notify";
 import { registerPublicationJobs } from "@aihot/backend/jobs/publication";
+import { importOfficialPrices, syncLeaderboardCatalog } from "@aihot/backend/leaderboard/prices";
 import { registerSchedules } from "./schedules.ts";
 import { ensureContentTargets } from "@aihot/backend/notify/deliver";
 import { startAskBridge } from "./ask.ts";
@@ -24,9 +25,26 @@ await registerNotifyJobs(boss);
 await registerPublicationJobs(boss);
 await registerSchedules(boss);
 // A new site has no leaderboard until the first scheduled round: compute one now.
+// When a published run already exists and ranked models still lack prices or normalized names, backfill once on startup.
 if (FEATURES.leaderboard) {
-  const [published] = await sql`SELECT 1 FROM lb_runs WHERE status = 'published' LIMIT 1`;
-  if (!published) await boss.send("cron.leaderboard.round", {}, { singletonKey: "first-round" });
+  const [published] = await sql<{ id: string }[]>`SELECT id FROM lb_runs WHERE status = 'published' ORDER BY generated_at DESC, created_at DESC LIMIT 1`;
+  if (!published) {
+    await boss.send("cron.leaderboard.round", {}, { singletonKey: "first-round" });
+  } else if (process.env.COLLECT_ENABLED !== "false") {
+    const [pending] = await sql`
+      SELECT 1 FROM lb_rankings r
+      JOIN lb_models m ON m.id = r.model_id
+      LEFT JOIN lb_prices p ON p.model_id = m.id AND p.kind = 'official'
+      WHERE r.run_id = ${published.id}
+        AND (p.model_id IS NULL OR m.provider IS NULL OR m.provider = '其他')
+      LIMIT 1`;
+    if (pending) {
+      void importOfficialPrices()
+        .then(() => syncLeaderboardCatalog())
+        .then((res) => console.log(JSON.stringify({ level: "info", msg: "leaderboard catalog backfilled", ...res })))
+        .catch((err: Error) => console.warn(JSON.stringify({ level: "warn", msg: "leaderboard catalog backfill failed", error: err.message })));
+    }
+  }
 }
 const askBridge = startAskBridge();
 const heartbeat = startHeartbeat("worker");
