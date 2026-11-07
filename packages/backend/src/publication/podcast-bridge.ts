@@ -254,10 +254,7 @@ export async function bridgePodcastsToPublications(): Promise<BridgePodcastsResu
         sort_at = EXCLUDED.sort_at,
         body_mode = EXCLUDED.body_mode,
         category = EXCLUDED.category,
-        tags = EXCLUDED.tags,
-        score = EXCLUDED.score,
         eligible = EXCLUDED.eligible,
-        selected = EXCLUDED.selected,
         search_text = EXCLUDED.search_text,
         updated_at = now()
     `;
