@@ -208,8 +208,8 @@ const tagged = (attemptTag: string | undefined, step: string) => [attemptTag, st
 
 async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<AnalysisRun["prefilter"]> {
   checkAnalysisRunning();
-  // 1. Try Decision Engine (Tier 0: Clef, Tier 1: Jev) first (free, ultra-fast, 0 Groq token consumption)
-  if (isDecisionEngineAvailable() && !opts.scoreModel) {
+  // 1. Try Decision Engine (Tier 0: Clef, Tier 1: Jev) only if explicitly enabled via environment variable
+  if (process.env.PREFILTER_USE_DECISION_ENGINE === "true" && isDecisionEngineAvailable() && !opts.scoreModel) {
     try {
       const decision = await evaluateWithDecisionEngine(
         {

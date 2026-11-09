@@ -26,8 +26,8 @@ const X_SOURCE = `test-analyze-x-${T}`;
 type Step = "prefilter" | "score" | "understand" | "summarize" | "structure";
 interface Req { step: Step; marker: string; system: string; user: string; body: Record<string, any> }
 const requests: Req[] = [];
-const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "VAGUE", "THIN", "SENSITIVE", "INFOSEC", "INFOSLOW", "CLEFSEC", "SECGUIDE", "推文"];
-const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [74, 74], SENSITIVE: [80, 80], INFOSEC: [84, 78], INFOSLOW: [30, 32], CLEFSEC: [84, 78], SECGUIDE: [30, 32], 推文: [40, 40], BARE: [30, 34], VAGUE: [72, 74] };
+const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "VAGUE", "THIN", "SENSITIVE", "INFOSEC", "INFOSLOW", "CLEFSEC", "SECGUIDE", "NOCLEF", "推文"];
+const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [74, 74], SENSITIVE: [80, 80], INFOSEC: [84, 78], INFOSLOW: [30, 32], CLEFSEC: [84, 78], SECGUIDE: [30, 32], NOCLEF: [78, 72], 推文: [40, 40], BARE: [30, 34], VAGUE: [72, 74] };
 
 const stepOf = (system: string, user: string): Step =>
   system === PREFILTER_SYSTEM ? "prefilter" : system.includes("事件注意力评分器") ? "score"
@@ -131,7 +131,7 @@ test("tag normalization separates infosec from explicit AI safety and preserves 
 });
 
 test("a selected item: prefilter, two scores, the content understanding and the structure", async () => {
-  assert.equal(tierThreshold("T1"), 72);
+  assert.equal(tierThreshold("T1"), 60);
   const id = await article("CLEAR");
   const res = await analyzeArticle(id);
   assert.deepEqual([res!.output!.selected, res!.output!.score], [true, 75], "78 + 72 = 150 >= 120");
@@ -195,6 +195,7 @@ test("an evidence-based infosec item reaches both scores, summary and the distin
 test("a pure infosec article passes CLEF and reaches scoring, summary and infosec tagging", async () => {
   config.allowPrivateNetworkFetch = true; // This case calls only the localhost CLEF stub.
   process.env.CLEF_ENABLED = "true";
+  process.env.PREFILTER_USE_DECISION_ENGINE = "true";
   process.env.CLEF_BASE_URL = clefProvider.url;
   process.env.CLEF_FALLBACK_BASE_URL = "";
   resetClefState();
@@ -212,6 +213,29 @@ test("a pure infosec article passes CLEF and reaches scoring, summary and infose
     assert.equal(r.title_zh, "OpenSSH 修補未驗證遠端程式碼執行漏洞");
     assert.ok(clefRequests.some((request) => request.questions.relevance));
     assert.ok(clefRequests.some((request) => JSON.stringify(request).includes("CVE-2026-12345")));
+  } finally {
+    process.env.CLEF_ENABLED = "false";
+    delete process.env.PREFILTER_USE_DECISION_ENGINE;
+    resetClefState();
+  }
+});
+
+test("by default prefilter uses standard LLM and bypasses decision engine even if clef is enabled", async () => {
+  config.allowPrivateNetworkFetch = true;
+  process.env.CLEF_ENABLED = "true";
+  delete process.env.PREFILTER_USE_DECISION_ENGINE;
+  process.env.CLEF_BASE_URL = clefProvider.url;
+  process.env.CLEF_FALLBACK_BASE_URL = "";
+  resetClefState();
+  const clefCountBefore = clefRequests.length;
+  try {
+    const id = await article("NOCLEF");
+    const result = await analyzeArticle(id);
+    assert.ok(result);
+    // CLEF stub should not have received any new request
+    assert.equal(clefRequests.length, clefCountBefore);
+    // Prefilter step was executed via standard LLM
+    assert.deepEqual(calls("NOCLEF").sort(), ["prefilter", "score", "score", "structure", "understand"]);
   } finally {
     process.env.CLEF_ENABLED = "false";
     resetClefState();

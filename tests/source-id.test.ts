@@ -124,6 +124,8 @@ test("sanitizeJsStringLiteral handles Seroval/Twitter SSR escapes", () => {
 });
 
 test("parseXSsrTimeline correctly extracts tweets, handles timestamps and ignores pinned/retweets", () => {
+  const nowMs = 1792785446000; // Original fixed timestamp
+  const recentMs = Date.now() - 3600000; // 1 hour ago so it stays within the 14-day crawl window
   const mockTimelinePayload = {
     data: {
       user_result_by_screen_name: {
@@ -155,7 +157,7 @@ test("parseXSsrTimeline correctly extracts tweets, handles timestamps and ignore
                               },
                               details: {
                                 full_text: "Major UI overhaul sneak peek!",
-                                created_at_ms: "1792785446000",
+                                created_at_ms: String(recentMs),
                               },
                               media_entities2: [
                                 {
@@ -224,7 +226,7 @@ test("parseXSsrTimeline correctly extracts tweets, handles timestamps and ignore
   assert.equal(candidate.identityKey, "x:2113721479435260138");
   assert.equal(candidate.url, "https://x.com/orca_build/status/2113721479435260138");
   assert.equal(candidate.title, "Major UI overhaul sneak peek!");
-  assert.equal(candidate.publishedAt?.toISOString(), "2026-10-23T19:57:26.000Z");
+  assert.equal(candidate.publishedAt?.toISOString(), new Date(recentMs).toISOString());
   assert.equal(candidate.media?.length, 1);
   assert.equal(candidate.media?.[0]?.url, "https://pbs.twimg.com/media/HVVxZF-bgAArUjg.jpg");
   assert.equal((candidate.raw as Record<string, unknown>)?.views, 5000);

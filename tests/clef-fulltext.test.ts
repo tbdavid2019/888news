@@ -27,6 +27,7 @@ after(async () => { await provider.close(); await stopBoss(); await closeDb(); }
 
 test("CLEF reads every full-text fragment, re-evaluates evidence and reuses audited receipts", async () => {
   process.env.CLEF_ENABLED = "true";
+  process.env.PREFILTER_USE_DECISION_ENGINE = "true";
   process.env.CLEF_BASE_URL = provider.url;
   process.env.CLEF_FALLBACK_BASE_URL = "";
   resetClefState();
