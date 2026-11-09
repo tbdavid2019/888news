@@ -64,6 +64,12 @@ export const config = {
   turnstileSecretKey: env.TURNSTILE_SECRET_KEY || null,
   turnstileEnabled: bool("TURNSTILE_ENABLED", true),
   turnstileHostnames: (env.TURNSTILE_HOSTNAMES || "news2.david888.com,david888.com,localhost,127.0.0.1").split(",").map((v) => v.trim()).filter(Boolean),
+  defaultAskBaseUrl: str("DEFAULT_ASK_BASE_URL", "https://llm.aiurl.tw/v1"),
+  get defaultAskKey(): string {
+    return env.DEFAULT_ASK_KEY || credential("models", "DEFAULT_ASK_KEY") || "";
+  },
+  defaultAskModel: str("DEFAULT_ASK_MODEL", "gpt-6-luna"),
+  defaultAskDailyLimit: int("DEFAULT_ASK_DAILY_LIMIT", 6),
 };
 
 export type CredentialGroup = "models" | "collectors" | "integrations" | "auth";

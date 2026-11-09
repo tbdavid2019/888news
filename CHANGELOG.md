@@ -2,6 +2,34 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-09] — 🤖 AI 伴隨助手預設服務安裝、GPT-6 Luna 模型整合與每日 6 則配額控管 (BYOK 擴充支援)
+
+### 🚀 預設安裝與後端安全配置
+- **預設服務端點與金鑰安全保護**：
+  - 於後端配置預設端點 `https://llm.aiurl.tw/v1`、金鑰 `sk-magpie-key-...` 與預設模型 `gpt-6-luna`。
+  - 遵循「公開內容匿名、密鑰絕不落地前端」架構準則，預設金鑰嚴格封裝於後端，前端訪客無法存取或洩漏站長憑證。
+  - 支援模型別名正規化（`normalizeAskModel`），相容 `gpt 6.1 luna`、`gpt-6.1-luna`、`codex/gpt-6.1-luna` 與 `gpt-6-luna`，確保推論請求精準對齊。
+
+### 🛡️ 雙重維度每日額度管理 (IP + 裝置指紋)
+- **資料庫遷移 (`0045_ask_daily_quota.sql`)**：
+  - 新增輕量高效的每日用量紀錄表 `ask_daily_usage(identifier, day_date, count, last_used_at)`。
+- **每人每日 6 則配額控管**：
+  - 自然日以台北時間 (UTC+8 / Asia/Taipei) 每日午夜自動重置。
+  - 續問亦算 1 則，嚴格防止刷題與額度透支。
+  - 同步校驗 IP 與前端裝置指紋（Device Fingerprint，儲存於 LocalStorage），任一達 6 則即啟動配額保護。
+  - 新增查詢端點 `/api/site/ask-quota`，供前端即時掌握每日剩餘次數。
+  - 超出 6 則時回傳 HTTP 429 及清晰的 BYOK 引導資訊。
+
+### 🎨 前端伴隨問答體驗全面升級 (`AskCompanion.tsx`)
+- **零門檻即開即用**：
+  - 未自備金鑰的讀者不再被強迫彈出設定抽屜，預設直接啟用「GPT-6 Luna · 每日 6 則免費額度」。
+  - 頂部狀態列動態顯示「GPT-6 Luna · 剩餘 X/6 則」，透明可感知。
+- **無縫 BYOK 切換**：
+  - 超過 6 則時自動彈出精緻引導卡片，提示切換為自備金鑰 (BYOK)。
+  - 自備金鑰發起的問答不扣除站方免費額度，享有無限次自由推論。
+  - 設定抽屜支援一鍵於「站方預設」與「自備金鑰」間切換。
+
+
 ## [2026-11-06] — 📊 模型榜 OpenRouter 調用熱度與排名全情境保底呈現優化
 
 ### 🛠️ OpenRouter 種子路徑與雙層保底策略 (Baseline Foundation + DB Overlay)

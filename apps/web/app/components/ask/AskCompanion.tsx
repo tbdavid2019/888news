@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "react-router";
-import { getByokConfig, saveByokConfig, clearByokConfig, subscribeByokConfig, type ByokProvider, type ByokConfig } from "../../lib/local-state";
+import { getByokConfig, saveByokConfig, clearByokConfig, subscribeByokConfig, getDeviceFingerprint, type ByokProvider, type ByokConfig } from "../../lib/local-state";
 import { useCompanionState, setCompanionContext, closeCompanion, toggleCompanion, clearPendingQuestion, type CompanionContext } from "../../lib/companion-bus";
-import { Bot, Settings, Trash2, RotateCw, AlertCircle, Lock, FileText, Lightbulb, Sparkles, Brain, X } from "lucide-react";
+import { Bot, Settings, Trash2, RotateCw, AlertCircle, Lock, FileText, Lightbulb, Sparkles, Brain, X, Check, ShieldCheck } from "lucide-react";
 
 type Source = { title: string; url: string; text: string; kind: "site" | "web" };
 type Turn = { question: string; answer: string; reasoning?: string; sources: Source[]; warning?: string };
@@ -11,6 +11,16 @@ interface ProviderDef {
   label: string;
   hint: string;
   keyPlaceholder: string;
+}
+
+interface QuotaInfo {
+  limit: number;
+  used: number;
+  remaining: number;
+  quotaExceeded: boolean;
+  hasDefaultKey: boolean;
+  defaultModel: string;
+  defaultModelDisplay: string;
 }
 
 const PROVIDERS: Record<ByokProvider, ProviderDef> = {
@@ -179,6 +189,9 @@ export function AskCompanion() {
   const [mounted, setMounted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
+  // Daily Quota State for default installation
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
+
   // Model & BYOK Config State
   const [provider, setProvider] = useState<ByokProvider>("openai");
   const [model, setModel] = useState("");
@@ -213,6 +226,8 @@ export function AskCompanion() {
 
   // Detect current article context from DOM or bus
   const [pageContext, setPageContext] = useState<CompanionContext | null>(null);
+
+  const isUsingDefault = !key.trim();
 
   // Clear stale companion context on page navigation
   useEffect(() => {
@@ -253,11 +268,26 @@ export function AskCompanion() {
       const ctx = companion.context;
       setQuestion(q);
       clearPendingQuestion();
-      if (!showSettings && key.trim() && model.trim()) {
+      if (!showSettings && (isUsingDefault || (key.trim() && model.trim()))) {
         setTimeout(() => void submitWithQuestion(q, ctx || undefined), 50);
       }
     }
-  }, [companion.pendingQuestion]);
+  }, [companion.pendingQuestion, isUsingDefault, key, model, showSettings]);
+
+  async function refreshQuota(): Promise<QuotaInfo | null> {
+    try {
+      const fp = getDeviceFingerprint();
+      const res = await fetch("/api/site/ask-quota", {
+        headers: { "x-device-fingerprint": fp },
+      });
+      if (res.ok) {
+        const data = await res.json() as QuotaInfo;
+        setQuota(data);
+        return data;
+      }
+    } catch {}
+    return null;
+  }
 
   async function fetchModelList(targetKey?: string, targetProvider?: ByokProvider, targetBaseUrl?: string, force = false) {
     const k = (targetKey !== undefined ? targetKey : key).trim();
@@ -340,10 +370,9 @@ export function AskCompanion() {
     setProviderKeys(cfg.keys || {});
     setBaseUrl(cfg.baseUrl || "");
     setRememberKey(cfg.rememberKey);
-    if (!activeKey.trim()) {
-      setShowSettings(true); // Open settings if no key yet
-    }
     setMounted(true);
+
+    void refreshQuota();
 
     if (activeKey.trim()) {
       void fetchModelList(activeKey, cfg.provider, cfg.baseUrl || "", true);
@@ -445,22 +474,38 @@ export function AskCompanion() {
     lastFetchedSignature.current = "";
     setBaseUrl("");
     setRememberKey(true);
+    void refreshQuota();
   }
 
   async function submitWithQuestion(targetQ: string, contextOverride?: CompanionContext) {
     const q = targetQ.trim();
     if (composing.current || busy) return;
 
-    if (!key.trim()) {
-      setShowSettings(true);
-      setError("請先填寫 API Key。");
-      return;
+    // Check if using default service and whether daily quota is exceeded
+    if (isUsingDefault) {
+      if (quota && (quota.quotaExceeded || quota.remaining <= 0)) {
+        // Double check with server in case midnight has passed
+        const latestQuota = await refreshQuota();
+        if (latestQuota && (latestQuota.quotaExceeded || latestQuota.remaining <= 0)) {
+          setShowSettings(true);
+          setError("今日免費額度（6則）已全數用完，請設定您自己的 API Key (BYOK) 繼續發問。");
+          return;
+        }
+      }
+    } else {
+      // User is using BYOK: key and model must be specified
+      if (!key.trim()) {
+        setShowSettings(true);
+        setError("請先填寫 API Key 或清除金鑰使用站方預設額度。");
+        return;
+      }
+      if (!model.trim()) {
+        setShowSettings(true);
+        setError("請先選擇或輸入模型名稱。");
+        return;
+      }
     }
-    if (!model.trim()) {
-      setShowSettings(true);
-      setError("請先選擇或輸入模型名稱。");
-      return;
-    }
+
     if (!q) return;
 
     setActiveQuestion(q);
@@ -511,7 +556,7 @@ export function AskCompanion() {
       }
       setCurrentSources(sources);
 
-      // If viewing a page, append page context (prefer explicit override, then bus context, then pageContext)
+      // If viewing a page, append page context
       let currentArticleNote = "";
       if (effectiveContext?.title) {
         currentArticleNote = `【當前正在閱讀的頁面文章】\n《${effectiveContext.title}》\n${(effectiveContext.summary || "").slice(0, 800)}\n\n`;
@@ -540,23 +585,59 @@ export function AskCompanion() {
       const currentTurnUserContent = `${currentArticleNote}【參考情報來源】\n${contextText || "（無額外外部檢索）"}\n\n【讀者提問】\n${sanitizedQ}`;
       promptMessages.push({ role: "user", content: currentTurnUserContent });
 
+      // Build request body: when using default service, send empty key and let backend inject the default config
+      const requestPayload = isUsingDefault
+        ? {
+            provider: "custom",
+            model: "gpt-6-luna",
+            key: "",
+            baseUrl: "",
+            messages: promptMessages,
+            stream: true,
+          }
+        : {
+            provider,
+            model,
+            key,
+            baseUrl,
+            messages: promptMessages,
+            stream: true,
+          };
+
+      const fp = getDeviceFingerprint();
+
       // Stream answer
       const answerRes = await fetch("/api/site/ask-model", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-device-fingerprint": fp,
+        },
         signal: controller.signal,
-        body: JSON.stringify({
-          provider,
-          model,
-          key,
-          baseUrl,
-          messages: promptMessages,
-          stream: true,
-        }),
+        body: JSON.stringify(requestPayload),
       });
 
+      // Update quota if response header present
+      const remHeader = answerRes.headers.get("x-ask-quota-remaining");
+      if (remHeader !== null) {
+        const rem = Number.parseInt(remHeader, 10);
+        if (!Number.isNaN(rem)) {
+          setQuota((prev) => (prev ? { ...prev, remaining: rem, used: prev.limit - rem, quotaExceeded: rem <= 0 } : null));
+        }
+      }
+
       if (!answerRes.ok) {
-        const errJson = await answerRes.json().catch(() => ({ error: `模型錯誤 (${answerRes.status})` })) as { error?: string };
+        const errJson = (await answerRes.json().catch(() => ({ error: `模型錯誤 (${answerRes.status})` }))) as {
+          error?: string;
+          quotaExceeded?: boolean;
+        };
+
+        if (answerRes.status === 429 || errJson.quotaExceeded) {
+          setShowSettings(true);
+          setQuota((prev) => (prev ? { ...prev, remaining: 0, used: prev.limit, quotaExceeded: true } : null));
+          throw new Error(errJson.error || "今日免費額度（6則）已全數用完，請設定您自己的 API Key (BYOK) 繼續發問。");
+        }
+
         throw new Error(errJson.error || `模型服務回應錯誤 (${answerRes.status})`);
       }
 
@@ -604,7 +685,7 @@ export function AskCompanion() {
           }
         }
       } else {
-        const result = await answerRes.json() as { content?: string; error?: string };
+        const result = (await answerRes.json()) as { content?: string; error?: string };
         accumulatedAnswer = result.content || "";
         isStreamCompleted = true;
       }
@@ -670,9 +751,9 @@ export function AskCompanion() {
           type="button"
           onClick={toggleCompanion}
           aria-label="打開 AI 伴隨問答"
-          className="fixed bottom-[calc(76px+env(safe-area-inset-bottom))] right-4 z-40 flex items-center gap-2 rounded-full border border-accent/40 bg-accent px-4 py-2.5 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 lg:bottom-6 lg:right-6"
+          className="fixed bottom-[calc(76px+env(safe-area-inset-bottom))] right-4 z-40 flex items-center gap-2 rounded-full border border-accent/40 bg-accent px-4 py-2.5 text-white dark:text-gray-950 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 lg:bottom-6 lg:right-6"
         >
-          <Bot size={18} className="text-white shrink-0" />
+          <Bot size={18} className="text-white dark:text-gray-950 shrink-0" />
           <span className="text-[13.5px] font-semibold tracking-wide hidden sm:inline">AI 伴隨問答</span>
         </button>
       )}
@@ -690,11 +771,18 @@ export function AskCompanion() {
             <div className="flex items-center gap-2 min-w-0">
               <Bot size={19} className="text-accent shrink-0" />
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[14px] font-bold text-ink truncate">AI 伴隨助手 (BYOK)</span>
-                  {key.trim() && model && (
-                    <span className="rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] text-accent truncate max-w-[120px]">
-                      {model}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[14px] font-bold text-ink truncate">AI 伴隨助手</span>
+                  {isUsingDefault ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">
+                      <span>GPT-6 Luna</span>
+                      <span className="opacity-60">·</span>
+                      <span className="font-mono">剩 {quota ? quota.remaining : 6}/6 則</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] text-accent truncate max-w-[130px]" title={model || provider}>
+                      <span>{model || provider}</span>
+                      <span className="opacity-70">(BYOK)</span>
                     </span>
                   )}
                 </div>
@@ -710,7 +798,7 @@ export function AskCompanion() {
               <button
                 type="button"
                 onClick={() => setShowSettings(!showSettings)}
-                className={`rounded p-1 text-[12px] transition-colors ${showSettings ? "bg-accent text-white" : "text-ink-3 hover:text-ink hover:bg-surface"}`}
+                className={`rounded p-1 text-[12px] transition-colors ${showSettings ? "bg-accent text-white dark:text-gray-950" : "text-ink-3 hover:text-ink hover:bg-surface"}`}
                 title="模型設定"
                 aria-label="模型設定"
               >
@@ -741,19 +829,50 @@ export function AskCompanion() {
 
           {/* Settings Drawer inside companion */}
           {showSettings && (
-            <div className="shrink-0 border-b border-line bg-surface-2 p-3 text-[13px] space-y-2.5 max-h-[280px] overflow-y-auto">
+            <div className="shrink-0 border-b border-line bg-surface-2 p-3 text-[13px] space-y-2.5 max-h-[310px] overflow-y-auto">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-ink text-[13.5px]">BYOK 模型設定</span>
-                {key && (
-                  <button type="button" onClick={handleClearKey} className="text-[11.5px] text-ink-3 hover:text-red-500 underline">
-                    清除金鑰
+                <span className="font-bold text-ink text-[13.5px]">AI 助手與 BYOK 設定</span>
+                {key.trim() && (
+                  <button type="button" onClick={handleClearKey} className="text-[11.5px] text-accent hover:underline flex items-center gap-1">
+                    <span>切換回站方預設 (每日6則)</span>
                   </button>
                 )}
               </div>
 
+              {/* Status Banner */}
+              {isUsingDefault ? (
+                <div className="rounded-xl bg-accent/10 border border-accent/20 p-2.5 text-[12px] text-ink-2 space-y-1">
+                  <div className="flex items-center justify-between font-semibold text-accent">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles size={13} />
+                      <span>站方預設服務啟用中 (免填金鑰)</span>
+                    </span>
+                    <span className="font-mono text-[11px] bg-accent/20 px-1.5 py-0.5 rounded">
+                      剩餘 {quota ? quota.remaining : 6} / 6 則
+                    </span>
+                  </div>
+                  <p className="text-ink-3 leading-relaxed text-[11.5px]">
+                    預設使用 <strong>GPT-6 Luna</strong> 模型。每人每天享有 6 則免費額度（追問亦計 1 則）。若額度用盡或想使用其他模型，請在下方填寫自備金鑰 (BYOK)。
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2.5 text-[12px] text-ink-2 space-y-1">
+                  <div className="flex items-center justify-between font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck size={13} />
+                      <span>自備金鑰 (BYOK) 生效中</span>
+                    </span>
+                    <span className="text-[11px] font-normal text-emerald-700 dark:text-emerald-300">無限則暢享</span>
+                  </div>
+                  <p className="text-ink-3 leading-relaxed text-[11.5px]">
+                    已啟用您自備的 {PROVIDERS[provider]?.label || provider} 金鑰，不受每日 6 則限制，隱私零落盤。
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-2">
                 <label className="block space-y-1">
-                  <span className="text-[12px] text-ink-3">服務商</span>
+                  <span className="text-[12px] text-ink-3">自備服務商</span>
                   <select
                     className={inputClass}
                     value={provider}
@@ -766,7 +885,7 @@ export function AskCompanion() {
                 </label>
 
                 <label className="block space-y-1">
-                  <span className="text-[12px] text-ink-3">API Key</span>
+                  <span className="text-[12px] text-ink-3">自備 API Key</span>
                   <input
                     className={inputClass}
                     type="password"
@@ -798,28 +917,28 @@ export function AskCompanion() {
                   <span className="text-[12px] text-ink-3">API Base URL</span>
                   <input
                     className={inputClass}
-                    placeholder="https://api.siliconflow.cn/v1"
+                    placeholder="https://llm.aiurl.tw/v1"
                     value={baseUrl}
                     onChange={(e) => setBaseUrl(e.target.value)}
                   />
                 </label>
               )}
 
-              {/* Dynamic Model Section */}
-              <div className="space-y-1 pt-1 border-t border-line/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-ink-3">模型選擇</span>
-                  <div className="flex items-center gap-1.5">
-                    {availableModels.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setCustomModelInput(!customModelInput)}
-                        className="text-[11px] text-accent underline"
-                      >
-                        {customModelInput ? "選單挑選" : "手動自訂"}
-                      </button>
-                    )}
-                    {key.trim() && (
+              {/* Dynamic Model Section (Shown when user is filling a key) */}
+              {key.trim() && (
+                <div className="space-y-1 pt-1 border-t border-line/50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-ink-3">模型選擇</span>
+                    <div className="flex items-center gap-1.5">
+                      {availableModels.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setCustomModelInput(!customModelInput)}
+                          className="text-[11px] text-accent underline"
+                        >
+                          {customModelInput ? "選單挑選" : "手動自訂"}
+                        </button>
+                      )}
                       <button
                         type="button"
                         disabled={loadingModels}
@@ -829,61 +948,61 @@ export function AskCompanion() {
                         <RotateCw size={11} className={loadingModels ? "animate-spin" : ""} />
                         <span>{loadingModels ? "載入中..." : "重新取得"}</span>
                       </button>
-                    )}
+                    </div>
                   </div>
-                </div>
 
-                {loadingModels && (
-                  <div className="text-[12px] text-ink-3 py-1 flex items-center gap-1.5">
-                    <span className="inline-block size-3 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-                    <span>正在取得 {PROVIDERS[provider].label} 可用模型...</span>
-                  </div>
-                )}
+                  {loadingModels && (
+                    <div className="text-[12px] text-ink-3 py-1 flex items-center gap-1.5">
+                      <span className="inline-block size-3 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                      <span>正在取得 {PROVIDERS[provider].label} 可用模型...</span>
+                    </div>
+                  )}
 
-                {modelError && (
-                  <div className="rounded bg-red-500/10 px-2 py-1 text-[11.5px] text-red-600 dark:text-red-400 flex items-center justify-between gap-1">
-                    <span className="inline-flex items-center gap-1">
-                      <AlertCircle size={13} className="shrink-0 text-current" />
-                      <span>{modelError}</span>
-                    </span>
-                    <button type="button" onClick={() => void fetchModelList(key, provider, baseUrl, true)} className="underline shrink-0 ml-1">重試</button>
-                  </div>
-                )}
+                  {modelError && (
+                    <div className="rounded bg-red-500/10 px-2 py-1 text-[11.5px] text-red-600 dark:text-red-400 flex items-center justify-between gap-1">
+                      <span className="inline-flex items-center gap-1">
+                        <AlertCircle size={13} className="shrink-0 text-current" />
+                        <span>{modelError}</span>
+                      </span>
+                      <button type="button" onClick={() => void fetchModelList(key, provider, baseUrl, true)} className="underline shrink-0 ml-1">重試</button>
+                    </div>
+                  )}
 
-                {customModelInput || (availableModels.length === 0 && !loadingModels) ? (
-                  <input
-                    className={inputClass}
-                    placeholder="輸入模型名稱 (填入 Key 自動取得清單)"
-                    value={model}
-                    onChange={(e) => setModel(e.target.value)}
-                    autoComplete="off"
-                  />
-                ) : (
-                  <div className="space-y-1">
-                    {availableModels.length > 8 && (
-                      <input
-                        className="w-full rounded border border-line bg-surface px-2 py-0.5 text-[12px] text-ink outline-none"
-                        placeholder={`篩選 ${availableModels.length} 款模型...`}
-                        value={modelSearch}
-                        onChange={(e) => setModelSearch(e.target.value)}
-                      />
-                    )}
-                    <select className={inputClass} value={model} onChange={(e) => setModel(e.target.value)}>
-                      {filteredModels.length === 0 ? (
-                        <option value="">無符合搜尋模型</option>
-                      ) : (
-                        filteredModels.map((m) => <option key={m} value={m}>{m}</option>)
+                  {customModelInput || (availableModels.length === 0 && !loadingModels) ? (
+                    <input
+                      className={inputClass}
+                      placeholder="輸入模型名稱 (填入 Key 自動取得清單)"
+                      value={model}
+                      onChange={(e) => setModel(e.target.value)}
+                      autoComplete="off"
+                    />
+                  ) : (
+                    <div className="space-y-1">
+                      {availableModels.length > 8 && (
+                        <input
+                          className="w-full rounded border border-line bg-surface px-2 py-0.5 text-[12px] text-ink outline-none"
+                          placeholder={`篩選 ${availableModels.length} 款模型...`}
+                          value={modelSearch}
+                          onChange={(e) => setModelSearch(e.target.value)}
+                        />
                       )}
-                    </select>
-                  </div>
-                )}
-              </div>
+                      <select className={inputClass} value={model} onChange={(e) => setModel(e.target.value)}>
+                        {filteredModels.length === 0 ? (
+                          <option value="">無符合搜尋模型</option>
+                        ) : (
+                          filteredModels.map((m) => <option key={m} value={m}>{m}</option>)
+                        )}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-1">
                 <button
                   type="button"
                   onClick={() => setShowSettings(false)}
-                  className="rounded bg-accent px-3 py-1 text-[12px] font-semibold text-white hover:opacity-90 transition-opacity"
+                  className="rounded bg-accent px-3 py-1 text-[12px] font-semibold text-white dark:text-gray-950 hover:opacity-90 transition-opacity"
                 >
                   確認收起設定
                 </button>
@@ -937,7 +1056,7 @@ export function AskCompanion() {
                       <span>888news 伴隨式情報 Copilot</span>
                     </p>
                     <p className="text-[12.5px] text-ink-3 mt-1">
-                      支援閱讀任意文章時隨時發問、深入探討或多輪追問。
+                      預設安裝 GPT-6 Luna 模型，每日可免費問 6 則情報。
                     </p>
                     <div className="mt-3 flex flex-col gap-1.5 text-left">
                       {[
@@ -1022,6 +1141,27 @@ export function AskCompanion() {
                 </div>
               </div>
             )}
+
+            {/* Quota Exceeded Prompt Card */}
+            {isUsingDefault && quota && (quota.quotaExceeded || quota.remaining <= 0) && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-[12.5px] space-y-2">
+                <div className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
+                  <AlertCircle size={15} className="shrink-0" />
+                  <span>今日免費額度（6則）已全數用完</span>
+                </div>
+                <p className="text-ink-3 leading-relaxed text-[12px]">
+                  預設安裝服務每人每日限 6 則（續問亦計 1 則）。若要繼續無限制深度問答，請自備金鑰 (BYOK)：
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-[12px] font-semibold text-white dark:text-gray-950 shadow-xs hover:opacity-90 transition-opacity"
+                >
+                  <Settings size={13} />
+                  <span>設定自備金鑰 (BYOK)</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Input Footer */}
@@ -1050,11 +1190,15 @@ export function AskCompanion() {
                 onCompositionStart={() => { composing.current = true; }}
                 onCompositionEnd={() => { composing.current = false; }}
                 placeholder={
-                  !key.trim()
-                    ? "請先點右上角設定圖示填寫 API Key..."
-                    : pageContext?.title
-                    ? `針對這篇文章發問... (Cmd/Ctrl+Enter)`
-                    : "輸入問題向 AI 發問... (Cmd/Ctrl+Enter)"
+                  isUsingDefault && quota && (quota.quotaExceeded || quota.remaining <= 0)
+                    ? "今日 6 則免費額度已用完，請設定 BYOK 金鑰繼續..."
+                    : isUsingDefault
+                    ? (pageContext?.title
+                      ? `針對這篇文章發問... (今日剩 ${quota ? quota.remaining : 6} 則免費 · Cmd/Ctrl+Enter)`
+                      : `輸入問題向 AI 發問... (今日剩 ${quota ? quota.remaining : 6} 則免費 · Cmd/Ctrl+Enter)`)
+                    : (pageContext?.title
+                      ? `針對這篇文章發問... (自備 Key · Cmd/Ctrl+Enter)`
+                      : `輸入問題向 AI 發問... (自備 Key · Cmd/Ctrl+Enter)`)
                 }
               />
 
@@ -1070,7 +1214,7 @@ export function AskCompanion() {
                 <button
                   type="submit"
                   disabled={!question.trim()}
-                  className="shrink-0 rounded-xl bg-accent px-3.5 py-2 text-[13px] font-semibold text-white shadow-xs hover:opacity-90 disabled:opacity-40 transition-all cursor-pointer disabled:cursor-not-allowed"
+                  className="shrink-0 rounded-xl bg-accent px-3.5 py-2 text-[13px] font-semibold text-white dark:text-gray-950 shadow-xs hover:opacity-90 disabled:opacity-40 transition-all cursor-pointer disabled:cursor-not-allowed"
                 >
                   發送
                 </button>

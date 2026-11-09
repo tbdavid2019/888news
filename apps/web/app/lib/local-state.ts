@@ -12,6 +12,7 @@ export const KEYS = {
   followedPodcasts: "aihot-followed-podcasts",
   starredPodcasts: "aihot-starred-podcasts",
   byokConfig: "aihot-byok-config-v1",
+  deviceFingerprint: "aihot-device-fp-v1",
 } as const;
 
 export const STARRED_LIMIT = 500;
@@ -564,6 +565,23 @@ export function clearByokConfig(): void {
     storage("local")?.removeItem(KEYS.byokConfig);
   } catch {}
   invalidate(KEYS.byokConfig);
+}
+
+export function getDeviceFingerprint(): string {
+  try {
+    let fp = readRaw(KEYS.deviceFingerprint);
+    if (!fp || fp.length < 10) {
+      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        fp = crypto.randomUUID();
+      } else {
+        fp = "dfp-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      }
+      writeRaw(KEYS.deviceFingerprint, fp);
+    }
+    return fp;
+  } catch {
+    return "";
+  }
 }
 
 export function useByokConfig(): ByokConfig {

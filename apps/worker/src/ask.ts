@@ -255,15 +255,19 @@ async function handleAskStream(req: IncomingMessage, res: ServerResponse) {
       return reply(res, 400, { error: "Invalid request payload" });
     }
 
-    const { provider, model, key, baseUrl, messages, stream = true } = body ?? {};
+    const { provider, model: rawModel, key, baseUrl, messages, stream = true } = body ?? {};
 
     // Validation
     const validProvider = typeof provider === "string" && (Object.hasOwn(DEFAULT_CHAT_ENDPOINTS, provider) || provider === "custom" || provider === "bedrock");
     if (!validProvider) return reply(res, 400, { error: "Invalid provider" });
 
-    if (typeof model !== "string" || !/^[\w.\-/:]{1,120}$/.test(model)) {
+    if (typeof rawModel !== "string" || !/^[\w.\-/: ]{1,120}$/.test(rawModel.trim())) {
       return reply(res, 400, { error: "Invalid model identifier" });
     }
+
+    const model = /^(?:codex\/)?gpt[-\s]?(?:6(?:\.1)?|5\.6)[-\s]?luna$/i.test(rawModel.trim())
+      ? "gpt-6-luna"
+      : rawModel.trim();
 
     if (typeof key !== "string" || key.length < 1 || key.length > 512 || /[\r\n]/.test(key)) {
       return reply(res, 400, { error: "Invalid API key" });
