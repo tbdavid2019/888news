@@ -215,6 +215,8 @@ export interface LlmSettings {
   fallback1: LlmChannelConfig;
   fallback2: LlmChannelConfig;
   fallback3: LlmChannelConfig;
+  fallback4: LlmChannelConfig;
+  fallback5: LlmChannelConfig;
   waitingCount: number;
 }
 
@@ -239,9 +241,17 @@ export async function getLlmSettings(): Promise<LlmSettings> {
   const fb2Base = dbConfig.llmFallback2BaseUrl || credential("models", "LLM_FALLBACK_2_BASE_URL") || process.env.LLM_FALLBACK_2_BASE_URL || "";
   const fb2Model = dbConfig.llmFallback2Model || process.env.LLM_FALLBACK_2_MODEL || "";
 
-  const fb3Key = dbConfig.llmFallback3ApiKey || credential("models", "LLM_FALLBACK_3_API_KEY") || process.env.LLM_FALLBACK_3_API_KEY || credential("models", "OPENAI_API_KEY") || process.env.OPENAI_API_KEY || null;
-  const fb3Base = dbConfig.llmFallback3BaseUrl || credential("models", "LLM_FALLBACK_3_BASE_URL") || process.env.LLM_FALLBACK_3_BASE_URL || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
-  const fb3Model = dbConfig.llmFallback3Model || process.env.LLM_FALLBACK_3_MODEL || "gpt-6-luna";
+  const fb3Key = dbConfig.llmFallback3ApiKey || credential("models", "LLM_FALLBACK_3_API_KEY") || process.env.LLM_FALLBACK_3_API_KEY || null;
+  const fb3Base = dbConfig.llmFallback3BaseUrl || credential("models", "LLM_FALLBACK_3_BASE_URL") || process.env.LLM_FALLBACK_3_BASE_URL || "";
+  const fb3Model = dbConfig.llmFallback3Model || process.env.LLM_FALLBACK_3_MODEL || "";
+
+  const fb4Key = dbConfig.llmFallback4ApiKey || credential("models", "LLM_FALLBACK_4_API_KEY") || process.env.LLM_FALLBACK_4_API_KEY || null;
+  const fb4Base = dbConfig.llmFallback4BaseUrl || credential("models", "LLM_FALLBACK_4_BASE_URL") || process.env.LLM_FALLBACK_4_BASE_URL || "";
+  const fb4Model = dbConfig.llmFallback4Model || process.env.LLM_FALLBACK_4_MODEL || "";
+
+  const fb5Key = dbConfig.llmFallback5ApiKey || credential("models", "LLM_FALLBACK_5_API_KEY") || process.env.LLM_FALLBACK_5_API_KEY || credential("models", "OPENAI_API_KEY") || process.env.OPENAI_API_KEY || null;
+  const fb5Base = dbConfig.llmFallback5BaseUrl || credential("models", "LLM_FALLBACK_5_BASE_URL") || process.env.LLM_FALLBACK_5_BASE_URL || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+  const fb5Model = dbConfig.llmFallback5Model || process.env.LLM_FALLBACK_5_MODEL || "gpt-6-luna";
 
   let waitingCount = 0;
   try {
@@ -278,6 +288,20 @@ export async function getLlmSettings(): Promise<LlmSettings> {
       isConfigured: Boolean(fb3Key && fb3Model),
       source: dbConfig.llmFallback3ApiKey ? "db" : fb3Key ? "env" : "none",
     },
+    fallback4: {
+      baseUrl: fb4Base,
+      model: fb4Model,
+      apiKeyMasked: mask(fb4Key),
+      isConfigured: Boolean(fb4Key && fb4Model),
+      source: dbConfig.llmFallback4ApiKey ? "db" : fb4Key ? "env" : "none",
+    },
+    fallback5: {
+      baseUrl: fb5Base,
+      model: fb5Model,
+      apiKeyMasked: mask(fb5Key),
+      isConfigured: Boolean(fb5Key && fb5Model),
+      source: dbConfig.llmFallback5ApiKey ? "db" : fb5Key ? "env" : "none",
+    },
     waitingCount,
   };
 }
@@ -296,6 +320,12 @@ export async function saveLlmSettings(
     llmFallback3BaseUrl?: string;
     llmFallback3ApiKey?: string;
     llmFallback3Model?: string;
+    llmFallback4BaseUrl?: string;
+    llmFallback4ApiKey?: string;
+    llmFallback4Model?: string;
+    llmFallback5BaseUrl?: string;
+    llmFallback5ApiKey?: string;
+    llmFallback5Model?: string;
   },
   reason: string,
   actor: string,

@@ -126,12 +126,18 @@ export function registerAdmin(app: FastifyInstance) {
       llmFallback3BaseUrl?: string;
       llmFallback3ApiKey?: string;
       llmFallback3Model?: string;
+      llmFallback4BaseUrl?: string;
+      llmFallback4ApiKey?: string;
+      llmFallback4Model?: string;
+      llmFallback5BaseUrl?: string;
+      llmFallback5ApiKey?: string;
+      llmFallback5Model?: string;
       reason?: string;
     }>(req);
     return saveLlmSettings(b, b.reason || "更新 LLM 配置", actorOf(admin));
   }));
   app.post("/api/admin/settings/llm/test", adminHandler(async (req) => {
-    const b = body<{ target: "default" | "fallback_1" | "fallback_2" | "fallback_3" }>(req);
+    const b = body<{ target: "default" | "fallback_1" | "fallback_2" | "fallback_3" | "fallback_4" | "fallback_5" }>(req);
     return testModelConnection(b.target);
   }));
   app.post("/api/admin/settings/llm/requeue", adminHandler(async () => {

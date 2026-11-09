@@ -33,6 +33,8 @@ export interface LlmSettings {
   fallback1: LlmChannelConfig;
   fallback2: LlmChannelConfig;
   fallback3: LlmChannelConfig;
+  fallback4: LlmChannelConfig;
+  fallback5: LlmChannelConfig;
   waitingCount: number;
 }
 
@@ -66,9 +68,15 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
     llmFallback3BaseUrl: "",
     llmFallback3ApiKey: "",
     llmFallback3Model: "",
+    llmFallback4BaseUrl: "",
+    llmFallback4ApiKey: "",
+    llmFallback4Model: "",
+    llmFallback5BaseUrl: "",
+    llmFallback5ApiKey: "",
+    llmFallback5Model: "",
   });
 
-  const handleTest = async (target: "default" | "fallback_1" | "fallback_2" | "fallback_3", name: string) => {
+  const handleTest = async (target: "default" | "fallback_1" | "fallback_2" | "fallback_3" | "fallback_4" | "fallback_5", name: string) => {
     const res = await run<{ ok: boolean; model?: string; error?: string }>(
       "POST",
       "/api/admin/settings/llm/test",
@@ -214,7 +222,7 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
               {llm?.fallback3.isConfigured ? (
                 <Badge tone="ok">已啟用備援</Badge>
               ) : (
-                <Badge tone="muted">未配置 (可選，預設支援 OpenAI luna 6)</Badge>
+                <Badge tone="muted">未配置 (可選)</Badge>
               )}
             </div>
             <div className="mt-1 font-mono text-[12px] text-ink-3 break-all">
@@ -227,6 +235,66 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
               disabled={!llm?.fallback3.isConfigured}
               busy={pending === "test-llm-fallback_3"}
               onClick={() => handleTest("fallback_3", "備援 3")}
+            >
+              測試連線
+            </Button>
+            <Button size="sm" tone="secondary" onClick={() => setOpen(true)}>
+              修改
+            </Button>
+          </div>
+        </div>
+
+        {/* Fallback 4 (第五順位) */}
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-ink">備援 4 (Fallback 4 / 第五順位)</span>
+              {llm?.fallback4.isConfigured ? (
+                <Badge tone="ok">已啟用備援</Badge>
+              ) : (
+                <Badge tone="muted">未配置 (可選)</Badge>
+              )}
+            </div>
+            <div className="mt-1 font-mono text-[12px] text-ink-3 break-all">
+              端點: {llm?.fallback4.baseUrl || "—"} · 模型: {llm?.fallback4.model || "—"} · API Key: {llm?.fallback4.apiKeyMasked || "—"}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              size="sm"
+              disabled={!llm?.fallback4.isConfigured}
+              busy={pending === "test-llm-fallback_4"}
+              onClick={() => handleTest("fallback_4", "備援 4")}
+            >
+              測試連線
+            </Button>
+            <Button size="sm" tone="secondary" onClick={() => setOpen(true)}>
+              修改
+            </Button>
+          </div>
+        </div>
+
+        {/* Fallback 5 (第六順位) */}
+        <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-ink">備援 5 (Fallback 5 / 第六順位)</span>
+              {llm?.fallback5.isConfigured ? (
+                <Badge tone="ok">已啟用備援</Badge>
+              ) : (
+                <Badge tone="muted">未配置 (可選，預設支援 OpenAI luna 6)</Badge>
+              )}
+            </div>
+            <div className="mt-1 font-mono text-[12px] text-ink-3 break-all">
+              端點: {llm?.fallback5.baseUrl || "—"} · 模型: {llm?.fallback5.model || "—"} · API Key: {llm?.fallback5.apiKeyMasked || "—"}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              size="sm"
+              disabled={!llm?.fallback5.isConfigured}
+              busy={pending === "test-llm-fallback_5"}
+              onClick={() => handleTest("fallback_5", "備援 5")}
             >
               測試連線
             </Button>
@@ -258,6 +326,12 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
           if (form.llmFallback3BaseUrl.trim()) payload.llmFallback3BaseUrl = form.llmFallback3BaseUrl.trim();
           if (form.llmFallback3ApiKey.trim()) payload.llmFallback3ApiKey = form.llmFallback3ApiKey.trim();
           if (form.llmFallback3Model.trim()) payload.llmFallback3Model = form.llmFallback3Model.trim();
+          if (form.llmFallback4BaseUrl.trim()) payload.llmFallback4BaseUrl = form.llmFallback4BaseUrl.trim();
+          if (form.llmFallback4ApiKey.trim()) payload.llmFallback4ApiKey = form.llmFallback4ApiKey.trim();
+          if (form.llmFallback4Model.trim()) payload.llmFallback4Model = form.llmFallback4Model.trim();
+          if (form.llmFallback5BaseUrl.trim()) payload.llmFallback5BaseUrl = form.llmFallback5BaseUrl.trim();
+          if (form.llmFallback5ApiKey.trim()) payload.llmFallback5ApiKey = form.llmFallback5ApiKey.trim();
+          if (form.llmFallback5Model.trim()) payload.llmFallback5Model = form.llmFallback5Model.trim();
 
           const ok = await run(
             "PUT",
@@ -271,6 +345,8 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
               llmFallback1BaseUrl: "", llmFallback1ApiKey: "", llmFallback1Model: "",
               llmFallback2BaseUrl: "", llmFallback2ApiKey: "", llmFallback2Model: "",
               llmFallback3BaseUrl: "", llmFallback3ApiKey: "", llmFallback3Model: "",
+              llmFallback4BaseUrl: "", llmFallback4ApiKey: "", llmFallback4Model: "",
+              llmFallback5BaseUrl: "", llmFallback5ApiKey: "", llmFallback5Model: "",
             });
             return true;
           }
@@ -394,6 +470,66 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
                 placeholder={llm?.fallback3.apiKeyMasked || "sk-..."}
                 value={form.llmFallback3ApiKey}
                 onChange={(e) => setForm({ ...form, llmFallback3ApiKey: e.target.value })}
+              />
+            </Field>
+          </div>
+
+          <div className="rounded-control bg-bg-sunk p-3 space-y-3">
+            <div className="text-[13px] font-semibold text-ink">備援 4 (Fallback 4 / 第五順位，選填)</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Fallback 4 Base URL">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback4.baseUrl || "https://generativelanguage.googleapis.com/v1beta/openai"}
+                  value={form.llmFallback4BaseUrl}
+                  onChange={(e) => setForm({ ...form, llmFallback4BaseUrl: e.target.value })}
+                />
+              </Field>
+              <Field label="Fallback 4 Model">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback4.model || "models/gemini-3.5-flash-lite"}
+                  value={form.llmFallback4Model}
+                  onChange={(e) => setForm({ ...form, llmFallback4Model: e.target.value })}
+                />
+              </Field>
+            </div>
+            <Field label="Fallback 4 API Key">
+              <Input
+                type="password"
+                placeholder={llm?.fallback4.apiKeyMasked || "AIza..."}
+                value={form.llmFallback4ApiKey}
+                onChange={(e) => setForm({ ...form, llmFallback4ApiKey: e.target.value })}
+              />
+            </Field>
+          </div>
+
+          <div className="rounded-control bg-bg-sunk p-3 space-y-3">
+            <div className="text-[13px] font-semibold text-ink">備援 5 (Fallback 5 / 第六順位，選填)</div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Fallback 5 Base URL">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback5.baseUrl || "https://api.openai.com/v1"}
+                  value={form.llmFallback5BaseUrl}
+                  onChange={(e) => setForm({ ...form, llmFallback5BaseUrl: e.target.value })}
+                />
+              </Field>
+              <Field label="Fallback 5 Model">
+                <Input
+                  type="text"
+                  placeholder={llm?.fallback5.model || "gpt-6-luna"}
+                  value={form.llmFallback5Model}
+                  onChange={(e) => setForm({ ...form, llmFallback5Model: e.target.value })}
+                />
+              </Field>
+            </div>
+            <Field label="Fallback 5 API Key">
+              <Input
+                type="password"
+                placeholder={llm?.fallback5.apiKeyMasked || "sk-..."}
+                value={form.llmFallback5ApiKey}
+                onChange={(e) => setForm({ ...form, llmFallback5ApiKey: e.target.value })}
               />
             </Field>
           </div>

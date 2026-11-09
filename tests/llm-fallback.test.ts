@@ -85,3 +85,11 @@ test("computeJitterDelay produces randomized delays within bounds", () => {
     assert.equal(delay >= 0 && delay <= 2000, true);
   }
 });
+
+test("MODELS dictionary includes all 5 fallback tiers", async () => {
+  const { MODELS } = await import("@aihot/backend/providers/llm");
+  for (const tier of ["fallback_1", "fallback_2", "fallback_3", "fallback_4", "fallback_5"]) {
+    assert.ok(MODELS[tier], `Missing tier ${tier} in MODELS`);
+    assert.equal(MODELS[tier].key, tier);
+  }
+});

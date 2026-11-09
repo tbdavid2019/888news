@@ -137,7 +137,17 @@ export const MODELS: Record<string, ModelSpec> = {
   },
   fallback_3: {
     key: "fallback_3", service: "fallback_3", baseUrlEnv: "LLM_FALLBACK_3_BASE_URL", apiKeyEnv: "LLM_FALLBACK_3_API_KEY",
-    get model() { return cachedDbLlmConfig?.llmFallback3Model ?? process.env.LLM_FALLBACK_3_MODEL ?? "gpt-6-luna"; },
+    get model() { return cachedDbLlmConfig?.llmFallback3Model ?? process.env.LLM_FALLBACK_3_MODEL ?? ""; },
+    jsonMode: true,
+  },
+  fallback_4: {
+    key: "fallback_4", service: "fallback_4", baseUrlEnv: "LLM_FALLBACK_4_BASE_URL", apiKeyEnv: "LLM_FALLBACK_4_API_KEY",
+    get model() { return cachedDbLlmConfig?.llmFallback4Model ?? process.env.LLM_FALLBACK_4_MODEL ?? ""; },
+    jsonMode: true,
+  },
+  fallback_5: {
+    key: "fallback_5", service: "fallback_5", baseUrlEnv: "LLM_FALLBACK_5_BASE_URL", apiKeyEnv: "LLM_FALLBACK_5_API_KEY",
+    get model() { return cachedDbLlmConfig?.llmFallback5Model ?? process.env.LLM_FALLBACK_5_MODEL ?? "gpt-6-luna"; },
     jsonMode: true,
   },
 };
@@ -231,27 +241,41 @@ export function getApiKey(spec: ModelSpec): string | null {
   return credential("models", spec.apiKeyEnv) ?? process.env[spec.apiKeyEnv] ?? null;
 }
 
-export async function isFallbackConfigured(key: "fallback_1" | "fallback_2" | "fallback_3"): Promise<boolean> {
+export async function isFallbackConfigured(key: "fallback_1" | "fallback_2" | "fallback_3" | "fallback_4" | "fallback_5"): Promise<boolean> {
   const spec = MODELS[key];
   if (!spec) return false;
   const dbConfig = await getDbLlmConfig();
-  if (key === "fallback_3") {
+  if (key === "fallback_5") {
     const apiKey =
-      dbConfig.llmFallback3ApiKey ||
+      dbConfig.llmFallback5ApiKey ||
       credential("models", spec.apiKeyEnv) ||
       process.env[spec.apiKeyEnv] ||
       credential("models", "OPENAI_API_KEY") ||
       process.env.OPENAI_API_KEY;
-    const model = dbConfig.llmFallback3Model || spec.model || "gpt-6-luna";
+    const model = dbConfig.llmFallback5Model || spec.model || "gpt-6-luna";
     return Boolean(apiKey && model);
   }
-  const apiKey = (key === "fallback_1" ? dbConfig.llmFallback1ApiKey : dbConfig.llmFallback2ApiKey) || getApiKey(spec);
-  const model = (key === "fallback_1" ? dbConfig.llmFallback1Model : dbConfig.llmFallback2Model) || spec.model;
+  const apiKey =
+    (key === "fallback_1"
+      ? dbConfig.llmFallback1ApiKey
+      : key === "fallback_2"
+      ? dbConfig.llmFallback2ApiKey
+      : key === "fallback_3"
+      ? dbConfig.llmFallback3ApiKey
+      : dbConfig.llmFallback4ApiKey) || getApiKey(spec);
+  const model =
+    (key === "fallback_1"
+      ? dbConfig.llmFallback1Model
+      : key === "fallback_2"
+      ? dbConfig.llmFallback2Model
+      : key === "fallback_3"
+      ? dbConfig.llmFallback3Model
+      : dbConfig.llmFallback4Model) || spec.model;
   return Boolean(apiKey && model);
 }
 
 export async function testModelConnection(
-  target: "default" | "fallback_1" | "fallback_2" | "fallback_3",
+  target: "default" | "fallback_1" | "fallback_2" | "fallback_3" | "fallback_4" | "fallback_5",
 ): Promise<{ ok: boolean; model?: string; error?: string }> {
   const spec = MODELS[target];
   if (!spec) return { ok: false, error: `未知的模型項目: ${target}` };
@@ -274,9 +298,17 @@ export async function testModelConnection(
     apiKey = dbConfig.llmFallback2ApiKey || apiKey;
     modelName = dbConfig.llmFallback2Model || modelName;
   } else if (target === "fallback_3") {
-    baseUrl = dbConfig.llmFallback3BaseUrl || baseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
-    apiKey = dbConfig.llmFallback3ApiKey || apiKey || credential("models", "OPENAI_API_KEY") || process.env.OPENAI_API_KEY || null;
-    modelName = dbConfig.llmFallback3Model || modelName || "gpt-6-luna";
+    baseUrl = dbConfig.llmFallback3BaseUrl || baseUrl;
+    apiKey = dbConfig.llmFallback3ApiKey || apiKey;
+    modelName = dbConfig.llmFallback3Model || modelName;
+  } else if (target === "fallback_4") {
+    baseUrl = dbConfig.llmFallback4BaseUrl || baseUrl;
+    apiKey = dbConfig.llmFallback4ApiKey || apiKey;
+    modelName = dbConfig.llmFallback4Model || modelName;
+  } else if (target === "fallback_5") {
+    baseUrl = dbConfig.llmFallback5BaseUrl || baseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    apiKey = dbConfig.llmFallback5ApiKey || apiKey || credential("models", "OPENAI_API_KEY") || process.env.OPENAI_API_KEY || null;
+    modelName = dbConfig.llmFallback5Model || modelName || "gpt-6-luna";
   }
 
   if (!apiKey) return { ok: false, error: "API Key 尚未配置" };
@@ -338,6 +370,14 @@ async function executeSingleModel<S extends z.ZodType>(
     if (dbConfig.llmFallback3BaseUrl) baseUrl = dbConfig.llmFallback3BaseUrl;
     if (dbConfig.llmFallback3ApiKey) apiKey = dbConfig.llmFallback3ApiKey;
     if (dbConfig.llmFallback3Model) modelName = dbConfig.llmFallback3Model;
+  } else if (spec.key === "fallback_4") {
+    if (dbConfig.llmFallback4BaseUrl) baseUrl = dbConfig.llmFallback4BaseUrl;
+    if (dbConfig.llmFallback4ApiKey) apiKey = dbConfig.llmFallback4ApiKey;
+    if (dbConfig.llmFallback4Model) modelName = dbConfig.llmFallback4Model;
+  } else if (spec.key === "fallback_5") {
+    if (dbConfig.llmFallback5BaseUrl) baseUrl = dbConfig.llmFallback5BaseUrl;
+    if (dbConfig.llmFallback5ApiKey) apiKey = dbConfig.llmFallback5ApiKey;
+    if (dbConfig.llmFallback5Model) modelName = dbConfig.llmFallback5Model;
     if (!baseUrl) baseUrl = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
     if (!apiKey) apiKey = credential("models", "OPENAI_API_KEY") || process.env.OPENAI_API_KEY || null;
     if (!modelName) modelName = "gpt-6-luna";
@@ -443,9 +483,9 @@ export async function chatJson<S extends z.ZodType>(opts: ChatJsonOptions<S>): P
 
   const primaryKey = opts.model;
   const candidates: string[] = [primaryKey];
-  if ((await isFallbackConfigured("fallback_1")) && primaryKey !== "fallback_1") candidates.push("fallback_1");
-  if ((await isFallbackConfigured("fallback_2")) && primaryKey !== "fallback_2") candidates.push("fallback_2");
-  if ((await isFallbackConfigured("fallback_3")) && primaryKey !== "fallback_3") candidates.push("fallback_3");
+  for (const fb of ["fallback_1", "fallback_2", "fallback_3", "fallback_4", "fallback_5"] as const) {
+    if ((await isFallbackConfigured(fb)) && primaryKey !== fb) candidates.push(fb);
+  }
 
   let lastError: unknown = null;
 
