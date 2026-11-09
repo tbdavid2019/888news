@@ -398,7 +398,7 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
               <Field label="Fallback 1 Model">
                 <Input
                   type="text"
-                  placeholder={llm?.fallback1.model || "llama-3.3-70b-versatile"}
+                  placeholder={llm?.fallback1.model || "antigravity/gemini-3.8-flash"}
                   value={form.llmFallback1Model}
                   onChange={(e) => setForm({ ...form, llmFallback1Model: e.target.value })}
                 />

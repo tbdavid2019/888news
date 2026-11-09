@@ -321,7 +321,7 @@ export async function testModelConnection(
     const testBody: Record<string, unknown> = {
       model: modelName,
       messages: [{ role: "user", content: "Reply with pong" }],
-      ...(isLunaOrO ? { max_completion_tokens: 10 } : { max_tokens: 10, temperature: 0 }),
+      ...(isLunaOrO ? { max_completion_tokens: 150 } : { max_tokens: 20, temperature: 0 }),
     };
     const res = await fetch(url, {
       method: "POST",
