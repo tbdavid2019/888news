@@ -19,8 +19,6 @@ interface QuotaInfo {
   remaining: number;
   quotaExceeded: boolean;
   hasDefaultKey: boolean;
-  defaultModel: string;
-  defaultModelDisplay: string;
 }
 
 const PROVIDERS: Record<ByokProvider, ProviderDef> = {
@@ -589,7 +587,6 @@ export function AskCompanion() {
       const requestPayload = isUsingDefault
         ? {
             provider: "custom",
-            model: "gpt-6-luna",
             key: "",
             baseUrl: "",
             messages: promptMessages,
@@ -632,13 +629,14 @@ export function AskCompanion() {
           quotaExceeded?: boolean;
         };
 
-        if (answerRes.status === 429 || errJson.quotaExceeded) {
+        if (errJson.quotaExceeded) {
           setShowSettings(true);
           setQuota((prev) => (prev ? { ...prev, remaining: 0, used: prev.limit, quotaExceeded: true } : null));
           throw new Error(errJson.error || "今日免費額度（6則）已全數用完，請設定您自己的 API Key (BYOK) 繼續發問。");
         }
 
-        throw new Error(errJson.error || `模型服務回應錯誤 (${answerRes.status})`);
+        if (isUsingDefault) void refreshQuota();
+        throw new Error(errJson.error || `問答服務暫時無法使用 (${answerRes.status})`);
       }
 
       let accumulatedAnswer = "";
@@ -775,9 +773,7 @@ export function AskCompanion() {
                   <span className="text-[14px] font-bold text-ink truncate">AI 伴隨助手</span>
                   {isUsingDefault ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">
-                      <span>GPT-6 Luna</span>
-                      <span className="opacity-60">·</span>
-                      <span className="font-mono">剩 {quota ? quota.remaining : 6}/6 則</span>
+                      <span className="font-mono">{!quota ? "查詢額度中" : !quota.hasDefaultKey ? "服務未設定" : `剩 ${quota.remaining}/${quota.limit} 則`}</span>
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded bg-accent/10 px-1.5 py-0.5 font-mono text-[10px] text-accent truncate max-w-[130px]" title={model || provider}>
@@ -845,14 +841,14 @@ export function AskCompanion() {
                   <div className="flex items-center justify-between font-semibold text-accent">
                     <span className="flex items-center gap-1.5">
                       <Sparkles size={13} />
-                      <span>站方預設服務啟用中 (免填金鑰)</span>
+                      <span>{quota && !quota.hasDefaultKey ? "站方問答服務尚未設定" : "站方預設服務 (免填金鑰)"}</span>
                     </span>
                     <span className="font-mono text-[11px] bg-accent/20 px-1.5 py-0.5 rounded">
-                      剩餘 {quota ? quota.remaining : 6} / 6 則
+                      {!quota ? "查詢額度中" : !quota.hasDefaultKey ? "無法使用" : `剩餘 ${quota.remaining} / ${quota.limit} 則`}
                     </span>
                   </div>
                   <p className="text-ink-3 leading-relaxed text-[11.5px]">
-                    預設使用 <strong>GPT-6 Luna</strong> 模型。每人每天享有 6 則免費額度（追問亦計 1 則）。若額度用盡或想使用其他模型，請在下方填寫自備金鑰 (BYOK)。
+                    {quota && !quota.hasDefaultKey ? "站方服務尚未設定；可在下方填寫自備金鑰提問。" : "每日免費額度包含追問。額度用盡後，可在下方填寫自備金鑰繼續發問。"}
                   </p>
                 </div>
               ) : (
@@ -1056,7 +1052,7 @@ export function AskCompanion() {
                       <span>888news 伴隨式情報 Copilot</span>
                     </p>
                     <p className="text-[12.5px] text-ink-3 mt-1">
-                      預設安裝 GPT-6 Luna 模型，每日可免費問 6 則情報。
+                      每日可免費提問，追問也會計入額度。
                     </p>
                     <div className="mt-3 flex flex-col gap-1.5 text-left">
                       {[

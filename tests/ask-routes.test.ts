@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import { buildApp } from "../apps/api/src/app.ts";
 import { closeDb } from "@aihot/backend/db";
 import { consumeAskQuota } from "@aihot/backend/publication/ask-quota";
+import { config } from "@aihot/backend/config";
+
 
 const app = await buildApp();
 
@@ -28,8 +30,38 @@ test("GET /api/site/ask-quota returns reader daily quota status", async () => {
   assert.equal(data.remaining, 6);
   assert.equal(data.quotaExceeded, false);
   assert.equal(data.hasDefaultKey, true);
-  assert.equal(data.defaultModel, "gpt-6-luna");
-  assert.equal(data.defaultModelDisplay, "GPT-6 Luna");
+});
+
+test("default questions use the configured model and refund quota on upstream rate limits", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalModel = config.defaultAskModel;
+  const fingerprint = `routing-test-${Date.now()}`;
+  let forwardedModel: string | undefined;
+  config.defaultAskModel = "configured-chat-model";
+  globalThis.fetch = async (_input, init) => {
+    forwardedModel = JSON.parse(String(init?.body)).model;
+    return new Response(JSON.stringify({ error: "provider rate limit" }), {
+      status: 429,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  try {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/site/ask-model",
+      headers: { "x-device-fingerprint": fingerprint },
+      payload: { key: "", model: "client-model", messages: [{ role: "user", content: "hello" }] },
+    });
+    assert.equal(forwardedModel, "configured-chat-model");
+    assert.equal(res.statusCode, 503);
+    assert.equal(res.json().quotaExceeded, undefined);
+    assert.equal(res.headers["x-ask-quota-remaining"], undefined);
+    const quota = await app.inject({ method: "GET", url: "/api/site/ask-quota", headers: { "x-device-fingerprint": fingerprint } });
+    assert.equal(quota.json().remaining, 6);
+  } finally {
+    globalThis.fetch = originalFetch;
+    config.defaultAskModel = originalModel;
+  }
 });
 
 test("POST /api/site/ask-model returns 429 when daily 6-question quota is exhausted", async () => {

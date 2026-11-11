@@ -18,8 +18,6 @@ export function registerAskModel(app: FastifyInstance) {
       remaining: quota.remaining,
       quotaExceeded: quota.quotaExceeded,
       hasDefaultKey: Boolean(config.defaultAskKey),
-      defaultModel: config.defaultAskModel,
-      defaultModelDisplay: "GPT-6 Luna",
     });
   };
 
@@ -68,7 +66,7 @@ export function registerAskModel(app: FastifyInstance) {
       body.provider = "custom";
       body.baseUrl = config.defaultAskBaseUrl;
       body.key = config.defaultAskKey;
-      body.model = normalizeAskModel(body.model || config.defaultAskModel, true);
+      body.model = config.defaultAskModel;
     } else {
       // For BYOK, normalize only if model was specified
       body.model = normalizeAskModel(body.model, false) || body.model;
@@ -100,9 +98,14 @@ export function registerAskModel(app: FastifyInstance) {
       if (!response.ok) {
         // Refund quota on server/upstream failure so the user isn't penalized
         if (didConsumeQuota) {
-          void refundAskQuota(req.ip, fingerprint).catch(() => {});
+          await refundAskQuota(req.ip, fingerprint);
+          reply.removeHeader("X-Ask-Quota-Remaining");
         }
         const value: unknown = await response.json().catch(() => ({ error: "Model request failed" }));
+        if (!isByok) {
+          req.log.warn({ status: response.status }, "Default question service failed");
+          return reply.code(503).send({ error: "問答服務暫時無法使用，請稍後再試；本次不扣除額度。" });
+        }
         return reply.code(response.status >= 400 && response.status < 600 ? response.status : 503).send(value);
       }
 
@@ -129,7 +132,8 @@ export function registerAskModel(app: FastifyInstance) {
     } catch (err) {
       if (abortController.signal.aborted) return;
       if (didConsumeQuota) {
-        void refundAskQuota(req.ip, fingerprint).catch(() => {});
+        await refundAskQuota(req.ip, fingerprint);
+        reply.removeHeader("X-Ask-Quota-Remaining");
       }
       req.log.warn("BYOK worker request failed");
       return reply.code(503).send({ error: "Worker unavailable" });
