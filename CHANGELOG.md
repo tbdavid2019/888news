@@ -2,6 +2,13 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-12] — ⚡️ 全面升級 Node.js 26 (v26.13.1) 與最新 CVE 安全防護加固 (Node.js 26 Runtime & Security Hardening)
+
+### ⚡️ 核心運行環境升級 Node.js 26 (`v26.13.1`)
+- 更新 [`Dockerfile`](Dockerfile) 基礎映像檔為 `node:26.13.1-trixie-slim`。
+- 完整防護 Node.js 官方 2026-11-11 安全公告修復之多項 High severity 安全性漏洞。
+
+
 ## [2026-11-09] — 🤖 AI 伴隨助手預設服務安裝、GPT-6 Luna 模型整合與每日 6 則配額控管 (BYOK 擴充支援)
 
 ### 🚀 預設安裝與後端安全配置
