@@ -26,7 +26,7 @@ const MACHINE: Array<[path: string, type: RegExp]> = [
 ];
 // The leaderboard pages answer 503 until the first round is published (a fresh site computes it when
 // the worker starts; with collection off there is nothing to compute).
-const LEADERBOARD = FEATURES.leaderboard ? ["/leaderboard", "/leaderboard/rules", "/leaderboard/sources"] : [];
+const LEADERBOARD = FEATURES.leaderboard ? ["/leaderboard", "/leaderboard/decisions", "/leaderboard/rules", "/leaderboard/sources"] : [];
 PAGES.push(...LEADERBOARD);
 if (FEATURES.codexResetMonitor) PAGES.push("/codex-reset");
 

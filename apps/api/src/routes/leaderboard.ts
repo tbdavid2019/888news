@@ -2,6 +2,7 @@
 import type { FastifyInstance } from "fastify";
 import { LEADERBOARD_PUBLIC_BOARDS, type LeaderboardBoardKey } from "@aihot/contracts/taxonomy";
 import { loadBoard, loadModel, loadRulesData, loadSource, loadSources, NoLeaderboardRun } from "@aihot/backend/leaderboard/read";
+import { readDecisionsBoard } from "@aihot/backend/publication/decisions";
 import { sendJsonWithEtag, sendProblem } from "../http/respond.ts";
 import { siteHandler } from "./site.ts";
 
@@ -49,5 +50,9 @@ export function registerLeaderboard(app: FastifyInstance) {
 
   app.get("/api/site/leaderboard/rules", guarded(async (req, reply) => {
     return sendJsonWithEtag(req, reply, await loadRulesData(), { etagPrefix: "lb-rules", cacheControl: CACHE });
+  }));
+
+  app.get("/api/site/leaderboard/decisions", guarded(async (req, reply) => {
+    return sendJsonWithEtag(req, reply, await readDecisionsBoard(), { etagPrefix: "lb-decisions", cacheControl: CACHE });
   }));
 }

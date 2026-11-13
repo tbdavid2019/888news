@@ -249,3 +249,25 @@ export interface LbRulesData {
   budgets: Array<{ key: string; name: string; weight: number; sources: string[] }>;
   anchors: string[];
 }
+
+export interface LbDecisionEntry {
+  rank: number;
+  openrouterRank: number;
+  id: string;
+  name: string;
+  author: string;
+  requests: number | null;
+  requestsText: string;
+  change: string | null;
+  /** Matched slug in the site's published leaderboard, if present. */
+  modelSlug: string | null;
+}
+
+export interface LbDecisionsBoardResponse {
+  updatedAt: string | null;
+  sourceName: string;
+  sourceUrl: string;
+  license: string;
+  licenseUrl: string;
+  entries: LbDecisionEntry[];
+}

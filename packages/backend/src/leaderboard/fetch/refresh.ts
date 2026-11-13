@@ -6,6 +6,7 @@
 import { sql } from "../../db.ts";
 import { guardedFetch } from "../../lib/http-fetch.ts";
 import { runLeaderboardRound, type RoundResult } from "../method/run.ts";
+import { syncOpenRouterDecisions } from "../openrouter-decisions.ts";
 import { syncOpenRouterRankings } from "../openrouter-rankings.ts";
 import { importOfficialPrices, syncLeaderboardCatalog } from "../prices.ts";
 import { FETCHERS } from "./index.ts";
@@ -97,12 +98,13 @@ export async function fillContextWindows(): Promise<{ filled: number }> {
   return { filled: contextFilled };
 }
 
-export async function refreshLeaderboard(): Promise<{ sources: { ok: number; changed: string[]; failed: Array<{ key: string; error?: string }> }; context: unknown; fx: unknown; prices: unknown; market: unknown; round: Pick<RoundResult, "status" | "runId" | "reason"> }> {
+export async function refreshLeaderboard(): Promise<{ sources: { ok: number; changed: string[]; failed: Array<{ key: string; error?: string }> }; context: unknown; fx: unknown; prices: unknown; market: unknown; decisions: unknown; round: Pick<RoundResult, "status" | "runId" | "reason"> }> {
   const states = await fetchSources();
   const fx = await refreshFx().catch((e: Error) => ({ error: e.message }));
   const seeded = await importOfficialPrices().then(({ written }) => ({ written }), (e: Error) => ({ error: e.message }));
   const catalog = await syncLeaderboardCatalog().catch((e: Error) => ({ error: e.message }));
   const market = await syncOpenRouterRankings().catch((e: Error) => ({ error: e.message }));
+  const decisions = await syncOpenRouterDecisions().catch((e: Error) => ({ error: e.message }));
   const context = "error" in catalog ? catalog : { filled: catalog.contextFilled, modelsUpdated: catalog.modelsUpdated };
   const prices = {
     seeded: "error" in seeded ? seeded : seeded.written,
@@ -120,6 +122,7 @@ export async function refreshLeaderboard(): Promise<{ sources: { ok: number; cha
     fx,
     prices,
     market,
+    decisions,
     round: { status: round.status, runId: round.runId, reason: round.reason },
   };
 }

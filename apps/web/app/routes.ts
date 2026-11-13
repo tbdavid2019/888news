@@ -36,6 +36,7 @@ export default [
   layout("routes/leaderboard-boards.tsx", [
     route("leaderboard", "routes/leaderboard.tsx", { id: "leaderboard" }),
     route("leaderboard/category/:key", "routes/leaderboard.tsx", { id: "leaderboard-category" }),
+    route("leaderboard/decisions", "routes/leaderboard-decisions.tsx", { id: "leaderboard-decisions" }),
   ]),
   route("leaderboard/sources", "routes/leaderboard-sources.tsx"),
   route("leaderboard/sources/:key", "routes/leaderboard-source.tsx"),
