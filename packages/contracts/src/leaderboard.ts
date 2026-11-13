@@ -263,6 +263,32 @@ export interface LbDecisionEntry {
   modelSlug: string | null;
 }
 
+export interface LbDecisionMarketShareEntry {
+  rank: number | null;
+  author: string;
+  sharePercent: number | null;
+  shareText: string;
+  change: string | null;
+}
+
+export interface LbDecisionCategoryModel {
+  model: string;
+  name: string;
+  author: string;
+  /** 0 ~ 1 share within this category */
+  share: number;
+  /** Percentage point change */
+  deltaPp: number;
+}
+
+export interface LbDecisionCategoryGroup {
+  value: string;
+  label: string;
+  /** 0 ~ 1 share of total requests */
+  shareOfTotal: number;
+  models: LbDecisionCategoryModel[];
+}
+
 export interface LbDecisionsBoardResponse {
   updatedAt: string | null;
   sourceName: string;
@@ -270,4 +296,7 @@ export interface LbDecisionsBoardResponse {
   license: string;
   licenseUrl: string;
   entries: LbDecisionEntry[];
+  marketShare: LbDecisionMarketShareEntry[];
+  criteria: LbDecisionCategoryGroup[];
+  domains: LbDecisionCategoryGroup[];
 }

@@ -2,18 +2,31 @@
 // Fetched periodically (4x daily alongside leaderboard refresh) and cached in settings.
 // Read-only reference board; never influences v17 capability consensus scores.
 import * as cheerio from "cheerio";
-import type { LbDecisionEntry, LbDecisionsBoardResponse } from "@aihot/contracts/leaderboard";
+import type {
+  LbDecisionCategoryGroup,
+  LbDecisionCategoryModel,
+  LbDecisionEntry,
+  LbDecisionMarketShareEntry,
+  LbDecisionsBoardResponse,
+} from "@aihot/contracts/leaderboard";
 import { LEADERBOARD_PUBLIC_BOARDS } from "@aihot/contracts/taxonomy";
 import { sql } from "../db.ts";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { modelSlug } from "./fetch/identity.ts";
 
 export const OPENROUTER_DECISIONS_URL = "https://openrouter.ai/rankings/decisions";
+export const OPENROUTER_CRITERION_URL =
+  "https://openrouter.ai/api/frontend/v1/rankings/modality-category-rankings?routeSegment=decisions&dimension=criterion";
+export const OPENROUTER_DOMAIN_URL =
+  "https://openrouter.ai/api/frontend/v1/rankings/modality-category-rankings?routeSegment=decisions&dimension=domain";
 const SETTINGS_KEY = "leaderboard.openrouter_decisions";
 
 interface StoredOpenRouterDecisions {
   at: string;
   entries: LbDecisionEntry[];
+  marketShare?: LbDecisionMarketShareEntry[];
+  criteria?: LbDecisionCategoryGroup[];
+  domains?: LbDecisionCategoryGroup[];
 }
 
 const COMPACT_MULTIPLIERS: Record<string, number> = {
@@ -98,6 +111,206 @@ export function parseOpenRouterDecisionsHtml(html: string): LbDecisionEntry[] {
   return entries;
 }
 
+/** Parses Table 1 (Author Market Share of requests) from OpenRouter's /rankings/decisions page. */
+export function parseOpenRouterMarketShareHtml(html: string): LbDecisionMarketShareEntry[] {
+  const $ = cheerio.load(html);
+  const table = $("table.or-table, table")
+    .filter((_, el) => {
+      const headers = $(el)
+        .find("thead th")
+        .map((__, th) => $(th).text().trim().toLowerCase())
+        .get();
+      return headers.some((h) => h.includes("author")) && headers.some((h) => h.includes("share"));
+    })
+    .first();
+
+  if (!table.length) return [];
+
+  const list: LbDecisionMarketShareEntry[] = [];
+  table.find("tbody tr").each((_, tr) => {
+    const cells = $(tr)
+      .find("td, th")
+      .map((__, cell) => $(cell).text().trim())
+      .get();
+    if (cells.length < 3) return;
+    const [rankRaw, authorRaw, shareRaw, changeRaw] = cells;
+    const author = (authorRaw || "").trim();
+    if (!author) return;
+
+    const rankNum = Number.parseInt(rankRaw || "", 10);
+    const rank = Number.isFinite(rankNum) && rankNum > 0 ? rankNum : null;
+
+    const shareText = (shareRaw || "").trim();
+    const shareNum = Number.parseFloat(shareText.replace(/%/g, "").trim());
+    const sharePercent = Number.isFinite(shareNum) ? shareNum : null;
+
+    const change = (changeRaw || "").trim() || null;
+
+    list.push({
+      rank,
+      author,
+      sharePercent,
+      shareText,
+      change,
+    });
+  });
+
+  return list;
+}
+
+/** Extracts model metadata links (shortName, author) embedded in OpenRouter SSR HTML. */
+export function extractModelLinks(html: string): Map<string, { name: string; author: string }> {
+  const map = new Map<string, { name: string; author: string }>();
+  if (!html) return map;
+
+  const match = html.match(/\\?"modelLinks\\?"\s*:\s*\{/);
+  if (!match || match.index == null) return map;
+
+  const start = match.index + match[0].length;
+  const chunk = html.slice(start, start + 200_000);
+  const unescaped = chunk.replace(/\\"/g, "\"");
+
+  const entryRegex = /"([a-zA-Z0-9_\-./]+)"\s*:\s*\{([^}]+)\}/g;
+  let entryMatch: RegExpExecArray | null;
+  while ((entryMatch = entryRegex.exec(unescaped)) !== null) {
+    const slug = entryMatch[1];
+    const body = entryMatch[2];
+    const nameMatch = body.match(/"(?:shortName|name)"\s*:\s*"([^"]+)"/);
+    const authorMatch = body.match(/"author"\s*:\s*"([^"]+)"/);
+    if (nameMatch && authorMatch && slug !== "modelLinks") {
+      map.set(slug, { name: nameMatch[1].trim(), author: authorMatch[1].trim() });
+    }
+  }
+
+  return map;
+}
+
+/** Automatically formats a model slug into author and clean readable name when not in modelLinks. */
+export function formatModelSlugFallback(slug: string): { name: string; author: string } {
+  if (!slug) return { name: "", author: "" };
+  const parts = slug.split("/");
+  const author = parts.length > 1 ? parts[0].trim() : "";
+  const rawModel = parts.length > 1 ? parts.slice(1).join("/") : slug;
+
+  // Strip trailing date suffixes like -20260917, -2026-09-17, etc.
+  const withoutDate = rawModel
+    .replace(/-\d{8}$/, "")
+    .replace(/-20\d{2}-\d{2}-\d{2}$/, "")
+    .trim();
+
+  // Convert kebab/snake-case into title words
+  const words = withoutDate
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((word) => {
+      const lower = word.toLowerCase();
+      if (lower === "gpt") return "GPT";
+      if (lower === "ai") return "AI";
+      if (/^v\d+(\.\d+)?$/i.test(word)) return word.toUpperCase();
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+
+  const name = words.join(" ") || rawModel;
+  return { name, author };
+}
+
+/** Clamps and normalizes share values to 0..1 range (handling raw percentages > 1). */
+export function normalizeShare(raw: unknown): number {
+  if (typeof raw !== "number" || !Number.isFinite(raw) || raw < 0) return 0;
+  const val = raw > 1 ? raw / 100 : raw;
+  return Math.min(1, Math.max(0, val));
+}
+
+/** Parses the JSON payload from OpenRouter modality-category-rankings API. */
+export function parseCategoryRankingsJson(
+  jsonText: string,
+  modelLinks: Map<string, { name: string; author: string }>,
+): LbDecisionCategoryGroup[] {
+  let json: {
+    data?: {
+      requests?: {
+        categories?: Array<{
+          value?: string;
+          label?: string;
+          shareOfTotal?: number;
+          models?: Array<{ model?: string; share?: number; deltaPp?: number }>;
+        }>;
+      };
+      spend?: {
+        categories?: Array<{
+          value?: string;
+          label?: string;
+          shareOfTotal?: number;
+          models?: Array<{ model?: string; share?: number; deltaPp?: number }>;
+        }>;
+      };
+    };
+  };
+
+  try {
+    json = JSON.parse(jsonText);
+  } catch {
+    return [];
+  }
+
+  const rawCategories = json.data?.requests?.categories ?? json.data?.spend?.categories ?? [];
+  if (!Array.isArray(rawCategories)) return [];
+
+  return rawCategories
+    .filter((cat) => cat && typeof cat.value === "string" && cat.value.trim().length > 0)
+    .map((cat) => {
+      const value = cat.value!.trim();
+      const label = (cat.label || value).trim();
+      const shareOfTotal = normalizeShare(cat.shareOfTotal);
+
+      const models: LbDecisionCategoryModel[] = Array.isArray(cat.models)
+        ? cat.models
+            .filter((m) => m && typeof m.model === "string" && m.model.trim().length > 0)
+            .map((m) => {
+              const slug = m.model!.trim();
+              const fallback = formatModelSlugFallback(slug);
+              const found = modelLinks.get(slug);
+              return {
+                model: slug,
+                name: found?.name || fallback.name,
+                author: found?.author || fallback.author,
+                share: normalizeShare(m.share),
+                deltaPp: typeof m.deltaPp === "number" && Number.isFinite(m.deltaPp) ? m.deltaPp : 0,
+              };
+            })
+            .sort((a, b) => b.share - a.share)
+        : [];
+
+      return {
+        value,
+        label,
+        shareOfTotal,
+        models,
+      };
+    })
+    .sort((a, b) => b.shareOfTotal - a.shareOfTotal);
+}
+
+export async function fetchCategoryRankings(
+  url: string,
+  modelLinks: Map<string, { name: string; author: string }>,
+): Promise<LbDecisionCategoryGroup[] | null> {
+  try {
+    const res = await guardedFetch(url, {
+      timeoutMs: 15_000,
+      maxBytes: 4 * 1024 * 1024,
+    });
+    if (res.status !== 200) {
+      console.warn(`[openrouter-decisions] Category rankings returned HTTP ${res.status} for ${url}`);
+      return null;
+    }
+    return parseCategoryRankingsJson(res.text(), modelLinks);
+  } catch (err) {
+    console.warn(`[openrouter-decisions] Category rankings fetch error for ${url}:`, err);
+    return null;
+  }
+}
+
 let cachedDecisions: { value: LbDecisionsBoardResponse; checkedAt: number } | null = null;
 
 export function invalidateOpenRouterDecisions(): void {
@@ -112,13 +325,44 @@ export async function syncOpenRouterDecisions(): Promise<{ modelsIndexed: number
   if (res.status !== 200) {
     throw new Error(`OpenRouter decisions HTTP ${res.status}`);
   }
-  const entries = parseOpenRouterDecisionsHtml(res.text());
+  const html = res.text();
+  const entries = parseOpenRouterDecisionsHtml(html);
   if (!entries.length) {
     throw new Error("OpenRouter decisions: parsed 0 entries");
   }
 
+  // Load existing stored data to prevent transient API failures from overwriting good data with empty arrays
+  let existing: StoredOpenRouterDecisions | undefined;
+  try {
+    const [row] = await sql<{ value: StoredOpenRouterDecisions }[]>`
+      SELECT value FROM settings WHERE key = ${SETTINGS_KEY}
+    `;
+    existing = row?.value;
+  } catch {
+    // Non-fatal if settings read fails
+  }
+
+  const parsedMarketShare = parseOpenRouterMarketShareHtml(html);
+  const marketShare = parsedMarketShare.length > 0 ? parsedMarketShare : (existing?.marketShare ?? []);
+
+  const modelLinks = extractModelLinks(html);
+
+  const [criteriaFetched, domainsFetched] = await Promise.all([
+    fetchCategoryRankings(OPENROUTER_CRITERION_URL, modelLinks),
+    fetchCategoryRankings(OPENROUTER_DOMAIN_URL, modelLinks),
+  ]);
+
+  const criteria = criteriaFetched ?? existing?.criteria ?? [];
+  const domains = domainsFetched ?? existing?.domains ?? [];
+
   const at = new Date().toISOString();
-  const record: StoredOpenRouterDecisions = { at, entries };
+  const record: StoredOpenRouterDecisions = {
+    at,
+    entries,
+    marketShare,
+    criteria,
+    domains,
+  };
   await sql`
     INSERT INTO settings (key, value, updated_by)
     VALUES (${SETTINGS_KEY}, ${sql.json(record as never)}, 'worker')
@@ -186,6 +430,9 @@ export async function loadOpenRouterDecisions(): Promise<LbDecisionsBoardRespons
     license: "CC BY 4.0",
     licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
     entries,
+    marketShare: Array.isArray(stored?.marketShare) ? stored.marketShare : [],
+    criteria: Array.isArray(stored?.criteria) ? stored.criteria : [],
+    domains: Array.isArray(stored?.domains) ? stored.domains : [],
   };
 
   cachedDecisions = { value: response, checkedAt: Date.now() };
