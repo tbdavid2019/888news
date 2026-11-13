@@ -74,10 +74,10 @@ export const SCHEDULES: Scheduled[] = [
   { name: "feedback.forward", cron: "*/10 * * * *", run: () => forwardPendingFeedback() },
   ...(backupConfigured() ? [{ name: "ops.backup", cron: "10 4 * * *", missed: "once" as const, run: () => runBackup() }] : []),
   { name: "reports.source-health", cron: "0 9 * * 1", missed: "once", run: () => sourceHealthWeekly() },
-  // Four upstream checks a day; a new run is published only when the evidence changed. With collection
+  // Check all upstreams every 3 hours; a new run is published only when the evidence changed. With collection
   // off only the computation runs, over the snapshots already stored.
   ...(FEATURES.leaderboard
-    ? [{ name: "leaderboard.round", cron: "5 2,8,14,20 * * *", missed: "once" as const, run: () => (collecting ? refreshLeaderboard() : runLeaderboardRound()) }]
+    ? [{ name: "leaderboard.round", cron: "5 */3 * * *", missed: "once" as const, run: () => (collecting ? refreshLeaderboard() : runLeaderboardRound()) }]
     : []),
   ...(collecting
     ? [
