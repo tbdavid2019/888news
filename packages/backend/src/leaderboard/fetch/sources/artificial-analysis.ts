@@ -59,7 +59,7 @@ export const artificialAnalysis: Fetcher = {
       attributionUrl: "https://artificialanalysis.ai/data-api/docs",
       publishedAt: null,
       rows,
-      metadata: { apiTier: "free", apiAccess: "free-headline", intelligenceIndexVersion: version, sourceOperator: "Artificial Analysis", sourceFamily: "broad-composite", metricCount: 1 },
+      metadata: { apiTier: "free", apiAccess: "free-headline", apiModelCount: models.length, intelligenceIndexVersion: version, sourceOperator: "Artificial Analysis", sourceFamily: "broad-composite", metricCount: 1 },
     }];
   },
 };

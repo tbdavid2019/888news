@@ -43,7 +43,9 @@ export const terminalBench: Fetcher = {
       const effort = s.metadata.reasoning_effort && s.metadata.reasoning_effort !== "none" ? s.metadata.reasoning_effort : null;
       const label = `${s.metadata.agent_display.label}${s.source_filter.agent_version ? ` ${s.source_filter.agent_version}` : ""} · ${effort ? `${effort} 推理` : "来源未报告推理档位"}`;
       const hw = m.accuracy_ci95_half_width;
-      const name = s.source_filter.model_name.split("/").pop()!;
+      const rawName = s.source_filter.model_name ?? s.metadata.model_display?.label;
+      if (!rawName) continue;
+      const name = rawName.split("/").pop()!;
       rows.push({
         sourceModelName: name,
         configurationKey: `tb4:${f.name}`,
@@ -70,7 +72,7 @@ export const terminalBench: Fetcher = {
           uncertaintyUnit: "percentage-points",
           uncertaintyMethod: "1.96 × per-task repeated-trial standard error; trial count is not independent task count",
           benchmarkVersion: version,
-          sourceApiModelId: s.source_filter.model_name,
+          sourceApiModelId: s.source_filter.model_name ?? s.metadata.model_display?.url ?? rawName,
           sourceSubmissionId: f.name,
           sourceSubmissionUrl: `https://raw.githubusercontent.com/${REPO}/${head.sha}/${DIR}/${f.name}`,
           sourceAccuracyPercent: m.accuracy,

@@ -2,6 +2,23 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-16] — 📊 模型排行榜資料管線全面修復（LiveBench v2、Artificial Analysis、Mercor 別名與 Terminal-Bench 4）
+
+### 🏆 修復新世代模型（如 Gemini 4 Hydrogen）無法即時上榜問題
+- **LiveBench v2 (`20261014`–`20261106`) 適配 (`packages/backend/src/leaderboard/fetch/sources/livebench.ts`、`method/inputs.ts`)**：
+  - 修復原爬蟲只辨識 `YYYY-MM-DD` 陣列而卡死在舊版 404 路徑長達一個月的問題，支援 LiveBench v2 `YYYYMMDD` 釋出清單與 `./data/<tag>/categories.json`、`./data/<tag>/table.csv`（並相容 `/v1/` 舊路徑回退）。
+  - 支援 `_overall_weights` 加權總分計算，並將 v2 的 `Long Agentic` 對接至 `livebench-coding:agentic` 與 `Coding` 雙軌評分。
+- **跨世代校準錨點擴充 (`packages/backend/src/leaderboard/method/calibration.ts`)**：
+  - 保留原有 18 組歷史錨點及已凍結的 `lb_calibrations` 摘要相容性，於 `ANCHORS` 末尾增列活躍世代跨來源錨點（`claude-fable-5-1`、`gpt-6-astra`、`gpt-6-1-sol`、`gemini-3-8-flash`、`grok-4-6`、`deepseek-v-4-1-flash-1017`），確保新期數基準測試具備足夠共同參照基準。
+- **Artificial Analysis 抓取保護調整 (`artificial-analysis.ts`、`refresh.ts`)**：
+  - 上游 `/api/v2/language/models/free` 回傳 742 筆模型中僅 129 筆保留舊版 Intelligence Index，改以 `apiModelCount` 核對完整 API 模型總數，解除誤判資料異常而連續 20 天失敗的阻斷。
+- **Mercor APEX-Agents 模型名稱正規化 (`mercor.ts`)**：
+  - 剝離供應商前綴（如 `gemini/`）與 `-eap` 測試後綴，使 `gemini/gemini-4-hydrogen-eap` 正確合併至 `gemini-4-hydrogen`，消除重複未上榜幽靈條目。
+- **Terminal-Bench 4 空值防護 (`terminal-bench.ts`)**：
+  - 修正部分提交檔 `source_filter.model_name` 為 `null` 時的 `split` 崩潰問題，自動回退至 `metadata.model_display.label`。
+
+---
+
 ## [2026-11-16] — 🧠 高可用多節點 Reader 叢集、「講給 10 歲小孩聽得懂」白話寫作重構與三層台灣用語根治
 
 ### 🌐 高可用多節點 Universal Reader 叢集 (`packages/backend/src/providers/reader.ts`)

@@ -59,10 +59,11 @@ export const mercor: Fetcher = {
       const m = e.model;
       const effort = m.effort?.toLowerCase() ?? null;
       const configuration = scaffolded(configurationOf(effort ? [effort] : []), [`harness-${slug(HARNESS)}`, `systemid-${slug(systemId)}`], [HARNESS, systemId]);
+      const withoutEffort = effort && m.modelId.toLowerCase().endsWith(`-${effort}`) ? m.modelId.slice(0, -effort.length - 1) : m.modelId;
       return {
         sourceModelName: m.modelId,
         keyName: slug(m.modelId),
-        baseName: effort && m.modelId.toLowerCase().endsWith(`-${effort}`) ? m.modelId.slice(0, -effort.length - 1) : m.modelId,
+        baseName: withoutEffort.split("/").pop()!.replace(/-eap$/i, ""),
         organization: m.provider?.name ?? null,
         releasedAt: m.releaseDate,
         configuration,

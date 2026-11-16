@@ -9,6 +9,7 @@ export const CALIBRATION_VERSION = "2026.10-fixed-anchor-iqr-v1";
 export const ANCHORS = [
   "claude-fable-5", "gpt-5-6-sol", "kimi-k-3", "qwen-3-8-max", "gpt-5-4", "claude-opus-4-8", "claude-sonnet-5", "grok-4-5", "gemini-3-5-flash",
   "glm-5-2", "claude-sonnet-4-6", "qwen-3-7-max", "kimi-k-2-6", "deepseek-v-4-pro", "qwen-3-6-plus", "minimax-m-3", "gpt-5-4-mini", "grok-4-3",
+  "claude-fable-5-1", "gpt-6-astra", "gpt-6-1-sol", "gemini-3-8-flash", "grok-4-6", "deepseek-v-4-1-flash-1017",
 ];
 
 export interface Calibration {

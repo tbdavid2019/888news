@@ -1,6 +1,17 @@
 {
-  "latestVersion": "2026-11-16 14:30",
+  "latestVersion": "2026-11-16 15:55",
   "releases": [
+    {
+      "date": "2026-11-16",
+      "time": "15:55",
+      "kind": "問題修復",
+      "title": "模型排行榜資料管線全面修復，納入 Gemini 4 Hydrogen 等新世代模型",
+      "body": [
+        "支援 LiveBench v2 (./data/20261106/table.csv) 與 Long Agentic 評分對接，並於保留歷史凍結校準前提下擴充活躍世代共同校準錨點。",
+        "修復 Artificial Analysis 因上游縮減舊版指數涵蓋範圍而觸發的誤判攔截，以及 Terminal-Bench 4 空 model_name 崩潰。",
+        "修正 Mercor APEX-Agents 未剝離供應商前綴與 -eap 後綴導致的模型重複建檔問題（如 gemini/gemini-4-hydrogen-eap）。"
+      ]
+    },
     {
       "date": "2026-11-16",
       "time": "14:30",

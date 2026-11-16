@@ -120,6 +120,39 @@ test('LiveBench skips empty/missing measurements, keeps real zeros and reads quo
   }
 });
 
+test('LiveBench v2 reads ./data/<YYYYMMDD>/ paths, weighted overall and Coding + Long Agentic', async () => {
+  const dispatcher = getGlobalDispatcher();
+  const mock = new MockAgent();
+  mock.disableNetConnect();
+  const upstream = mock.get('https://livebench.ai');
+  const oldPrivate = config.allowPrivateNetworkFetch;
+  config.allowPrivateNetworkFetch = true;
+  setGlobalDispatcher(mock);
+  upstream.intercept({path:'/'}).reply(200, '<script src="/static/js/main.v2.js"></script>');
+  upstream.intercept({path:'/static/js/main.v2.js'}).reply(200, '["2026-06-25"]Yt=["20261014","20261106"]');
+  upstream.intercept({path:'/data/20261106/categories.json'}).reply(200, JSON.stringify({
+    'Long Agentic':['long_agentic'], Reasoning:['reasoning'], Coding:['coding'], _overall_weights:{ 'Long Agentic': 2, Coding: 1.5 },
+  }));
+  upstream.intercept({path:'/data/20261106/table.csv'}).reply(200, 'model,long_agentic,reasoning,coding\ngemini-4-hydrogen,60,90,80\n');
+  try {
+    const boards = await livebench.fetch();
+    const general = boards.find(b => b.sourceKey === 'livebench-general')!;
+    const coding = boards.find(b => b.sourceKey === 'livebench-coding')!;
+    const reasoning = boards.find(b => b.sourceKey === 'livebench-reasoning')!;
+    const writing = boards.find(b => b.sourceKey === 'livebench-writing')!;
+    assert.equal(general.metadata.release, '2026-11-06');
+    assert.ok(Math.abs(general.rows[0]!.rawScore - (60 * 2 + 90 * 1 + 80 * 1.5) / 4.5) < 1e-9);
+    assert.deepEqual(coding.rows.map(r => [r.sourceModelName, r.rawScore]), [['gemini-4-hydrogen', 70]]);
+    assert.equal(coding.rows[0]!.metadata!['livebenchCategoryScore:Long Agentic'], 60);
+    assert.deepEqual(reasoning.rows.map(r => [r.sourceModelName, r.rawScore]), [['gemini-4-hydrogen', 90]]);
+    assert.equal(writing.rows.length, 0);
+  } finally {
+    setGlobalDispatcher(dispatcher);
+    config.allowPrivateNetworkFetch = oldPrivate;
+    await mock.close();
+  }
+});
+
 test('EQ-Bench skips empty scores and reads quoted CSV names in both writing datasets', async () => {
   const dispatcher = getGlobalDispatcher();
   const mock = new MockAgent();

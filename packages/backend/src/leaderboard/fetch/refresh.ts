@@ -28,9 +28,12 @@ const STATE_KEY = "leaderboard.fetch";
 /** A parse that suddenly yields under half the rows of the last snapshot is treated as broken, not as news. */
 async function plausible(r: FetchResult): Promise<string | null> {
   if (!r.rows.length) return "no rows parsed";
-  const [prev] = await sql<{ n: number | null }[]>`
-    SELECT (metadata->>'rawRowCount')::int AS n FROM lb_snapshots WHERE source_key = ${r.sourceKey} ORDER BY fetched_at DESC LIMIT 1`;
-  if (prev?.n && r.rows.length < prev.n / 2) return `only ${r.rows.length} rows (last snapshot had ${prev.n})`;
+  const [prev] = await sql<{ n: number | null; api_n: number | null }[]>`
+    SELECT (metadata->>'rawRowCount')::int AS n, (metadata->>'apiModelCount')::int AS api_n
+    FROM lb_snapshots WHERE source_key = ${r.sourceKey} ORDER BY fetched_at DESC LIMIT 1`;
+  const count = typeof r.metadata.apiModelCount === "number" ? r.metadata.apiModelCount : r.rows.length;
+  const prevCount = prev?.api_n ?? prev?.n;
+  if (prevCount && count < prevCount / 2) return `only ${count} rows (last snapshot had ${prevCount})`;
   return null;
 }
 

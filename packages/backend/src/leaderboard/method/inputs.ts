@@ -191,8 +191,8 @@ export async function buildRunInputs(opts: { at?: Date } = {}): Promise<RunInput
       if (row.selected_for_product && row.raw_score !== null && !cloakedModel(row.slug, row.name)) {
         const carried = snap.id !== bySource.get(snap.source_key)!.id;
         if (row.metric_key === "livebench-coding") {
-          for (const [part, field] of [["direct", "Coding"], ["agentic", "Agentic Coding"]]) {
-            const value = row.metadata[`livebenchCategoryScore:${field}`];
+          for (const [part, fields] of [["direct", ["Coding"]], ["agentic", ["Agentic Coding", "Long Agentic"]]] as const) {
+            const value = fields.map((f) => row.metadata[`livebenchCategoryScore:${f}`]).find((v) => typeof v === "number" && Number.isFinite(v));
             if (typeof value === "number" && Number.isFinite(value)) addRow({ ...row, metric_key: `livebench-coding:${part}`, raw_score: value, lower_bound: null, upper_bound: null }, snap, carried);
           }
         } else addRow(row, snap, carried);
