@@ -226,7 +226,7 @@ export function enforceIdentity(input: TranslateInput, copy: { titleZh: string; 
 
 // ── Answer-first summary length ──────────────────────────────────────────────────────────────
 
-export const MAX_SUMMARY_CHARS = 1200;
+export const MAX_SUMMARY_CHARS = 900;
 
 export function compactAnswerFirstSummary(summary: string, maxChars = MAX_SUMMARY_CHARS): string {
   const normalized = summary
