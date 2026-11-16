@@ -144,11 +144,11 @@ export function registerAdmin(app: FastifyInstance) {
     return requeueAllWaitingArticles();
   }));
   app.put("/api/admin/settings/webhooks", adminHandler(async (req, _reply, admin) => {
-    const b = body<{ slackWebhookUrl?: string; discordWebhookUrl?: string; telegramBotToken?: string; telegramChatId?: string; reason?: string }>(req);
+    const b = body<{ slackWebhookUrl?: string; discordWebhookUrl?: string; telegramBotToken?: string; telegramChatId?: string; alertEmailTo?: string; reason?: string }>(req);
     return saveWebhookSettings(b, b.reason || "更新 Webhook 配置", actorOf(admin));
   }));
   app.post("/api/admin/settings/webhooks/test", adminHandler(async (req) => {
-    const b = body<{ channel: "slack" | "discord" | "telegram" }>(req);
+    const b = body<{ channel: "slack" | "discord" | "telegram" | "email" }>(req);
     return testWebhookChannel(b.channel);
   }));
   app.post("/api/admin/settings/contact-qr", adminHandler(async (req, _reply, admin) => {

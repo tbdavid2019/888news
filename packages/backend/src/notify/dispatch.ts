@@ -1,6 +1,7 @@
 import { getSlackWebhookUrl, isSlackConfigured, sendSlackAlert, sendSlackFeedback } from "./slack.ts";
 import { getDiscordWebhookUrl, isDiscordConfigured, sendDiscordAlert, sendDiscordFeedback } from "./discord.ts";
 import { getTelegramConfig, isTelegramConfigured, sendTelegramAlert, sendTelegramFeedback } from "./telegram.ts";
+import { getEmailConfig, sendEmailAlert, sendEmailFeedback } from "./email.ts";
 import { feishuInternalEnabled, sendAlert as sendFeishuAlert } from "./feishu.ts";
 
 export type AlertLevel = "now" | "today" | "digest";
@@ -27,10 +28,11 @@ export async function dispatchAlert(
   lines: string[],
   level: AlertLevel = "now",
 ): Promise<DispatchAlertResult> {
-  const [slackUrl, discordUrl, tgConfig] = await Promise.all([
+  const [slackUrl, discordUrl, tgConfig, emailCfg] = await Promise.all([
     getSlackWebhookUrl(),
     getDiscordWebhookUrl(),
     getTelegramConfig(),
+    getEmailConfig(),
   ]);
 
   const tasks: Array<Promise<{ channel: string; ok: boolean; error?: string }>> = [];
@@ -56,6 +58,14 @@ export async function dispatchAlert(
       sendTelegramAlert(title, lines, level)
         .then((r) => ({ channel: "telegram", ok: r.ok, error: r.error }))
         .catch((e) => ({ channel: "telegram", ok: false, error: String(e) })),
+    );
+  }
+
+  if (emailCfg.host && emailCfg.from && emailCfg.user && emailCfg.pass && emailCfg.to.length > 0) {
+    tasks.push(
+      sendEmailAlert(title, lines, level)
+        .then((r) => ({ channel: "email", ok: r.ok, error: r.error }))
+        .catch((e) => ({ channel: "email", ok: false, error: String(e) })),
     );
   }
 
@@ -90,10 +100,11 @@ export async function dispatchAlert(
  * Dispatches a user feedback submission to all configured channels in parallel.
  */
 export async function dispatchFeedback(fb: FeedbackNotification): Promise<DispatchAlertResult> {
-  const [slackUrl, discordUrl, tgConfig] = await Promise.all([
+  const [slackUrl, discordUrl, tgConfig, emailCfg] = await Promise.all([
     getSlackWebhookUrl(),
     getDiscordWebhookUrl(),
     getTelegramConfig(),
+    getEmailConfig(),
   ]);
 
   const tasks: Array<Promise<{ channel: string; ok: boolean; error?: string }>> = [];
@@ -119,6 +130,14 @@ export async function dispatchFeedback(fb: FeedbackNotification): Promise<Dispat
       sendTelegramFeedback(fb)
         .then((r) => ({ channel: "telegram", ok: r.ok, error: r.error }))
         .catch((e) => ({ channel: "telegram", ok: false, error: String(e) })),
+    );
+  }
+
+  if (emailCfg.host && emailCfg.from && emailCfg.user && emailCfg.pass && emailCfg.to.length > 0) {
+    tasks.push(
+      sendEmailFeedback(fb)
+        .then((r) => ({ channel: "email", ok: r.ok, error: r.error }))
+        .catch((e) => ({ channel: "email", ok: false, error: String(e) })),
     );
   }
 

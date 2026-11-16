@@ -2,6 +2,17 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-16] — 📧 新增 SMTP Email 系統報錯告警與使用者反饋通知
+
+### 🔔 營運告警與使用者反饋 Email 通知 (`packages/backend/src/notify/email.ts`、`dispatch.ts`)
+- **零外部相依 SMTP 寄信引擎**：採用 Node 原生 `node:tls` / `node:net` 實作 Direct TLS（Port 465）與 STARTTLS（Port 587），完整支援 Amazon SES `AUTH LOGIN` / `AUTH PLAIN` 與 UTF-8 Base64 MIME 編碼。
+- **全面接軌系統報錯與告警排程 (`dispatchAlert` / `dispatchFeedback`)**：
+  - 即時發送內容停收、文章處理卡住/失敗、日報異常、LLM/Decisions 熔斷器開啟、付費 API 欠費/限流、每日系統摘要（含排行榜來源異常超過 26 小時）及使用者 `/feedback` 反饋信件至管理員信箱（`ALERT_EMAIL_TO`）。
+- **後台系統設定整合 (`apps/web/app/routes/admin/settings.tsx`、`packages/backend/src/admin/settings.ts`)**：
+  - 於「第三方通知」卡片顯示 Email (SMTP) 啟用狀態、收件人設定，並支援一鍵「發送測試」與覆寫收件人地址。
+
+---
+
 ## [2026-11-16] — 📊 模型排行榜資料管線全面修復（LiveBench v2、Artificial Analysis、Mercor 別名與 Terminal-Bench 4）
 
 ### 🏆 修復新世代模型（如 Gemini 4 Hydrogen）無法即時上榜問題

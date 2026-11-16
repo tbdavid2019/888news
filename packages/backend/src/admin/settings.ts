@@ -12,6 +12,7 @@ import { audit } from "./auth.ts";
 import { invalidateSlackCache, sendSlackAlert } from "../notify/slack.ts";
 import { invalidateDiscordCache, sendDiscordAlert } from "../notify/discord.ts";
 import { invalidateTelegramCache, sendTelegramAlert } from "../notify/telegram.ts";
+import { getEmailConfig, invalidateEmailCache, sendEmailAlert } from "../notify/email.ts";
 import { getDbLlmConfig, invalidateLlmConfigCache, testModelConnection } from "../providers/llm.ts";
 import { requeueAllWaitingArticles } from "../jobs/content.ts";
 
@@ -90,6 +91,7 @@ export interface WebhooksSettings {
   slack: WebhookChannelInfo;
   discord: WebhookChannelInfo;
   telegram: WebhookChannelInfo;
+  email: WebhookChannelInfo;
 }
 
 export async function getWebhookSettings(): Promise<WebhooksSettings> {
@@ -98,6 +100,7 @@ export async function getWebhookSettings(): Promise<WebhooksSettings> {
     const [row] = await sql<{ value: Record<string, string> }[]>`SELECT value FROM settings WHERE key = 'webhook_channels'`;
     if (row?.value) db = row.value;
   } catch {}
+  const emailCfg = await getEmailConfig();
 
   const slackUrl =
     db.slackWebhookUrl === "" || db.slackWebhookUrl === "disabled"
@@ -139,11 +142,17 @@ export async function getWebhookSettings(): Promise<WebhooksSettings> {
       valueMasked: mask(tgToken, 6),
       extraMasked: tgChatId ? String(tgChatId) : null,
     },
+    email: {
+      configured: Boolean(emailCfg.host && emailCfg.from && emailCfg.user && emailCfg.pass && emailCfg.to.length > 0),
+      source: db.alertEmailTo ? "db" : emailCfg.host && emailCfg.to.length > 0 ? "env" : "none",
+      valueMasked: emailCfg.to.length ? emailCfg.to.join(", ") : null,
+      extraMasked: emailCfg.host && emailCfg.from ? `${emailCfg.from} (${emailCfg.host}:${emailCfg.port})` : null,
+    },
   };
 }
 
 export async function saveWebhookSettings(
-  input: { slackWebhookUrl?: string | null; discordWebhookUrl?: string | null; telegramBotToken?: string | null; telegramChatId?: string | null },
+  input: { slackWebhookUrl?: string | null; discordWebhookUrl?: string | null; telegramBotToken?: string | null; telegramChatId?: string | null; alertEmailTo?: string | null },
   reason: string,
   actor: string,
 ): Promise<WebhooksSettings> {
@@ -167,6 +176,7 @@ export async function saveWebhookSettings(
   updateField("discordWebhookUrl", input.discordWebhookUrl);
   updateField("telegramBotToken", input.telegramBotToken);
   updateField("telegramChatId", input.telegramChatId);
+  updateField("alertEmailTo", input.alertEmailTo);
 
   await sql`
     INSERT INTO settings (key, value, updated_by) VALUES ('webhook_channels', ${sql.json(next)}, ${actor})
@@ -176,12 +186,13 @@ export async function saveWebhookSettings(
   invalidateSlackCache();
   invalidateDiscordCache();
   invalidateTelegramCache();
+  invalidateEmailCache();
 
   await audit(actor, "settings.webhooks", "settings:webhook_channels", reason, before, next);
   return getWebhookSettings();
 }
 
-export async function testWebhookChannel(channel: "slack" | "discord" | "telegram"): Promise<{ ok: boolean; error?: string }> {
+export async function testWebhookChannel(channel: "slack" | "discord" | "telegram" | "email"): Promise<{ ok: boolean; error?: string }> {
   const title = `🧪 888news 通知連線測試 (${channel.toUpperCase()})`;
   const lines = [
     `這是一則來自 888news 後台管理系統的即時連線測試訊息。`,
@@ -198,6 +209,9 @@ export async function testWebhookChannel(channel: "slack" | "discord" | "telegra
   }
   if (channel === "telegram") {
     return sendTelegramAlert(title, lines, "now");
+  }
+  if (channel === "email") {
+    return sendEmailAlert(title, lines, "now");
   }
   return { ok: false, error: "unknown channel" };
 }

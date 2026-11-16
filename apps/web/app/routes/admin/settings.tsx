@@ -18,6 +18,7 @@ export interface WebhooksSettings {
   slack: WebhookChannelInfo;
   discord: WebhookChannelInfo;
   telegram: WebhookChannelInfo;
+  email?: WebhookChannelInfo;
 }
 
 export interface LlmChannelConfig {
@@ -542,18 +543,20 @@ function LlmCard({ llm }: { llm?: LlmSettings }) {
 function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
   const { run, pending } = useAdminAction();
   const [open, setOpen] = useState(false);
-  const [clearTarget, setClearTarget] = useState<{ id: "slack" | "discord" | "telegram"; name: string } | null>(null);
+  const [clearTarget, setClearTarget] = useState<{ id: "slack" | "discord" | "telegram" | "email"; name: string } | null>(null);
   const [clearSlack, setClearSlack] = useState(false);
   const [clearDiscord, setClearDiscord] = useState(false);
   const [clearTelegram, setClearTelegram] = useState(false);
+  const [clearEmail, setClearEmail] = useState(false);
   const [form, setForm] = useState({
     slackWebhookUrl: "",
     discordWebhookUrl: "",
     telegramBotToken: "",
     telegramChatId: "",
+    alertEmailTo: "",
   });
 
-  const handleTest = async (channel: "slack" | "discord" | "telegram", name: string) => {
+  const handleTest = async (channel: "slack" | "discord" | "telegram" | "email", name: string) => {
     const res = await run<{ ok: boolean; error?: string }>(
       "POST",
       "/api/admin/settings/webhooks/test",
@@ -571,11 +574,20 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
     setClearSlack(false);
     setClearDiscord(false);
     setClearTelegram(false);
-    setForm({ slackWebhookUrl: "", discordWebhookUrl: "", telegramBotToken: "", telegramChatId: "" });
+    setClearEmail(false);
+    setForm({ slackWebhookUrl: "", discordWebhookUrl: "", telegramBotToken: "", telegramChatId: "", alertEmailTo: "" });
     setOpen(true);
   };
 
   const channels = [
+    {
+      id: "email" as const,
+      name: "Email (SMTP)",
+      info: webhooks?.email,
+      desc: webhooks?.email?.valueMasked
+        ? `收件人: ${webhooks.email.valueMasked}${webhooks.email.extraMasked ? ` · 寄件: ${webhooks.email.extraMasked}` : ""}`
+        : "未設置 SMTP 或 ALERT_EMAIL_TO",
+    },
     {
       id: "slack" as const,
       name: "Slack",
@@ -671,6 +683,7 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
             payload.telegramBotToken = "";
             payload.telegramChatId = "";
           }
+          if (clearTarget.id === "email") payload.alertEmailTo = "";
           const ok = await run(
             "PUT",
             "/api/admin/settings/webhooks",
@@ -714,6 +727,12 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
             if (form.telegramChatId.trim()) payload.telegramChatId = form.telegramChatId.trim() === "-" ? "" : form.telegramChatId.trim();
           }
 
+          if (clearEmail) {
+            payload.alertEmailTo = "";
+          } else if (form.alertEmailTo.trim()) {
+            payload.alertEmailTo = form.alertEmailTo.trim() === "-" ? "" : form.alertEmailTo.trim();
+          }
+
           const ok = await run(
             "PUT",
             "/api/admin/settings/webhooks",
@@ -721,10 +740,11 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
             { label: "save-webhooks", success: "Webhook 配置已成功更新" }
           );
           if (ok !== null) {
-            setForm({ slackWebhookUrl: "", discordWebhookUrl: "", telegramBotToken: "", telegramChatId: "" });
+            setForm({ slackWebhookUrl: "", discordWebhookUrl: "", telegramBotToken: "", telegramChatId: "", alertEmailTo: "" });
             setClearSlack(false);
             setClearDiscord(false);
             setClearTelegram(false);
+            setClearEmail(false);
             return true;
           }
           return false;
@@ -827,6 +847,34 @@ function WebhooksCard({ webhooks }: { webhooks?: WebhooksSettings }) {
                 </Field>
               </div>
             )}
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-[13px] font-medium text-ink">Email 報錯通知收件人 (ALERT_EMAIL_TO)</label>
+              {webhooks?.email?.configured && (
+                <button
+                  type="button"
+                  className="text-xs text-accent-red hover:underline"
+                  onClick={() => {
+                    setClearEmail(!clearEmail);
+                    if (!clearEmail) setForm((f) => ({ ...f, alertEmailTo: "" }));
+                  }}
+                >
+                  {clearEmail ? "復原保留" : "清除覆寫"}
+                </button>
+              )}
+            </div>
+            <Input
+              type="text"
+              disabled={clearEmail}
+              placeholder={clearEmail ? "（已標記清除資料庫覆寫，儲存後將改回環境變數設定）" : webhooks?.email?.valueMasked || "tbdavid2019@gmail.com"}
+              value={form.alertEmailTo}
+              onChange={(e) => setForm({ ...form, alertEmailTo: e.target.value })}
+            />
+            <p className="text-[11.5px] text-ink-4">
+              {clearEmail ? "⚠️ 儲存時將移除資料庫收件人覆寫。" : "多位收件人請以逗號分隔；SMTP 主機與憑證於 .env 設定。"}
+            </p>
           </div>
         </div>
       </ReasonDialog>

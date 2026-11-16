@@ -1,6 +1,16 @@
 {
-  "latestVersion": "2026-11-16 15:55",
+  "latestVersion": "2026-11-16 16:45",
   "releases": [
+    {
+      "date": "2026-11-16",
+      "time": "16:45",
+      "kind": "功能發布",
+      "title": "新增 SMTP Email 系統報錯告警與後台測試功能",
+      "body": [
+        "新增零外部相依之 SMTP Email 通知通道（支援 Port 465 TLS 與 Port 587 STARTTLS / Amazon SES 驗證），並接入全站營運告警、API 熔斷與使用者反饋分發。",
+        "於後台系統設定顯示 SMTP 收件狀態，支援隨時一鍵發送測試郵件與調整告警收件人。"
+      ]
+    },
     {
       "date": "2026-11-16",
       "time": "15:55",
