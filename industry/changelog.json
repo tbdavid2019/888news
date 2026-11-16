@@ -1,6 +1,27 @@
 {
-  "latestVersion": "2026-10-17 19:35",
+  "latestVersion": "2026-11-16 14:30",
   "releases": [
+    {
+      "date": "2026-11-16",
+      "time": "14:30",
+      "kind": "架構升級",
+      "title": "高可用三節點 Reader 叢集、「講給 10 歲小孩聽得懂」白話導讀與三層台灣用語根治",
+      "body": [
+        "多節點 Universal Reader 叢集：整合 2md.aiurl.tw、create360.ai、2md.glsoft.ai，具備 Round-Robin 分流、100–400ms 防驚群抖動、45 秒長逾時與毒藥網址隔離熔斷。",
+        "白話導讀重構：全面更新撰寫提示詞並解除 200 字截斷，用自然流暢的台灣白話說明痛點、解法與例子，摒棄論文流水帳與直譯詞（統一改寫為 AI 助理）。",
+        "三層台灣用語根治：新增共用 rules-taiwan-zh 規則、後端確定性 normalizeTaiwanTerms 守衛，並修復前端 OpenCC 將系統／實例／連接器誤轉的問題。"
+      ]
+    },
+    {
+      "date": "2026-11-13",
+      "time": "14:00",
+      "kind": "功能發布",
+      "title": "OpenRouter 決策模型榜 (Decisions Leaderboard) 與每 3 小時高頻同步上線",
+      "body": [
+        "新增 /leaderboard/decisions 決策模型參考榜單，支援 Top Models、Market Share（市場佔有率）、Evaluation Criteria（評估準則）與 Domain（應用領域）視覺化分析。",
+        "全站模型榜定時刷新頻率調整為每 3 小時自動更新一次，確保新模型動態即時呈現。"
+      ]
+    },
     {
       "date": "2026-10-17",
       "time": "19:35",

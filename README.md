@@ -65,7 +65,7 @@
 
 ### 🌐 1. 全方位多語系與台灣在地化 (Multi-Language & Localization)
 - **繁 | EN | 简 平滑切換**：以台灣繁體中文（`zh-TW`）為核心，提供繁中、英文（`en`）、簡中（`zh-CN`）完整介面字典支援。
-- **動態內文繁體在地化（台灣詞彙）**：整合伺服端 OpenCC（`cn` $\rightarrow$ `twp` 詞庫），自動將新聞內文的標題、摘要、推薦理由轉化為在地化用語（如「網絡」$\rightarrow$「網路」、「内存」$\rightarrow$「記憶體」、「服務器」$\rightarrow$「伺服器」）。
+- **三層台灣用語根治（Prompt + 確定性詞彙守衛 + OpenCC 修補）**：結合純台灣正體中文提示詞（`rules-taiwan-zh.md`）、後端寫入前確定性正規化守衛 `normalizeTaiwanTerms`（自動轉換如 `上面級 → 上級火箭`、`助推器 → 推進器`、`數據庫 → 資料庫`、`服務器 → 伺服器`、`智慧體 → AI 助理` 等並避開程式碼與 URL），以及前端 OpenCC `tw-fixup` 防誤轉保護（修正 `系統／實例／連接器`），確保全站用語純正道地。
 - **美元與新台幣切換**：完全移除人民幣顯示，預設採用美元（USD $），並提供即時匯率轉換切換為新台幣（NT$）。
 
 ### 📱 2. 完整 PWA 支援 (Progressive Web App)
@@ -73,10 +73,10 @@
 - 在 Android Chrome / Edge 及 iPhone Safari 上點擊「加入主畫面」，即可安裝為獨立全螢幕 App。
 - 內建 Service Worker (`/sw.js`)，支援核心靜態資源離線快取與網路優先導航策略。
 
-### 🤖 3. 智慧情報管線與免金鑰 X (Twitter) 採集
+### 🤖 3. 智慧情報管線、高可用多節點 Reader 叢集與白話寫作
 - **六種信源相容**：支援 RSS / Atom、網頁列表 (Web List)、JSON API、X (Twitter)、微信公眾號及外部腳本推播。
-- **免金鑰 X (Twitter) 抓取**：深度整合 `2md.aiurl.tw`，即使沒有 SocialData 付費 API 金鑰，也能直接透過 2md Reader 解析 Twitter 個人動態與推文，點擊即預覽、即時入庫。
-- **大模型寫作**：自動提煉「答案先行」的高密度中文摘要、核心觀點與入選推薦理由。
+- **高可用三節點 Universal Reader 叢集**：整合 `https://2md.aiurl.tw`、`https://create360.ai` 與 `https://2md.glsoft.ai`，支援 Round-Robin 負載分流、**100–400ms 防驚群隨機抖動（Jitter）**、**45 秒寬裕渲染逾時**、毒藥網址隔離熔斷器與自動故障轉移；當 RSS 偵測到中／英文截斷標記或本地 Readability 抓取不足 1,500 字時，自動切換由叢集補抓完整內文再送交評分與寫作，同時支援免金鑰抓取 X 推文。
+- **「講給 10 歲小孩也聽得懂」白話寫作**：透過生活化白話提示詞重構，摒棄機器翻譯腔與論文流水帳，用「痛點 → 做法 → 關鍵例子與好處」寫出人人都讀得懂的導讀與推薦理由。
 
 ### 🔥 4. 事件歸組與真實熱點演算法
 - **同一件事只看一次**：不論多少家媒體轉載、社群如何討論，同一事件彙整為一個主卡片，後續發展串聯在事件時間軸上。
@@ -196,7 +196,9 @@ docker compose up -d --build
 | **`JEV_API_KEY`** | Jev API 金鑰（支援多把逗號分隔） | `apikey_...` |
 | **`JEV_FALLBACK_API_KEYS`** | Jev 第二把、第三把備用金鑰 | 選填，402 額度用盡自動無縫輪換 |
 | **`SCORE_BY_DECISION_ENGINE`** | 是否完全跳過 Groq 評分（方案 B 開關） | `false`（預設方案 A：Clef 擋雜訊，Groq 精確定分） |
-| **`READER_BASE_URL`** | 動態反爬網頁渲染器 | `https://2md.aiurl.tw` |
+| **`READER_BASE_URLS`** | 多節點 Universal Reader 叢集（逗號分隔） | `https://2md.aiurl.tw,https://create360.ai,https://2md.glsoft.ai` |
+| **`READER_TIMEOUT_MS`** | Reader 單節點請求逾時毫秒（防無頭渲染中斷） | `45000`（45 秒） |
+| **`READER_COOLDOWN_MS`** | Reader 故障節點熔斷冷卻毫秒（另支援 HTTP 429 `Retry-After`） | `60000`（60 秒） |
 | **`TURNSTILE_ENABLED`** | 啟用 Cloudflare Turnstile 人機驗證與防偽防護 | `true` |
 | **`TURNSTILE_SITE_KEY`** | Cloudflare Turnstile Site Key (前端公開) | `0x4AAAAAAEvqf7unH6MrhIv2` |
 | **`TURNSTILE_SECRET_KEY`** | Cloudflare Turnstile Secret Key (後端保密) | 自行填寫 |

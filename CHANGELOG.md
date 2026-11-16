@@ -2,6 +2,38 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-16] — 🧠 高可用多節點 Reader 叢集、「講給 10 歲小孩聽得懂」白話寫作重構與三層台灣用語根治
+
+### 🌐 高可用多節點 Universal Reader 叢集 (`packages/backend/src/providers/reader.ts`)
+- **三節點負載平衡與自動容災**：預設整合 `https://2md.aiurl.tw`、`https://create360.ai`、`https://2md.glsoft.ai`，採用 Round-Robin 輪詢分散抓取壓力，單節點異常時自動平滑切換至健康節點。
+- **防驚群效應與長 Timeout 保護**：每次請求加入 **100–400ms 隨機抖動（Jitter）** 防止併發打垮目標服務；預設單節點 Timeout **45,000ms（45 秒）** 並設有整體叢集期限（`90s`），確保無頭瀏覽器 JS 渲染不被過早中斷。
+- **智慧熔斷器與毒藥網址隔離**：
+  - 嚴格隔離冷卻中節點不參與正常輪詢，全數冷卻時快速拒絕不空耗等待。
+  - 精準區分節點故障（網路逾時、TLS 異常、HTTP 429、5xx）與目標文章自身 4xx（如 404/403），不因單篇失效網址懲罰 Reader 節點。
+  - 支援解析 HTTP 429 `Retry-After` 秒數與 HTTP-Date 標頭（上限 300 秒）。
+- **強化全文補抓觸發（`sources/rss.ts`、`content/extract.ts`、`jobs/content.ts`）**：
+  - 支援偵測中文與 WordPress RSS 截斷特徵（`繼續閱讀`、`閱讀全文`、`...〈標題〉這篇文章最早發佈於` 等，門檻擴大至 2,800 字內），以及本地 Readability 小於 1,500 字時自動交由 2md 叢集補抓完整 Markdown。
+  - 註冊並支援來源設定 `alwaysExtractBody`（`config-keys.ts`）。
+
+### ✍️ 「講給 10 歲小孩聽得懂」白話導讀重構與解除 200 字截斷 (`editorial/writing.ts` & `industry/prompts/`)
+- **解除極端截斷與換行破壞**：將 `MAX_SUMMARY_CHARS` 由原本的 190/200 字放寬至 700 字（`summarize_article` 讀取原文上限由 6,000 提升至 12,000 字），並改為依段落／條列邊界保留完整結構。
+- **全面改寫為「說人話」白話規則**：全面更新 `rules-answer-first-summary.md`、`summarize-article.md`、`content-understanding.md`、`summarize-long-post.md`、`story-digest.md` 與 `rules-self-contained-title.md`，要求用「痛點 → 做法 → 例子／好處」白話敘事，禁止抄寫論文腔、次要實驗拆分數字、授權條款或「智慧體」等直譯詞，統一改稱 **AI 助理**。
+
+### 🇹🇼 三層台灣正體中文用語根治與 OpenCC 誤轉修復 (`editorial/taiwan-terms.ts` & `apps/web/app/lib/i18n/`)
+- **共用 Prompt 規範與繁中純化**：抽出 `rules-taiwan-zh.md` 掛入所有對外產出之 Prompt，並將提示詞內原有簡體指示全面改寫為台灣正體中文。
+- **確定性詞彙後處理守衛 (`normalizeTaiwanTerms`)**：寫入資料庫前強制正規化高頻大陸用語（如 `上面級 → 上級火箭`、`助推器 → 推進器`、`發射臺 → 發射台`、`數據庫 → 資料庫`、`服務器 → 伺服器`、`內存 → 記憶體`、`芯片 → 晶片`、`激光 → 雷射`、`智慧體 → AI 助理`），並自動避開 URL、行內 `` `code` `` 與程式碼區塊。
+- **修復前端 OpenCC `twp` 誤轉 (`tw-fixup.ts`)**：於 `converter.server.ts` 與 `AutoConverter.tsx` 修復 OpenCC 將既有繁中「系統 → 係統」、「實例 → 例項」、「連接器 → 聯結器」錯誤改寫的問題。
+
+---
+
+## [2026-11-13] — 🏆 OpenRouter 決策模型榜 (Decisions Leaderboard) 與 3 小時高頻榜單同步
+
+### 📊 OpenRouter Decision Models 參考榜單 (`/leaderboard/decisions`)
+- 完整收錄 OpenRouter Decision Models 排行榜與詳情圖表：**Top Models**、**Market Share（市場佔有率）**、**Evaluation Criteria（評估準則分佈）** 與 **Domain（應用領域分佈）**。
+- 更新排行榜定時排程頻率為 **每 3 小時自動更新一次**，確保新發布模型（如 Gemini 4 系列等）能即時同步呈現。
+
+---
+
 ## [2026-11-12] — ⚡️ 全面升級 Node.js 26 (v26.13.1) 與最新 CVE 安全防護加固 (Node.js 26 Runtime & Security Hardening)
 
 ### ⚡️ 核心運行環境升級 Node.js 26 (`v26.13.1`)
