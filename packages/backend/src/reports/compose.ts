@@ -5,6 +5,7 @@ import { z } from "zod";
 import { SITE } from "@aihot/industry/site";
 import { CATEGORIES } from "@aihot/industry/taxonomy";
 import { promptText, promptVersion } from "../editorial/prompts.ts";
+import { normalizeTaiwanTerms } from "../editorial/taiwan-terms.ts";
 import { modelFor } from "../editorial/models.ts";
 import { addDays, beijingDate, beijingMidnight, isoWeekLabel, isoWeekRange } from "@aihot/contracts/time";
 import { sql } from "../db.ts";
@@ -120,7 +121,14 @@ async function writeLead(kind: string, key: string, entries: ReportEntry[], mode
     .map((h) => entries[Number(h) - 1])
     .filter((e): e is ReportEntry => !!e)
     .map((e) => e.itemId);
-  return { lead: { title: res.data.title, leadParagraph: res.data.leadParagraph }, highlights, receiptId: res.receiptId };
+  return {
+    lead: {
+      title: normalizeTaiwanTerms(res.data.title),
+      leadParagraph: normalizeTaiwanTerms(res.data.leadParagraph),
+    },
+    highlights,
+    receiptId: res.receiptId,
+  };
 }
 
 async function saveReport(kind: "daily" | "weekly" | "monthly", key: string, start: Date, end: Date, content: Record<string, unknown>, reason: string, model: string) {
@@ -220,11 +228,11 @@ async function composePeriod(kind: "weekly" | "monthly", key: string, startDate:
       ...periodPrompt(kind, startDate, endDateInclusive, top), schema: PeriodSchema, temperature: 0.3, maxTokens: 2500,
     });
     receiptId = res.receiptId;
-    headline = res.data.headline.trim();
-    overview = res.data.overview;
+    headline = normalizeTaiwanTerms(res.data.headline.trim());
+    overview = normalizeTaiwanTerms(res.data.overview);
     themes = res.data.themes.map((t) => ({
-      heading: t.heading,
-      summary: t.summary,
+      heading: normalizeTaiwanTerms(t.heading),
+      summary: normalizeTaiwanTerms(t.summary),
       storyRefs: t.refs.map((r) => top[Number(r) - 1]).filter((e): e is Candidate => !!e).map(({ category: _c, factKey: _f, ...e }) => e),
     }));
   }

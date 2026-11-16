@@ -5,6 +5,7 @@ import { IDENTITY_CONTEXT_ALIASES, IDENTITY_LEXICON, PUBLISHER_DOMAINS } from "@
 import { onlyXArticleLink } from "../sources/x.ts";
 import type { AnalyzeInputArticle } from "./input.ts";
 import { promptText } from "./prompts.ts";
+import { normalizeTaiwanTerms } from "./taiwan-terms.ts";
 import { htmlText } from "../lib/text.ts";
 
 export const PREFILTER_SYSTEM = promptText("prefilter");
@@ -274,11 +275,16 @@ function answerFirstSummaryLengthOk(summary: string, input: TranslateInput): boo
 
 export const isShortTweetInput = (input: TranslateInput) => input.sourceKind === "x_search" && isShortTweet(input.mainText || input.title);
 
-/** The length rule (compacted without another call) and the identity guard, for any writing model. */
+/** The length rule (compacted without another call), identity guard, and Taiwan terminology normalizer. */
 export function finalizeCopy(input: TranslateInput, copy: { titleZh: string; summaryZh: string }) {
   let summaryZh = copy.summaryZh;
   if (!isShortTweetInput(input) && summaryZh && !answerFirstSummaryLengthOk(summaryZh, input)) summaryZh = compactAnswerFirstSummary(summaryZh);
-  return enforceIdentity(input, { titleZh: copy.titleZh, summaryZh });
+  const guarded = enforceIdentity(input, { titleZh: copy.titleZh, summaryZh });
+  return {
+    ...guarded,
+    titleZh: normalizeTaiwanTerms(guarded.titleZh),
+    summaryZh: normalizeTaiwanTerms(guarded.summaryZh),
+  };
 }
 
 // ── Title/summary prompts for items the content understanding does not write ─────────────────

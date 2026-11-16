@@ -17,6 +17,7 @@ import { sha256 } from "../lib/ids.ts";
 import { modelFor } from "./models.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
 import { promptText, promptVersion } from "./prompts.ts";
+import { normalizeTaiwanTerms } from "./taiwan-terms.ts";
 
 export const TRANSLATE_PROMPT_VERSION = promptVersion("translate-body", "translate-post");
 const BATCH_CHARS = 3500;
@@ -84,7 +85,7 @@ async function translateBatch(articleId: string, revision: number, index: number
     timeoutMs: 180_000,
     attemptTag,
   });
-  return res.data.t.length === parts.length ? res.data.t : null;
+  return res.data.t.length === parts.length ? res.data.t.map((segment) => normalizeTaiwanTerms(segment)) : null;
 }
 
 /** Translates batches, halving a batch once when the answer does not line up with the input. */

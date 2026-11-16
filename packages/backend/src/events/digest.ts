@@ -8,6 +8,7 @@ import { chatJson } from "../providers/llm.ts";
 import { completeReceipt } from "../providers/receipts.ts";
 import { sha256, stableJson } from "../lib/ids.ts";
 import { promptText, promptVersion } from "../editorial/prompts.ts";
+import { normalizeTaiwanTerms } from "../editorial/taiwan-terms.ts";
 
 export const DIGEST_PROMPT_VERSION = promptVersion("story-digest");
 
@@ -44,10 +45,12 @@ export async function composeStoryDigest(storyId: number, opts: { afterCorrectio
   if (reports.length === 1 && !opts.afterCorrection) {
     const single = reports[0]!;
     if (!story.digest && single.summary) {
+      const singleDigest = normalizeTaiwanTerms(single.summary);
+      const singleTitle = normalizeTaiwanTerms(single.title);
       await sql`
         UPDATE stories 
-        SET digest = ${single.summary}, latest = ${single.title}, digest_updated_at = now(),
-            title = CASE WHEN origin = 'manual' OR title <> '' THEN title ELSE ${single.title} END,
+        SET digest = ${singleDigest}, latest = ${singleTitle}, digest_updated_at = now(),
+            title = CASE WHEN origin = 'manual' OR title <> '' THEN title ELSE ${singleTitle} END,
             updated_at = now()
         WHERE id = ${storyId} AND digest IS NULL
       `;
@@ -76,12 +79,15 @@ export async function composeStoryDigest(storyId: number, opts: { afterCorrectio
     model: await modelFor("digest"), purpose: "story_digest", subject: `story:${storyId}@${ids.length}`, promptVersion: DIGEST_PROMPT_VERSION,
     system: SYSTEM, user, schema: Schema, temperature: 0.3, maxTokens: 1200,
   });
+  const normalizedTitle = normalizeTaiwanTerms(res.data.title);
+  const normalizedDigest = normalizeTaiwanTerms(res.data.digest);
+  const normalizedLatest = res.data.latest ? normalizeTaiwanTerms(res.data.latest) : null;
   const version = story.version + 1;
   await sql.begin(async (tx) => {
     await tx`INSERT INTO story_digests (story_id, version, digest, latest, receipt_id, article_ids, inputs_hash)
-             VALUES (${storyId}, ${version}, ${res.data.digest}, ${res.data.latest || null}, ${res.receiptId}, ${ids}, ${inputsHash})`;
-    await tx`UPDATE stories SET digest = ${res.data.digest}, latest = ${res.data.latest || null}, digest_updated_at = now(),
-               title = CASE WHEN origin = 'manual' OR ${res.data.title} = '' THEN title ELSE ${res.data.title} END,
+             VALUES (${storyId}, ${version}, ${normalizedDigest}, ${normalizedLatest}, ${res.receiptId}, ${ids}, ${inputsHash})`;
+    await tx`UPDATE stories SET digest = ${normalizedDigest}, latest = ${normalizedLatest}, digest_updated_at = now(),
+               title = CASE WHEN origin = 'manual' OR ${normalizedTitle} = '' THEN title ELSE ${normalizedTitle} END,
                version = ${version}, updated_at = now()
              WHERE id = ${storyId}`;
     await completeReceipt(tx, res.receiptId);

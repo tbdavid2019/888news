@@ -29,6 +29,7 @@ import {
 } from "./writing.ts";
 import { CATEGORY_BY_ITEM_TYPE, CATEGORY_GUIDE, CATEGORY_TAG_BY_KEY, CATEGORY_TAGS, ENTITIES, ENTITY_TAGS, ITEM_TYPES, normalizeTags, TOPIC_TAGS } from "./vocabulary.ts";
 import { promptText, promptVersion } from "./prompts.ts";
+import { normalizeTaiwanTerms } from "./taiwan-terms.ts";
 
 export { buildMaterial, loadAnalyzeInput, type AnalyzeInputArticle };
 
@@ -361,8 +362,9 @@ async function runUnderstand(
   const copy = finalizeCopy(translateInputOf(a), { titleZh: d.titleZh, summaryZh: d.summaryZh });
   const finalItemType = (hints?.itemType && (ITEM_TYPES as readonly string[]).includes(hints.itemType)) ? (hints.itemType as typeof ITEM_TYPES[number]) : d.itemType;
   const finalAuthorRole = (hints?.authorRole === "principal" || hints?.authorRole === "observer" || hints?.authorRole === "relayer") ? hints.authorRole : d.authorRole;
+  const reasonZh = d.editorialJudgment.trim() ? normalizeTaiwanTerms(d.editorialJudgment.trim()) : null;
   return {
-    kind: "understand", model: res.model, titleZh: copy.titleZh, summaryZh: copy.summaryZh, reasonZh: d.editorialJudgment.trim() || null,
+    kind: "understand", model: res.model, titleZh: copy.titleZh, summaryZh: copy.summaryZh, reasonZh,
     tags: normalizeTags(d.tags, { fallbackCategory: CATEGORY_BY_ITEM_TYPE[finalItemType] }), itemType: finalItemType, authorRole: finalAuthorRole,
     identityGuard: copy.identityGuard, receiptIds: [res.receiptId], reused: res.reused,
   };
