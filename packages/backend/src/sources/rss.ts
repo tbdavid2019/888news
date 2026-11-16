@@ -3,6 +3,7 @@ import { XMLParser } from "fast-xml-parser";
 import { guardedFetch } from "../lib/http-fetch.ts";
 import { collapseWhitespace, stripTags } from "../lib/text.ts";
 import { sanitizeBody } from "../content/sanitize.ts";
+import { TEASER_LENGTH_THRESHOLD } from "../content/extract.ts";
 import { identityKeyForUrl } from "../lib/url.ts";
 import { sha256, stableJson } from "../lib/ids.ts";
 import { FetchError, type Candidate, type SourceRow } from "./types.ts";
@@ -98,9 +99,26 @@ export function isTeaser(text: string): boolean {
  */
 function feedText(bodyHtml: string | null, summaryHtml: string, source: SourceRow): Pick<Candidate, "excerpt" | "bodyHtml" | "bodyText" | "bodyStatus"> {
   const bodyText = bodyHtml ? stripTags(bodyHtml) : null;
-  const teaser = !!bodyText && source.participation_mode === "editorial" && isTeaser(bodyText);
-  const excerpt = summaryHtml ? collapseWhitespace(stripTags(summaryHtml)).slice(0, 2000) : teaser ? collapseWhitespace(bodyText!) : null;
-  return bodyText && bodyText.length > 280 && !teaser
+  const isEditorial = source.participation_mode === "editorial";
+  const teaser = !!bodyText && isEditorial && isTeaser(bodyText);
+  const alwaysExtract = source.config?.alwaysExtractBody === true;
+
+  // Threshold: For editorial sources, body length < TEASER_LENGTH_THRESHOLD chars or teaser pattern indicates short summary/teaser.
+  // For other sources, threshold is 280 chars.
+  // If alwaysExtractBody is configured, always mark pending to fetch high-fidelity full Markdown via Reader cluster.
+  const isPending =
+    alwaysExtract ||
+    !bodyText ||
+    teaser ||
+    (isEditorial ? bodyText.length < TEASER_LENGTH_THRESHOLD : bodyText.length <= 280);
+
+  const excerpt = summaryHtml
+    ? collapseWhitespace(stripTags(summaryHtml)).slice(0, 2000)
+    : (teaser || (bodyText && isPending))
+      ? collapseWhitespace(bodyText!).slice(0, 2000)
+      : null;
+
+  return !isPending && bodyText
     ? { excerpt, bodyHtml, bodyText, bodyStatus: "ok" }
     : { excerpt, bodyHtml: null, bodyText: null, bodyStatus: "pending" };
 }

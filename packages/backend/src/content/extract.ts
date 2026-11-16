@@ -21,6 +21,7 @@ export interface ExtractedBody {
 }
 
 const MIN_BODY_CHARS = 200;
+export const TEASER_LENGTH_THRESHOLD = 800;
 
 export function readable(html: string, url: string): ExtractedBody | null {
   const { document } = parseHTML(html);
@@ -79,27 +80,44 @@ function markdownToHtml(md: string): string {
 }
 
 export async function extractFromUrl(url: string, opts: { allowJina: boolean; subject: string }): Promise<ExtractedBody | null> {
+  let localResult: ExtractedBody | null = null;
   try {
     const res = await guardedFetch(url, { timeoutMs: 20_000, maxBytes: 6 * 1024 * 1024 });
     const type = res.headers.get("content-type") ?? "";
     if (res.status === 200 && /html/.test(type)) {
       const got = readable(res.text(), res.url);
-      if (got) return got;
+      if (got) {
+        // If local readability captured a complete, long article (>= TEASER_LENGTH_THRESHOLD) or reader is disabled, use it directly
+        if (got.text.length >= TEASER_LENGTH_THRESHOLD || !opts.allowJina) {
+          return got;
+        }
+        // Under TEASER_LENGTH_THRESHOLD may be a paywall/cookie shell or truncated preview; fall through to Reader cluster
+        localResult = got;
+      }
     }
   } catch {
-    // fall through to Jina
+    // fall through to Reader cluster
   }
-  if (!opts.allowJina) return null;
+  if (!opts.allowJina) return localResult;
   try {
     const page = await readPageAsMarkdown(url, { purpose: "body_fallback", subject: opts.subject });
     const html = trimTrailingChrome(sanitizeBody(markdownToHtml(page.markdown), url));
     const text = stripTags(html);
-    if (text.length < MIN_BODY_CHARS) return null;
-    return { html, text, images: [], via: "jina" };
+    if (text.length >= MIN_BODY_CHARS) {
+      // If local readability captured images and reader only produced slightly longer text, preserve local images
+      if (localResult && localResult.images.length > 0 && text.length < localResult.text.length * 1.5) {
+        return localResult;
+      }
+      if (!localResult || text.length >= localResult.text.length || text.length >= TEASER_LENGTH_THRESHOLD) {
+        return { html, text, images: [], via: "jina" };
+      }
+    }
   } catch (error) {
-    if (error instanceof BudgetExceededError) return null;
+    if (error instanceof BudgetExceededError) return localResult;
+    if (localResult) return localResult;
     throw error;
   }
+  return localResult;
 }
 
 /** Pages extraction can fetch: ordinary web pages (X posts and WeChat articles arrive whole or not at all). */

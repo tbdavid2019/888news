@@ -6,7 +6,7 @@ import { config } from "@aihot/backend/config";
 import { fetchRss } from "@aihot/backend/sources/rss";
 import { escapeXml } from "@aihot/backend/lib/text";
 
-const body = `<p>Before <strong>bold</strong>, between <em>italic</em>, after.</p><p>${"A complete research article with enough text for the feed body. ".repeat(8)}</p>`;
+const body = `<p>Before <strong>bold</strong>, between <em>italic</em>, after.</p><p>${"A complete research article with enough text for the feed body. ".repeat(14)}</p>`;
 const xhtml = (html: string) => `<div xmlns="http://www.w3.org/1999/xhtml">${html}</div>`;
 const pages: Record<string, string> = {
   "/title": `<title type="xhtml">${xhtml("New <em>research</em> result")}</title><summary type="xhtml">${xhtml("First <b>important</b> result, then another.")}</summary>`,
