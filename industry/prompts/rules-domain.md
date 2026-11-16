@@ -6,7 +6,7 @@
    - Token / tokens = 模型語境為 token、認證語境可譯為權杖或憑證；依上下文判斷
    - Transformer = 模型架構保留 Transformer，電力設備依語境譯為變壓器
    - Diffusion = 依語境譯為擴散模型或擴散
-   - Agent / Agentic = 依語境譯為 AI 智慧體、代理程式或代理架構
+   - Agent / Agentic = 一律譯為 AI 助理（不要用「智慧體」「智能體」「代理程式」這種生硬直譯詞）
    - Alignment = AI 模型語境譯為對齊
    - Inference = 模型語境譯為推論或推理，其他領域依上下文
    - Reasoning = AI 模型語境譯為推理；必要時用「鏈式推理」區分 CoT

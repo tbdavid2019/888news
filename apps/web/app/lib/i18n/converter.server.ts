@@ -1,12 +1,14 @@
 import * as OpenCC from "opencc-js";
 import type { Locale } from "./types.ts";
+import { fixTwOverConversion } from "./tw-fixup.ts";
 
 
 let converterTw: ((text: string) => string) | null = null;
 
 function getTwConverter() {
   if (!converterTw) {
-    converterTw = OpenCC.Converter({ from: "cn", to: "twp" });
+    const raw = OpenCC.Converter({ from: "cn", to: "twp" });
+    converterTw = (text: string) => fixTwOverConversion(raw(text));
   }
   return converterTw;
 }

@@ -14,11 +14,11 @@ describe("Taiwan Terminology Guard (normalizeTaiwanTerms)", () => {
   });
 
   it("normalizes tech, AI, hardware, and IT terms", () => {
-    const input = "這款人工智能大語言模型運行於最新半導體芯片與服務器，優化了數據庫查詢算法、網絡帶寬與內存使用，程序員在博客分享視頻與代碼。";
+    const input = "這款人工智能大語言模型與 AI 智慧體運行於最新半導體芯片與服務器，優化了數據庫查詢算法、網絡帶寬與內存使用，程序員在博客分享視頻與代碼，提供例項與聯結器。";
     const out = normalizeTaiwanTerms(input);
     assert.equal(
       out,
-      "這款人工智慧大型語言模型運行於最新半導體晶片與伺服器，優化了資料庫查詢演算法、網路頻寬與記憶體使用，工程師在部落格分享影片與程式碼。",
+      "這款人工智慧大型語言模型與 AI 助理運行於最新半導體晶片與伺服器，優化了資料庫查詢演算法、網路頻寬與記憶體使用，工程師在部落格分享影片與程式碼，提供實例與連接器。",
     );
   });
 

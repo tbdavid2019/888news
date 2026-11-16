@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import * as OpenCC from "opencc-js";
+import { fixTwOverConversion } from "./tw-fixup.ts";
 
 const HAS_ZH = /[\u4e00-\u9fa5]/;
 
@@ -12,7 +13,8 @@ const HAS_ZH = /[\u4e00-\u9fa5]/;
 export function AutoTraditionalConverter({ locale }: { locale: string }) {
   useEffect(() => {
     if (locale !== "zh-TW") return;
-    const cv = OpenCC.Converter({ from: "cn", to: "twp" });
+    const rawCv = OpenCC.Converter({ from: "cn", to: "twp" });
+    const cv = (text: string) => fixTwOverConversion(rawCv(text));
 
     const convertTree = (root: Node) => {
       if (!(root instanceof Node)) return;
