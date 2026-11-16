@@ -78,19 +78,21 @@ function imagesFrom(html: string, base: string): Array<{ kind: "image"; url: str
  * mark (The Verge's "Read the full story at The Verge."). Treated as a summary, so extraction fetches
  * the page before the article is judged.
  */
-const TEASER_BELOW = 1200;
+const TEASER_BELOW = 2800;
 const TEASER_MARKS = [
   /\bappeared first on\b/i,
   /\bread (?:the )?full (?:story|article)\b/i,
   /\bcontinue reading\b/i,
   /\bread more\b/i,
-  /…\s*$/,
-  /\[\s*(?:…|\.\.\.)\s*\]\s*$/,
+  /(?:繼續閱讀|閱讀全文|閱讀更多|查看全文|點擊閱讀原文|詳見原文)/,
+  /(?:\[\s*(?:…|\.\.\.)\s*\]|…)\s*(?:這篇文章最早發佈於|appeared first on|$)/i,
+  /\.\.\.\s*(?:[〈《「]|這篇文章最早發佈於|$)/,
 ];
 
 export function isTeaser(text: string): boolean {
   const t = text.trim();
-  return t.length < TEASER_BELOW && TEASER_MARKS.some((m) => m.test(t));
+  const tail = t.slice(-300);
+  return t.length < TEASER_BELOW && TEASER_MARKS.some((m) => m.test(tail));
 }
 
 /**

@@ -13,7 +13,7 @@ import { upsertMaterial } from "@aihot/backend/content/materials";
 import { ANALYZE_PROMPT_VERSION, analyzeArticle, PROMPT_VERSIONS, SCORE_SYSTEM, tierThreshold } from "@aihot/backend/editorial/analyze";
 import { queueProcessing } from "@aihot/backend/jobs/content";
 import { QUEUES, stopBoss } from "@aihot/backend/jobs/queue";
-import { compactAnswerFirstSummary, enforceIdentity, parseTranslateOutput, PREFILTER_SYSTEM } from "@aihot/backend/editorial/writing";
+import { compactAnswerFirstSummary, enforceIdentity, finalizeCopy, MAX_SUMMARY_CHARS, parseTranslateOutput, PREFILTER_SYSTEM } from "@aihot/backend/editorial/writing";
 import { promptText } from "@aihot/backend/editorial/prompts";
 import { SITE } from "@aihot/industry/site";
 import { normalizeTags } from "@aihot/backend/editorial/vocabulary";
@@ -320,8 +320,31 @@ test("guards: a company the input does not name is not written in; long summarie
   // The identity lexicon: a Chinese rendering of a company the input names in English is no invention.
   const alibaba = { title: "Alibaba ships a new coding model", text: "Alibaba released a coding model with pricing details.", sourceKind: "rss" };
   assert.equal(enforceIdentity(alibaba, { titleZh: "阿里巴巴发布编程模型", summaryZh: "阿里巴巴发布了编程模型并公布价格。" }).identityGuard.outcome, "pass");
-  const long = "第一句交代了谁做了什么以及关键结果，这一句本身已经足够说明核心事件的来龙去脉。".repeat(3) + "第二句补充数字。".repeat(20);
-  assert.ok(compactAnswerFirstSummary(long).length <= 190);
+  const veryLong = "第一句交代了谁做了什么以及关键结果，这一句本身已经足够说明核心事件的来龙去脉。".repeat(25) + "第二句补充数字。".repeat(40);
+  const compacted = compactAnswerFirstSummary(veryLong);
+  assert.ok(compacted.length <= MAX_SUMMARY_CHARS && compacted.length >= 200);
+  const structuredMd = [
+    "作者分析自家網站收到的 **132 名 ChatGPT 訪客**，發現流量集中於首頁與工具頁。",
+    "",
+    "- **流量分布**：統計 **19 天**內 ChatGPT 帶來 **132 名訪客**，Gemini 為 **2 名**。",
+    "- **落地頁差異**：產品發布平台收到 **67 名**，工具目錄收到 **55 名**。",
+    "- **限制說明**：資料量仍不足以歸納固定推薦公式。",
+  ].join("\n");
+  const richFinal = finalizeCopy(
+    { title: "ChatGPT vs Gemini traffic test", text: "ChatGPT and Gemini traffic analysis. " + "A".repeat(1200), sourceKind: "rss" },
+    { titleZh: "測試標題", summaryZh: structuredMd },
+  );
+  assert.equal(richFinal.summaryZh, structuredMd, "Rich Markdown bullet summary within MAX_SUMMARY_CHARS is preserved intact");
+  const overMaxMd = [
+    "核心導語交代完整事件與關鍵結果。",
+    "",
+    "- **第一點**：" + "詳細數據與規格說明。".repeat(30),
+    "- **第二點**：" + "更多技術細節與評測表現。".repeat(30),
+    "- **第三點**：" + "額外補充內容。".repeat(30),
+  ].join("\n");
+  const trimmedMd = compactAnswerFirstSummary(overMaxMd);
+  assert.ok(trimmedMd.length <= MAX_SUMMARY_CHARS);
+  assert.ok(trimmedMd.includes("\n- **第一點**"), "Markdown bullet breaks are preserved when trimming at block boundary");
   assert.deepEqual(parseTranslateOutput("title_zh: 标题\nsummary_zh: 第一句。\n第二句。"), { titleZh: "标题", summaryZh: "第一句。\n第二句。", bodyZh: "" });
   assert.equal(parseTranslateOutput("title_zh: 标题\nbody_zh: 我们懂你。\n\n来源：X：PixVerse (@PixVerse)").bodyZh, "我们懂你。", "a repeated prompt line is dropped");
 });

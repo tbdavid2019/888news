@@ -500,6 +500,15 @@ describe("RSS Body Extraction and Teaser Threshold Optimization", () => {
     const { unsupportedConfig } = await import("@aihot/backend/sources/config-keys");
     const unsupported = unsupportedConfig("rss", { feedUrl, alwaysExtractBody: true });
     assert.deepEqual(unsupported, [], "alwaysExtractBody should be a recognized RSS config key");
+
+    // 5. Verify Chinese truncation teaser marks trigger pending even past 1200 chars
+    const { isTeaser } = await import("@aihot/backend/sources/rss");
+    const zhTruncated = "中文科技報導正文摘要內容。".repeat(80) + " ...〈標題〉這篇文章最早發佈於動區BlockTempo。";
+    assert.equal(isTeaser(zhTruncated), true, "Detects WordPress/Chinese truncation footer");
+    const zhContinue = "另一篇繁體中文科技評論。".repeat(70) + "（繼續閱讀）";
+    assert.equal(isTeaser(zhContinue), true, "Detects 繼續閱讀 marker");
+    const zhComplete = "這是一篇完整的繁體中文研究報導，結尾有清楚句點。".repeat(40);
+    assert.equal(isTeaser(zhComplete), false, "Complete Chinese article is not misclassified as teaser");
   });
 });
 

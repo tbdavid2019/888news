@@ -22,6 +22,7 @@ export interface ExtractedBody {
 
 const MIN_BODY_CHARS = 200;
 export const TEASER_LENGTH_THRESHOLD = 800;
+export const READABILITY_UPGRADE_THRESHOLD = 1500;
 
 export function readable(html: string, url: string): ExtractedBody | null {
   const { document } = parseHTML(html);
@@ -87,11 +88,11 @@ export async function extractFromUrl(url: string, opts: { allowJina: boolean; su
     if (res.status === 200 && /html/.test(type)) {
       const got = readable(res.text(), res.url);
       if (got) {
-        // If local readability captured a complete, long article (>= TEASER_LENGTH_THRESHOLD) or reader is disabled, use it directly
-        if (got.text.length >= TEASER_LENGTH_THRESHOLD || !opts.allowJina) {
+        // If local readability captured a substantial article (>= READABILITY_UPGRADE_THRESHOLD) or reader is disabled, use it directly
+        if (got.text.length >= READABILITY_UPGRADE_THRESHOLD || !opts.allowJina) {
           return got;
         }
-        // Under TEASER_LENGTH_THRESHOLD may be a paywall/cookie shell or truncated preview; fall through to Reader cluster
+        // Under 1500 chars may be a paywall/cookie shell, JS-rendered preview, or truncated post; consult Reader cluster
         localResult = got;
       }
     }
@@ -108,7 +109,7 @@ export async function extractFromUrl(url: string, opts: { allowJina: boolean; su
       if (localResult && localResult.images.length > 0 && text.length < localResult.text.length * 1.5) {
         return localResult;
       }
-      if (!localResult || text.length >= localResult.text.length || text.length >= TEASER_LENGTH_THRESHOLD) {
+      if (!localResult || text.length >= localResult.text.length * 1.15 || text.length >= READABILITY_UPGRADE_THRESHOLD) {
         return { html, text, images: [], via: "jina" };
       }
     }

@@ -225,34 +225,51 @@ export function enforceIdentity(input: TranslateInput, copy: { titleZh: string; 
 
 // ── Answer-first summary length ──────────────────────────────────────────────────────────────
 
-export function compactAnswerFirstSummary(summary: string, maxChars = 190): string {
-  const text = summary.trim().replace(/\s*\n+\s*/g, " ");
-  if (text.length <= maxChars) return text;
-  const sentences = text.match(/[^。！？!?]+[。！？!?]?/gu) ?? [text];
+export const MAX_SUMMARY_CHARS = 1200;
+
+export function compactAnswerFirstSummary(summary: string, maxChars = MAX_SUMMARY_CHARS): string {
+  const normalized = summary
+    .trim()
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n");
+  if (normalized.length <= maxChars) return normalized;
+
+  // Prefer trimming at paragraph/bullet boundaries so Markdown list structure stays intact.
+  const blocks = normalized.split(/\n+/).map((b) => b.trim()).filter(Boolean);
+  if (blocks.length > 1) {
+    let out = "";
+    for (const block of blocks) {
+      const sep = !out ? "" : out.split("\n").pop()!.startsWith("- ") && block.startsWith("- ") ? "\n" : "\n\n";
+      if (out.length + sep.length + block.length > maxChars) break;
+      out += sep + block;
+    }
+    if (out.length >= 60) return out;
+  }
+
+  // Single long block: cut cleanly at a sentence boundary.
+  const sentences = normalized.match(/[^。！？!?]+[。！？!?]?/gu) ?? [normalized];
   let result = "";
   for (const sentence of sentences) {
     if ((result + sentence).length > maxChars) break;
     result += sentence;
-    if (result.length >= 80) break;
   }
-  if (result.length >= 50) return result.trim();
-  // The first sentence alone is too long: cut at a clause boundary, never inside a name or number.
-  const clauses = text.match(/[^，；：、,;:]+[，；：、,;:]?/gu) ?? [text];
+  if (result.length >= 60) return result.trim();
+
+  // The first sentence alone exceeds maxChars: cut at a clause boundary, never inside a name or number.
+  const clauses = normalized.match(/[^，；：、,;:]+[，；：、,;:]?/gu) ?? [normalized];
   result = "";
   for (const clause of clauses) {
     if ((result + clause).length + 1 > maxChars) break;
     result += clause;
-    if (result.length >= 80) break;
   }
-  return result.length >= 50 ? `${result.replace(/[，；：、,;:]$/u, "")}。` : text;
+  return result.length >= 40 ? `${result.replace(/[，；：、,;:]$/u, "")}。` : normalized.slice(0, maxChars);
 }
 
 function answerFirstSummaryLengthOk(summary: string, input: TranslateInput): boolean {
   const trimmed = summary.trim();
   const sourceLength = (input.sourceKind === "x_search" ? input.text : cleanArticleTextForLLM(input.text)).trim().length;
-  const sentences = trimmed.split(/[。！？!?]+/u).map((p) => p.trim()).filter(Boolean).length;
   const rich = sourceLength >= 500;
-  return trimmed.length <= 200 && trimmed.length >= (rich ? 80 : 50) && sentences <= 3 && (!rich || sentences >= 2);
+  return trimmed.length <= MAX_SUMMARY_CHARS && trimmed.length >= (rich ? 80 : 40);
 }
 
 export const isShortTweetInput = (input: TranslateInput) => input.sourceKind === "x_search" && isShortTweet(input.mainText || input.title);
@@ -280,7 +297,7 @@ export function buildArticlePrompt(input: TranslateInput): string {
     sourceName: sourceName(input.sourceName),
     identity: identityPrompt(input),
     title: input.title,
-    body: input.text ? clampText(cleanArticleTextForLLM(input.text), 6000) : promptText("summarize-article-empty"),
+    body: input.text ? clampText(cleanArticleTextForLLM(input.text), 12000) : promptText("summarize-article-empty"),
   });
 }
 
