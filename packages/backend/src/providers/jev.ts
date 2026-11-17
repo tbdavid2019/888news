@@ -1,9 +1,8 @@
-// TypeSafe AI Jev & Clef (System One) Provider.
-// Dedicated structured decision engine for boolean (noul), choice (categorical), and numeric scoring.
-// Multi-tier architecture:
+// Structured Decision Engine Cascade:
 //   Tier 0: Clef (Local / self-hosted, 0 tokens, free)
-//   Tier 1: Jev (Cloud System One, 350ms, multi-key rotation)
-//   Tier 2: Primary LLM (Groq / Gemini / OpenAI fallback)
+//   Tier 1: OpenAI Decisions (gpt-6-luna, 0 output tokens)
+//   Tier 2: Gemini Decisions (gemini-decision-1, 0 output tokens)
+//   Tier 3: Primary LLM (Groq / Gemini / OpenAI fallback)
 import { CLEF_SELECTION_QUESTIONS } from "@aihot/industry/clef-selection";
 import { splitDecisionMaterial, decisionEvidence } from "./decision-material.ts";
 import { sha256, stableJson } from "../lib/ids.ts";
@@ -16,8 +15,20 @@ import {
   callOpenAIDecisions,
   resetOpenAIDecisionCircuit,
 } from "./openai-decisions.ts";
+import {
+  isGeminiDecisionAvailable,
+  callGeminiDecisions,
+  resetGeminiDecisionCircuit,
+} from "./gemini-decisions.ts";
 
-export { isOpenAIDecisionAvailable, callOpenAIDecisions, resetOpenAIDecisionCircuit };
+export {
+  isOpenAIDecisionAvailable,
+  callOpenAIDecisions,
+  resetOpenAIDecisionCircuit,
+  isGeminiDecisionAvailable,
+  callGeminiDecisions,
+  resetGeminiDecisionCircuit,
+};
 
 export const CLEF_SELECTION_VERSION = `clef-selection@fulltext-v1-${sha256(stableJson(CLEF_SELECTION_QUESTIONS)).slice(0, 10)}`;
 
@@ -326,7 +337,7 @@ export async function callClefSystemOne(
       void dispatchAlert("Clef circuit opened", [
         `Failures: ${clefState.failureCount}`,
         `Reason: ${err instanceof Error ? err.message : String(err)}`,
-        "Action: Routing decision traffic to Jev Tier 1 for 60s",
+        "Action: Routing decision traffic to OpenAI Decisions Tier 1 for 60s",
       ]).catch(() => {});
     }
     throw err;
@@ -521,18 +532,18 @@ export async function callJevSystemOne(
 }
 
 // ---------------------------------------------------------------------------
-// Unified Decision Engine (Clef Tier 0 -> OpenAI Decisions Tier 1 -> Jev Tier 2)
+// Unified Decision Engine (Clef Tier 0 -> OpenAI Decisions Tier 1 -> Gemini Decision 1 Tier 2)
 // ---------------------------------------------------------------------------
 
 export function isDecisionEngineAvailable(): boolean {
-  return isClefAvailable() || isOpenAIDecisionAvailable() || isJevAvailable();
+  return isClefAvailable() || isOpenAIDecisionAvailable() || isGeminiDecisionAvailable();
 }
 
 export const isJevOrClefAvailable = isDecisionEngineAvailable;
 
 export function parseDecisionResult(
   res: { response: JevResponse; receiptId: number; reused: boolean },
-  engine: "clef" | "jev" | "openai"
+  engine: "clef" | "openai" | "gemini" | "jev"
 ) {
   const relAns = res.response.answers.relevance as JevChoiceAnswer | undefined;
   const scoreAns = res.response.answers.score as JevScoreAnswer | undefined;
@@ -563,7 +574,7 @@ export function parseDecisionResult(
     category,
     itemType,
     authorRole,
-    model: res.response.model || (engine === "clef" ? "clef-flash" : engine === "openai" ? "gpt-6-luna" : "jev-latest"),
+    model: res.response.model || (engine === "clef" ? "clef-flash" : engine === "openai" ? "gpt-6-luna" : engine === "gemini" ? "gemini-decision-1" : "jev-latest"),
     engine,
     receiptId: res.receiptId,
     receiptIds: [res.receiptId],
@@ -583,7 +594,7 @@ export async function evaluateWithDecisionEngine(
   itemType: string | null;
   authorRole: "principal" | "observer" | "relayer" | null;
   model: string;
-  engine: "clef" | "jev" | "openai";
+  engine: "clef" | "openai" | "gemini" | "jev";
   receiptId: number;
   receiptIds: number[];
   reused: boolean;
@@ -629,7 +640,7 @@ export async function evaluateWithDecisionEngine(
     }
   }
 
-  // 2. Try Tier 1: OpenAI Decisions API (Official OpenAI gpt-6-luna, prior to Jev)
+  // 2. Try Tier 1: OpenAI Decisions API (Official OpenAI gpt-6-luna)
   if (isOpenAIDecisionAvailable()) {
     try {
       const res = await callOpenAIDecisions(text, questions, {
@@ -640,29 +651,29 @@ export async function evaluateWithDecisionEngine(
       return parseDecisionResult(res, "openai");
     } catch (openaiErr) {
       console.warn(
-        `[DecisionEngine] OpenAI Decisions API failed (${openaiErr instanceof Error ? openaiErr.message : String(openaiErr)}), falling back to Jev Tier 2`
+        `[DecisionEngine] OpenAI Decisions API failed (${openaiErr instanceof Error ? openaiErr.message : String(openaiErr)}), falling back to Gemini Decision 1 Tier 2`
       );
     }
   }
 
-  // 3. Try Tier 2: Jev (Cloud System One, fast & paid)
-  if (isJevAvailable()) {
+  // 3. Try Tier 2: Gemini Decision 1 (Google gemini-decision-1)
+  if (isGeminiDecisionAvailable()) {
     try {
-      const res = await callJevSystemOne(text, questions, {
+      const res = await callGeminiDecisions(text, questions, {
         purpose: opts.purpose ?? "prefilter_article",
         subject: opts.subject ?? "article:material",
         attemptTag: opts.attemptTag,
       });
-      return parseDecisionResult(res, "jev");
-    } catch (jevErr) {
+      return parseDecisionResult(res, "gemini");
+    } catch (geminiErr) {
       console.warn(
-        `[DecisionEngine] Jev Tier 2 failed or exhausted (${jevErr instanceof Error ? jevErr.message : String(jevErr)}), falling back to LLM Tier 3`
+        `[DecisionEngine] Gemini Decision 1 Tier 2 failed (${geminiErr instanceof Error ? geminiErr.message : String(geminiErr)}), falling back to LLM Tier 3`
       );
-      throw jevErr;
+      throw geminiErr;
     }
   }
 
-  throw new Error("No decision engine (Clef, OpenAI, or Jev) available");
+  throw new Error("No decision engine (Clef, OpenAI, or Gemini Decision 1) available");
 }
 
 export const jevEvaluateMaterial = evaluateWithDecisionEngine;
@@ -678,14 +689,23 @@ export const RELATION_CRITERIA: Record<"SAME_OCCURRENCE" | "SAME_STORY" | "UNREL
   ROUNDUP: "One or both reports is a multi-topic digest, weekly roundup, or listicle",
 };
 
+type PairRelation = "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP";
+type DecisionEngineName = "clef" | "openai" | "gemini" | "jev";
+
+function parseRelationChoice(ans: JevChoiceAnswer | undefined): { relation: PairRelation; confidence: number } {
+  const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
+  const relation: PairRelation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
+  return { relation, confidence: ans?.confidence ?? 0.8 };
+}
+
 export async function evaluatePairRelationWithDecisionEngine(
   reportAText: string,
   reportBText: string,
   opts: { purpose?: string; subject?: string; attemptTag?: string } = {}
 ): Promise<{
-  relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP";
+  relation: PairRelation;
   confidence: number;
-  engine: "clef" | "jev" | "openai";
+  engine: DecisionEngineName;
   receiptId: number;
   reused: boolean;
 }> {
@@ -697,24 +717,17 @@ export async function evaluatePairRelationWithDecisionEngine(
       criteria: RELATION_CRITERIA,
     },
   };
+  const reqOpts = {
+    purpose: opts.purpose ?? "group_pair",
+    subject: opts.subject ?? "relation:pair",
+    attemptTag: opts.attemptTag,
+  };
 
   if (isClefAvailable()) {
     try {
-      const res = await callClefSystemOne(state, questions, {
-        purpose: opts.purpose ?? "group_pair",
-        subject: opts.subject ?? "relation:pair",
-        attemptTag: opts.attemptTag,
-      });
-      const ans = res.response.answers.relation as JevChoiceAnswer | undefined;
-      const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
-      const relation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
-      return {
-        relation,
-        confidence: ans?.confidence ?? 0.8,
-        engine: "clef",
-        receiptId: res.receiptId,
-        reused: res.reused,
-      };
+      const res = await callClefSystemOne(state, questions, reqOpts);
+      const parsed = parseRelationChoice(res.response.answers.relation as JevChoiceAnswer | undefined);
+      return { ...parsed, engine: "clef", receiptId: res.receiptId, reused: res.reused };
     } catch (err) {
       console.warn(`[DecisionEngine] Clef pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to OpenAI Decisions Tier 1`);
     }
@@ -722,45 +735,21 @@ export async function evaluatePairRelationWithDecisionEngine(
 
   if (isOpenAIDecisionAvailable()) {
     try {
-      const res = await callOpenAIDecisions(state, questions, {
-        purpose: opts.purpose ?? "group_pair",
-        subject: opts.subject ?? "relation:pair",
-        attemptTag: opts.attemptTag,
-      });
-      const ans = res.response.answers.relation as JevChoiceAnswer | undefined;
-      const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
-      const relation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
-      return {
-        relation,
-        confidence: ans?.confidence ?? 0.8,
-        engine: "openai",
-        receiptId: res.receiptId,
-        reused: res.reused,
-      };
+      const res = await callOpenAIDecisions(state, questions, reqOpts);
+      const parsed = parseRelationChoice(res.response.answers.relation as JevChoiceAnswer | undefined);
+      return { ...parsed, engine: "openai", receiptId: res.receiptId, reused: res.reused };
     } catch (err) {
-      console.warn(`[DecisionEngine] OpenAI pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Jev Tier 2`);
+      console.warn(`[DecisionEngine] OpenAI pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Gemini Decision 1 Tier 2`);
     }
   }
 
-  if (isJevAvailable()) {
+  if (isGeminiDecisionAvailable()) {
     try {
-      const res = await callJevSystemOne(state, questions, {
-        purpose: opts.purpose ?? "group_pair",
-        subject: opts.subject ?? "relation:pair",
-        attemptTag: opts.attemptTag,
-      });
-      const ans = res.response.answers.relation as JevChoiceAnswer | undefined;
-      const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
-      const relation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
-      return {
-        relation,
-        confidence: ans?.confidence ?? 0.8,
-        engine: "jev",
-        receiptId: res.receiptId,
-        reused: res.reused,
-      };
+      const res = await callGeminiDecisions(state, questions, reqOpts);
+      const parsed = parseRelationChoice(res.response.answers.relation as JevChoiceAnswer | undefined);
+      return { ...parsed, engine: "gemini", receiptId: res.receiptId, reused: res.reused };
     } catch (err) {
-      console.warn(`[DecisionEngine] Jev pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 3`);
+      console.warn(`[DecisionEngine] Gemini Decision 1 pair relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 3`);
       throw err;
     }
   }
@@ -773,8 +762,8 @@ export async function evaluateBatchRelationWithDecisionEngine(
   candidateIds: string[],
   opts: { purpose?: string; subject?: string; attemptTag?: string } = {}
 ): Promise<{
-  decisions: Array<{ id: string; relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP"; confidence: number }>;
-  engine: "clef" | "jev" | "openai";
+  decisions: Array<{ id: string; relation: PairRelation; confidence: number }>;
+  engine: DecisionEngineName;
   receiptId: number;
   reused: boolean;
 }> {
@@ -786,30 +775,25 @@ export async function evaluateBatchRelationWithDecisionEngine(
       criteria: RELATION_CRITERIA,
     };
   }
-
-  const parseBatch = (res: { response: JevResponse; receiptId: number; reused: boolean }, engine: "clef" | "jev" | "openai") => {
-    const decisions: Array<{ id: string; relation: "SAME_OCCURRENCE" | "SAME_STORY" | "UNRELATED" | "ROUNDUP"; confidence: number }> = [];
-    for (const id of candidateIds) {
-      const ans = res.response.answers[id] as JevChoiceAnswer | undefined;
-      const raw = ans?.choice?.toUpperCase() ?? "UNRELATED";
-      const relation = raw === "SAME_OCCURRENCE" || raw === "SAME_STORY" || raw === "ROUNDUP" ? raw : "UNRELATED";
-      decisions.push({
-        id,
-        relation,
-        confidence: ans?.confidence ?? 0.8,
-      });
-    }
-    return { decisions, engine, receiptId: res.receiptId, reused: res.reused };
+  const reqOpts = {
+    purpose: opts.purpose ?? "group_batch",
+    subject: opts.subject ?? "relation:batch",
+    attemptTag: opts.attemptTag,
   };
+
+  const parseBatch = (res: { response: JevResponse; receiptId: number; reused: boolean }, engine: DecisionEngineName) => ({
+    decisions: candidateIds.map((id) => ({
+      id,
+      ...parseRelationChoice(res.response.answers[id] as JevChoiceAnswer | undefined),
+    })),
+    engine,
+    receiptId: res.receiptId,
+    reused: res.reused,
+  });
 
   if (isClefAvailable()) {
     try {
-      const res = await callClefSystemOne(stateText, questions, {
-        purpose: opts.purpose ?? "group_batch",
-        subject: opts.subject ?? "relation:batch",
-        attemptTag: opts.attemptTag,
-      });
-      return parseBatch(res, "clef");
+      return parseBatch(await callClefSystemOne(stateText, questions, reqOpts), "clef");
     } catch (err) {
       console.warn(`[DecisionEngine] Clef batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to OpenAI Decisions Tier 1`);
     }
@@ -817,27 +801,17 @@ export async function evaluateBatchRelationWithDecisionEngine(
 
   if (isOpenAIDecisionAvailable()) {
     try {
-      const res = await callOpenAIDecisions(stateText, questions, {
-        purpose: opts.purpose ?? "group_batch",
-        subject: opts.subject ?? "relation:batch",
-        attemptTag: opts.attemptTag,
-      });
-      return parseBatch(res, "openai");
+      return parseBatch(await callOpenAIDecisions(stateText, questions, reqOpts), "openai");
     } catch (err) {
-      console.warn(`[DecisionEngine] OpenAI batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Jev Tier 2`);
+      console.warn(`[DecisionEngine] OpenAI batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to Gemini Decision 1 Tier 2`);
     }
   }
 
-  if (isJevAvailable()) {
+  if (isGeminiDecisionAvailable()) {
     try {
-      const res = await callJevSystemOne(stateText, questions, {
-        purpose: opts.purpose ?? "group_batch",
-        subject: opts.subject ?? "relation:batch",
-        attemptTag: opts.attemptTag,
-      });
-      return parseBatch(res, "jev");
+      return parseBatch(await callGeminiDecisions(stateText, questions, reqOpts), "gemini");
     } catch (err) {
-      console.warn(`[DecisionEngine] Jev batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 3`);
+      console.warn(`[DecisionEngine] Gemini Decision 1 batch relation failed (${err instanceof Error ? err.message : String(err)}), falling back to LLM Tier 3`);
       throw err;
     }
   }

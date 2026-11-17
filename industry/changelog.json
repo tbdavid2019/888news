@@ -1,6 +1,16 @@
 {
-  "latestVersion": "2026-11-16 16:45",
+  "latestVersion": "2026-11-17 08:40",
   "releases": [
+    {
+      "date": "2026-11-17",
+      "time": "08:40",
+      "kind": "架構升級",
+      "title": "決策引擎重構：重啟 Tier 0 Clef、移除 Jev 並整合 Gemini Decision 1",
+      "body": [
+        "重新啟用 Tier 0 自建 Clef-Flash 結構化決策引擎，降低文章預篩與事件歸組 Token 成本。",
+        "移除原有 TypeSafe Jev Tier 2 備援，改接 Google 官方 Gemini Decisions API (gemini-decision-1) 作為第三層結構化決策備援。"
+      ]
+    },
     {
       "date": "2026-11-16",
       "time": "16:45",

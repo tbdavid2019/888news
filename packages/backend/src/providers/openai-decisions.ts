@@ -287,7 +287,7 @@ export async function callOpenAIDecisions(
             void dispatchAlert("OpenAI Decisions circuit opened", [
               `Failures: ${circuitState.failureCount}`,
               `HTTP ${res.status}: ${errText.slice(0, 150)}`,
-              "Action: Routing decision traffic to Jev Tier 2 for 60s",
+              "Action: Routing decision traffic to Gemini Decision 1 Tier 2 for 60s",
             ]).catch(() => {});
           }
           throw new ProviderRejectedError(

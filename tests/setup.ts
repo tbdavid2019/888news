@@ -16,6 +16,7 @@ process.env.FEISHU_CONTENT_PUSH_ENABLED = "false";
 process.env.INDEXNOW_SUBMIT_ENABLED = "false";
 process.env.CLEF_ENABLED = "false";
 process.env.JEV_ENABLED = "false";
+process.env.GEMINI_DECISIONS_ENABLED = "false";
 // Existing editorial fixtures exercise configurable two-score, no-short-circuit mode.
 // Production defaults (one score and native CLEF cutoff 1.05) have separate tests.
 process.env.SCORE_CALLS ??= "2";

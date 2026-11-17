@@ -2,6 +2,16 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-17] — 🧠 決策引擎層級重構：啟用 Tier 0 Clef-Flash、移除 Jev 並整合 Gemini Decision 1 (Tier 2)
+
+### ⚙️ 決策引擎級聯切換 (`packages/backend/src/providers/gemini-decisions.ts`、`jev.ts`)
+- **啟用 Tier 0 (`Clef-Flash`)**：重新開啟免費自建結構化決策引擎 `clef.create360.ai`（`0` 輸出 Token 成本），負責文章預篩與關聯判斷第一線。
+- **移除舊版 TypeSafe Jev Tier 2、改接 Google Gemini Decision 1 (`gemini-decision-1`)**：
+  - 新增 `gemini-decisions.ts` 對接 Google 官方 REST 端點 `POST https://generativelanguage.googleapis.com/v1beta/decisions`（使用 `x-goog-api-key` 與 `GEMINI_API_KEY` / `GEMINI_DECISION_API_KEY`），支援 `noul` / `choice` / `score` 機率決策與熔斷告警。
+  - 更新 `jev.ts` 決策級聯順序為 **`Tier 0 (Clef)` → `Tier 1 (OpenAI Decisions gpt-6-luna)` → `Tier 2 (Gemini Decision 1)` → `Tier 3 (LLM 兜底)`**，不再呼叫過期的 Jev 端點。
+
+---
+
 ## [2026-11-16] — 📧 新增 SMTP Email 系統報錯告警與使用者反饋通知
 
 ### 🔔 營運告警與使用者反饋 Email 通知 (`packages/backend/src/notify/email.ts`、`dispatch.ts`)
