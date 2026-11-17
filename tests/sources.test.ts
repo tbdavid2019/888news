@@ -21,6 +21,11 @@ const source = (config: Record<string, unknown>) => ({ id: "test-list", config }
 // map, the route table naming the homepage's chunks, and the chunk with the Blog list among the menu,
 // the model cards, the other sections and a Paper list built at run time.
 const pages: Record<string, (cdn: string) => string> = {
+  "/lmsys": () => `<script>self.__next_f.push(${JSON.stringify([1, `6:["$","$L6",null,{"posts":${JSON.stringify([
+    { slug: "2026-11-13-example", title: "A new model", author: "LMSYS", date: "November 13, 2026", excerpt: "A summary", categories: ["news"] },
+    { slug: "2026-11-13-example", title: "Duplicate" },
+    { slug: "../outside", title: "Invalid path" },
+  ])}}]`])})</script>`,
   "/": (cdn) =>
     `<html><head><script defer src="${cdn}static/js/lib-react.a6be410a.js"></script><script defer src="${cdn}static/js/4752.2908c99e.js"></script>` +
     `<script defer src="${cdn}static/js/index.c5195ace.js"></script></head><body><a href="/zh/index">简体中文</a><a href="/mimocode">MiMo Code</a>` +
@@ -116,6 +121,11 @@ test("promotions a feed rotates inside its posts are left out of the body", () =
   assert.equal(a, b, "the same post whichever promotion it carried");
   assert.ok(!/PODCAST SERIES|Ideas|Foundry Labs|Listen now/.test(a));
   assert.ok(a.includes("native integration"), "the post's own text stays");
+});
+
+test("LMSYS client-rendered posts retain their metadata and URL rules", async () => {
+  const out = await fetchWebList(source({ url: `${site}/lmsys`, adapter: "lmsys_blog", allowUrlPrefixes: [`${site}/blog/`] }));
+  assert.deepEqual(out, [{ url: `${site}/blog/2026-11-13-example`, title: "A new model", author: "LMSYS", excerpt: "A summary", publishedAt: new Date("2026-11-12T16:00:00Z") }]);
 });
 
 test("the MiMo homepage lists its posts and model pages, not its menu", async () => {

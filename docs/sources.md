@@ -38,6 +38,7 @@
 - `parseMode`：`html`（默认，用选择器）、`markdown`（经 Jina 渲染后按 Markdown 读）、`docusaurus_changelog`。
 - `detail`：列表缺日期、标题或摘要时抓详情页补齐（`publishedAtSelector`、`titleSelector`、`summarySelector` 等）。
 - `allowUrlPrefixes` / `denyUrlPrefixes`：只收某些路径下的文章。
+- LMSYS Org Blog 使用 `"adapter": "lmsys_blog"`，列表网址和允许前缀均填写 `https://www.lmsys.org/blog/`。
 
 ### x_search
 

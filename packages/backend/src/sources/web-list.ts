@@ -306,11 +306,54 @@ async function fromMimoHome(html: string, base: string, source: SourceRow): Prom
   throw new FetchError("mimo_home: no Blog list in the homepage's chunks");
 }
 
+/** LMSYS renders its post cards client-side; the post data is in a Next.js flight payload. */
+function fromLmsysBlog(html: string, base: string, source: SourceRow): Candidate[] {
+  const $ = cheerio.load(html);
+  for (const script of $("script").toArray()) {
+    const text = $(script).html() ?? "";
+    for (const match of text.matchAll(/self\.__next_f\.push\((\[.*?\])\)/gs)) {
+      let payload: unknown;
+      try { payload = JSON.parse(match[1]!)[1]; } catch { continue; }
+      if (typeof payload !== "string") continue;
+      const start = payload.indexOf('"posts":[');
+      if (start < 0) continue;
+      const arrayStart = start + '"posts":'.length;
+      let depth = 0, quoted = false, escaped = false;
+      for (let i = arrayStart; i < payload.length; i++) {
+        const ch = payload[i]!;
+        if (quoted) {
+          if (escaped) escaped = false;
+          else if (ch === "\\") escaped = true;
+          else if (ch === '"') quoted = false;
+        } else if (ch === '"') quoted = true;
+        else if (ch === "[") depth++;
+        else if (ch === "]" && --depth === 0) {
+          let posts: unknown;
+          try { posts = JSON.parse(payload.slice(arrayStart, i + 1)); } catch { break; }
+          if (!Array.isArray(posts)) break;
+          const seen = new Set<string>();
+          return posts.flatMap((post): Candidate[] => {
+            if (typeof post?.slug !== "string" || !/^[a-zA-Z0-9-]+$/.test(post.slug) || typeof post.title !== "string" || !post.title.trim()) return [];
+            const url = new URL(`/blog/${post.slug}`, base).toString();
+            if (seen.has(url) || !allowed(url, source)) return [];
+            seen.add(url);
+            return [{ url, title: post.title, author: typeof post.author === "string" ? post.author : null,
+              excerpt: typeof post.excerpt === "string" ? post.excerpt : null,
+              publishedAt: parseLooseDate(typeof post.date === "string" ? post.date : null, source.config.publishedAtUtcOffset) }];
+          });
+        }
+      }
+    }
+  }
+  return [];
+}
+
 export async function fetchWebList(source: SourceRow): Promise<Candidate[]> {
   const { text, viaReader, base } = await fetchListingText(source);
-  const mode = source.config.adapter === "mimo_home" ? "mimo_home" : source.config.parseMode ?? (viaReader ? "markdown" : "html");
+  const mode = source.config.adapter ?? source.config.parseMode ?? (viaReader ? "markdown" : "html");
   let out: Candidate[];
   if (mode === "mimo_home") out = await fromMimoHome(text, base, source);
+  else if (mode === "lmsys_blog") out = fromLmsysBlog(text, base, source);
   else if (mode === "markdown") out = fromMarkdown(text, base, source);
   else if (mode === "docusaurus_changelog") out = fromDocusaurusChangelog(text, base, source);
   else out = fromHtml(text, base, source);

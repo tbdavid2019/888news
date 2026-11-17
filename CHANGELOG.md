@@ -2,6 +2,14 @@
 
 本專案遵循語意化版本（Semantic Versioning）與時序更新原則，記錄所有架構升級、功能迭代、UI/UX 優化與 Bug 修復。
 
+## [2026-11-17] — 修復 LMSYS 與 Cursor 部落格信源
+
+- LMSYS 部落格改用 `www.lmsys.org`，解析網頁內的文章清單資料，保留標題、日期和摘要。
+- Cursor 原 RSS 網址已回傳網頁，改讀繁體中文部落格列表，文章網址統一為原始網址以供判重。
+- 資料庫遷移自動更新仍使用原始設定的既有信源，保留管理員自訂設定。
+
+---
+
 ## [2026-11-17] — 🧠 決策引擎層級重構：啟用 Tier 0 Clef-Flash、移除 Jev 並整合 Gemini Decision 1 (Tier 2)
 
 ### ⚙️ 決策引擎級聯切換 (`packages/backend/src/providers/gemini-decisions.ts`、`jev.ts`)

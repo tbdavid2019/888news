@@ -2443,9 +2443,10 @@
       "name": "LMSYS Org Blog",
       "kind": "web_list",
       "config": {
-        "url": "https://lmsys.org/blog/",
+        "url": "https://www.lmsys.org/blog/",
+        "adapter": "lmsys_blog",
         "allowUrlPrefixes": [
-          "https://lmsys.org/blog/"
+          "https://www.lmsys.org/blog/"
         ],
         "_aihot": {
           "initialBackfillLimit": 8
@@ -6359,9 +6360,16 @@
     {
       "id": "rss-cursor-blog",
       "name": "Cursor Official Blog",
-      "kind": "rss",
+      "kind": "web_list",
       "config": {
-        "feedUrl": "https://cursor.com/rss.xml"
+        "url": "https://cursor.com/zh-Hant/blog",
+        "itemSelector": ".blog-directory__item",
+        "linkSelector": "a.blog-directory__row",
+        "titleSelector": "p",
+        "publishedAtSelector": "time",
+        "allowUrlPrefixes": ["https://cursor.com/zh-Hant/blog/"],
+        "itemUrlPrefixRewrite": { "from": "https://cursor.com/zh-Hant/blog/", "to": "https://cursor.com/blog/" },
+        "_aihot": { "initialBackfillLimit": 8 }
       },
       "tier": "T1",
       "first_party": true,
