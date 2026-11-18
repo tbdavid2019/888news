@@ -35,8 +35,6 @@ export function resolveEmbeddingConfig(): EmbeddingConfig {
   const openaiKey =
     credential("models", "OPENAI_API_KEY") ||
     process.env.OPENAI_API_KEY ||
-    credential("models", "OPENAI_DECISION_API_KEY") ||
-    process.env.OPENAI_DECISION_API_KEY ||
     credential("models", "LLM_FALLBACK_3_API_KEY") ||
     process.env.LLM_FALLBACK_3_API_KEY;
   if (openaiKey) {

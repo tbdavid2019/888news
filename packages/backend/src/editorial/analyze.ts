@@ -20,8 +20,6 @@ import { modelFor } from "./models.ts";
 import { buildMaterial, firstImagePart, loadAnalyzeInput, type AnalyzeInputArticle } from "./input.ts";
 import { pageFetchable } from "../content/extract.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
-import { belowDecisionCutoff } from "../providers/decision-material.ts";
-import { isDecisionEngineAvailable, evaluateWithDecisionEngine, CLEF_SELECTION_VERSION } from "../providers/jev.ts";
 import {
   buildArticlePrompt, buildLongTweetPrompt, buildShortTweetPrompt, finalizeCopy, isShortTweetInput, looksZh, MAX_BODY_CHARS, missingEvidence,
   needsShortTweetTranslation, parseTranslateOutput, PREFILTER_SYSTEM, prefilterUser, translateInputOf, UNDERSTAND_SYSTEM, understandUser,
@@ -34,7 +32,6 @@ import { normalizeTaiwanTerms } from "./taiwan-terms.ts";
 export { buildMaterial, loadAnalyzeInput, type AnalyzeInputArticle };
 
 export const PROMPT_VERSIONS = {
-  clef: CLEF_SELECTION_VERSION,
   prefilter: promptVersion("prefilter"),
   score: promptVersion("selection-score"),
   understand: promptVersion("understand"),
@@ -161,12 +158,6 @@ export interface AnalysisRun {
     model: string;
     receiptId: number;
     reused: boolean;
-    receiptIds?: number[];
-    fastScore?: number;
-    rawGrade?: number;
-    category?: string | null;
-    itemType?: string | null;
-    authorRole?: "principal" | "observer" | "relayer" | null;
   };
   /**
    * The independent score calls and the tier threshold they are held against; absent when the material
@@ -209,41 +200,7 @@ const tagged = (attemptTag: string | undefined, step: string) => [attemptTag, st
 
 async function runPrefilter(a: AnalyzeInputArticle, opts: StepOpts): Promise<AnalysisRun["prefilter"]> {
   checkAnalysisRunning();
-  // 1. Try Decision Engine (Tier 0: Clef, Tier 1: Jev) only if explicitly enabled via environment variable
-  if (process.env.PREFILTER_USE_DECISION_ENGINE === "true" && isDecisionEngineAvailable() && !opts.scoreModel) {
-    try {
-      const decision = await evaluateWithDecisionEngine(
-        {
-          title: a.title,
-          bodyText: a.xPost
-            ? [a.xPost.text, a.xPost.quoted?.text].filter(Boolean).join("\n\n[Quoted source]\n")
-            : a.bodyText,
-          excerpt: a.excerpt,
-        },
-        { purpose: "prefilter_article", subject: subjectOf(a), attemptTag: opts.attemptTag }
-      );
-      const label = decision.label === "BLOCK" && missingEvidence(a) ? "UNKNOWN" : decision.label;
-      return {
-        label,
-        reason: decision.label === "BLOCK" ? `${decision.engine.toUpperCase()}: off-topic/noise` : "",
-        model: decision.model,
-        receiptId: decision.receiptId,
-        receiptIds: decision.receiptIds,
-        reused: decision.reused,
-        fastScore: decision.score,
-        rawGrade: decision.rawGrade,
-        category: decision.category,
-        itemType: decision.itemType,
-        authorRole: decision.authorRole,
-      };
-    } catch (err) {
-      console.warn(`[Prefilter] Decision Engine (Clef/Jev) failed or exhausted, falling back to LLM:`, err instanceof Error ? err.message : String(err));
-    }
-  }
-
-  // 2. Fallback to standard LLM chatJson
   const model = await modelFor("prefilter");
-  checkAnalysisRunning();
   const res = await chatJson({
     model,
     purpose: "prefilter_article",
@@ -420,49 +377,12 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
     const scores = threshold === null ? null : await runScores(a, threshold, opts);
     return { prefilter, scores, writing: null, structure: null };
   }
-  const noiseCutoff = process.env.NOISE_SCORE_CUTOFF ? Number(process.env.NOISE_SCORE_CUTOFF) : 35;
-
-  // Compare the native 0–3 grade before display rounding, preserving the
-  // configured 0–100 cutoff. Low-value material skips secondary scoring.
-  if (
-    prefilter.fastScore !== undefined &&
-    belowDecisionCutoff(prefilter.rawGrade, prefilter.fastScore, noiseCutoff) &&
-    threshold !== null &&
-    !opts.attemptTag
-  ) {
-    const scores: NonNullable<AnalysisRun["scores"]> = {
-      model: prefilter.model,
-      threshold,
-      values: [prefilter.fastScore],
-      receiptIds: [prefilter.receiptId],
-      reused: prefilter.reused,
-    };
-    const t = translateInputOf(a);
-    const main = collapseWhitespace(t.mainText || t.title);
-    const isZh = looksZh(main);
-    const writing: AnalysisRun["writing"] = {
-      kind: isZh ? "verbatim" : "none",
-      model: null,
-      titleZh: isZh ? (looksZh(t.title) ? t.title : main.slice(0, 100)) : "",
-      summaryZh: isZh ? main.slice(0, 200) : "",
-      reasonZh: null,
-      tags: null,
-      identityGuard: undefined,
-      receiptIds: [],
-      reused: true,
-    };
-    return { prefilter, scores, writing, structure: null };
-  }
-
-  // 2. Option A: Run single precision scoring via Groq/LLM with industry rubric (SCORE_CALLS=1).
-  // (If SCORE_BY_DECISION_ENGINE=true, bypass Groq scoring completely)
-  const bypassGroqScore = process.env.SCORE_BY_DECISION_ENGINE === "true" && prefilter.fastScore !== undefined;
-  const scores = threshold === null ? null : bypassGroqScore
-    ? { model: prefilter.model, threshold, values: [prefilter.fastScore!], receiptIds: [prefilter.receiptId], reused: prefilter.reused }
-    : await runScores(a, threshold, opts);
+  const scores = threshold === null ? null : await runScores(a, threshold, opts);
   const count = scores?.values.length ?? 0;
   const sum = scores && !scores.refused && count > 0 ? scores.values.reduce((total, v) => total + v, 0) : null;
   const meanScore = sum !== null && count > 0 ? Math.floor(sum / count) : null;
+
+  const noiseCutoff = process.env.NOISE_SCORE_CUTOFF ? Number(process.env.NOISE_SCORE_CUTOFF) : 35;
 
   // 3. Short-circuit: if the article scored below cutoff and has no custom attempt tag, it is noise.
   // We skip expensive structure extraction and deep writing LLM calls.
@@ -487,8 +407,8 @@ export async function runAnalysis(a: AnalyzeInputArticle, opts: StepOpts & { sta
 
   // 3. For articles that passed the noise filter, run structure and writing.
   const near = sum !== null && (sum >= (scores?.threshold ?? 60) * count || sum > UNDERSTAND_FLOOR * count);
-  const structure = await runStructure(a, opts, { category: prefilter.category, itemType: prefilter.itemType });
-  const writing = (near ? await runUnderstand(a, opts, { itemType: prefilter.itemType, authorRole: prefilter.authorRole }) : null) ?? (await runSummarize(a, opts));
+  const structure = await runStructure(a, opts);
+  const writing = (near ? await runUnderstand(a, opts) : null) ?? (await runSummarize(a, opts));
 
   return { prefilter, scores, writing, structure };
 }
@@ -510,14 +430,8 @@ export function normalizeAnalysis(run: AnalysisRun) {
   const threshold = run.scores?.threshold ?? null;
   const selected = relevance === "pass" && sum !== null && threshold !== null && count > 0 && sum >= threshold * count;
   const subjects = run.structure?.subjects ?? [];
-  const validPrefilterCat = run.prefilter.category && (CATEGORY_KEYS as readonly string[]).includes(run.prefilter.category)
-    ? (run.prefilter.category as typeof CATEGORY_KEYS[number])
-    : null;
-  const category = run.structure?.category ?? validPrefilterCat;
+  const category = run.structure?.category ?? null;
   const tags = [...(run.writing?.tags ?? run.structure?.tags ?? [])];
-  if (tags.length === 0 && run.prefilter.itemType && CATEGORY_BY_ITEM_TYPE[run.prefilter.itemType]) {
-    tags.push(CATEGORY_BY_ITEM_TYPE[run.prefilter.itemType]!);
-  }
   for (const s of subjects) {
     const display = ENTITIES[s]?.displayTag;
     if (display && !tags.includes(display)) tags.push(display);
@@ -562,13 +476,11 @@ export async function analyzeArticle(articleId: string, opts: StepOpts = {}): Pr
   const run = await runAnalysis(input, opts);
   const out = normalizeAnalysis(run);
   const receiptIds = [...new Set([
-    ...(run.prefilter.receiptIds ?? [run.prefilter.receiptId]), ...(run.scores?.receiptIds ?? []), ...(run.writing?.receiptIds ?? []), ...(run.structure ? [run.structure.receiptId] : []),
+    run.prefilter.receiptId, ...(run.scores?.receiptIds ?? []), ...(run.writing?.receiptIds ?? []), ...(run.structure ? [run.structure.receiptId] : []),
   ])];
   const w = run.writing;
   const detail = {
-    prefilter: { label: run.prefilter.label, reason: run.prefilter.reason,
-      ...(run.prefilter.rawGrade !== undefined ? { rawGrade: run.prefilter.rawGrade, displayScore: run.prefilter.fastScore } : {}),
-    },
+    prefilter: { label: run.prefilter.label, reason: run.prefilter.reason },
     scores: out.scores, scoreModel: out.scoreModel, threshold: out.threshold, ...(out.scoreRefused ? { scoreRefused: true } : {}),
     ...(w ? { writer: w.kind, writerModel: w.model, itemType: w.itemType ?? null, authorRole: w.authorRole ?? null } : {}),
     ...(w?.identityGuard?.outcome === "fallback" ? { identityGuard: w.identityGuard } : {}),

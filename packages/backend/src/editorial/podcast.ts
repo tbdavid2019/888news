@@ -1,7 +1,16 @@
-// Podcast AI Intelligence & CLEF/JEV evaluation pipeline.
+// Podcast AI evaluation pipeline (standard LLM via chatJson).
+import { z } from "zod";
 import { sql } from "../db.ts";
-import { evaluateWithDecisionEngine, isDecisionEngineAvailable } from "../providers/jev.ts";
+import { chatJson } from "../providers/llm.ts";
+import { modelFor } from "./models.ts";
 import { ENTITIES } from "@aihot/industry/taxonomy";
+
+const PodcastEvalSchema = z.object({
+  label: z.preprocess((v) => String(v ?? "PASS").trim().toUpperCase(), z.enum(["PASS", "BLOCK", "UNKNOWN"])).catch("PASS"),
+  score: z.coerce.number().min(0).max(100).catch(50),
+  category: z.string().nullable().optional().catch(null),
+  authorRole: z.enum(["principal", "observer", "relayer"]).nullable().optional().catch("observer"),
+});
 
 export interface PodcastEvalResult {
   label: "PASS" | "BLOCK" | "UNKNOWN";
@@ -33,28 +42,25 @@ export async function evaluatePodcastEpisode(ep: {
   title: string;
   showNotes: string;
 }): Promise<PodcastEvalResult> {
-  if (!isDecisionEngineAvailable()) {
-    return {
-      label: "PASS",
-      score: 50,
-      selected: true,
-      category: "ai-tech",
-      authorRole: "observer",
-    };
-  }
+  const model = await modelFor("score");
+  const res = await chatJson({
+    model,
+    purpose: "podcast_selection",
+    subject: `podcast:${ep.id}`,
+    promptVersion: "podcast-eval-v1",
+    system: "Evaluate whether this podcast episode is relevant to the tech/AI industry and score its editorial value from 0 to 100. Return JSON with fields: label (PASS, BLOCK, or UNKNOWN), score (0-100), category (string or null), authorRole (principal, observer, relayer, or null).",
+    user: `Title: ${ep.title}\n\nShow notes:\n${ep.showNotes.slice(0, 8000)}`,
+    schema: PodcastEvalSchema,
+    temperature: 0,
+    maxTokens: 256,
+  });
 
-  const decision = await evaluateWithDecisionEngine(
-    {
-      title: ep.title,
-      bodyText: ep.showNotes,
-    },
-    {
-      purpose: "podcast_selection",
-      subject: `podcast:${ep.id}`,
-    }
-  );
-
-  const result = evalPodcastDecisionLogic(decision);
+  const result = evalPodcastDecisionLogic({
+    label: res.data.label,
+    score: Math.round(res.data.score),
+    category: res.data.category ?? null,
+    authorRole: res.data.authorRole ?? null,
+  });
 
   await sql`
     UPDATE podcast_episodes

@@ -17,7 +17,6 @@ import { compactAnswerFirstSummary, enforceIdentity, finalizeCopy, MAX_SUMMARY_C
 import { promptText } from "@aihot/backend/editorial/prompts";
 import { SITE } from "@aihot/industry/site";
 import { normalizeTags } from "@aihot/backend/editorial/vocabulary";
-import { resetClefState } from "../packages/backend/src/providers/jev.ts";
 
 const T = tag();
 const SOURCE = `test-analyze-${T}`;
@@ -26,8 +25,8 @@ const X_SOURCE = `test-analyze-x-${T}`;
 type Step = "prefilter" | "score" | "understand" | "summarize" | "structure";
 interface Req { step: Step; marker: string; system: string; user: string; body: Record<string, any> }
 const requests: Req[] = [];
-const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "VAGUE", "THIN", "SENSITIVE", "INFOSEC", "INFOSLOW", "CLEFSEC", "SECGUIDE", "NOCLEF", "推文"];
-const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [74, 74], SENSITIVE: [80, 80], INFOSEC: [84, 78], INFOSLOW: [30, 32], CLEFSEC: [84, 78], SECGUIDE: [30, 32], NOCLEF: [78, 72], 推文: [40, 40], BARE: [30, 34], VAGUE: [72, 74] };
+const MARKERS = ["CLEAR", "RESCUE", "LOW", "OFFTOPIC", "BARE", "VAGUE", "THIN", "SENSITIVE", "INFOSEC", "INFOSLOW", "SECGUIDE", "推文"];
+const scoreAnswers: Record<string, number[]> = { CLEAR: [78, 72], RESCUE: [56, 50], LOW: [45, 40], THIN: [74, 74], SENSITIVE: [80, 80], INFOSEC: [84, 78], INFOSLOW: [30, 32], SECGUIDE: [30, 32], 推文: [40, 40], BARE: [30, 34], VAGUE: [72, 74] };
 
 const stepOf = (system: string, user: string): Step =>
   system === PREFILTER_SYSTEM ? "prefilter" : system.includes("事件注意力评分器") ? "score"
@@ -48,10 +47,10 @@ const provider = await stub((_hit, req) => {
   if (step === "score") return answer({ attentionScore: scoreAnswers[marker]!.shift() });
   if (step === "understand") {
     if (marker === "SENSITIVE") return new Reply(400, { contentFilter: [{ level: 1, role: "user" }], error: { code: "1301", message: "系统检测到输入或生成内容可能包含不安全或敏感内容" } });
-    if (marker === "INFOSEC" || marker === "CLEFSEC") return answer({ itemType: "industry_event", authorRole: "observer", tags: ["產業動態", "資訊安全"], editorialJudgment: "OpenSSH 的受影響版本與修補資訊可協助管理者判斷升級時程。", titleZh: "OpenSSH 修補未驗證遠端程式碼執行漏洞", summaryZh: "OpenSSH 9.8 至 9.9 存在未驗證 RCE；研究者公開 PoC，專案釋出 9.9.1 修補版並提供設定緩解。" });
+    if (marker === "INFOSEC") return answer({ itemType: "industry_event", authorRole: "observer", tags: ["產業動態", "資訊安全"], editorialJudgment: "OpenSSH 的受影響版本與修補資訊可協助管理者判斷升級時程。", titleZh: "OpenSSH 修補未驗證遠端程式碼執行漏洞", summaryZh: "OpenSSH 9.8 至 9.9 存在未驗證 RCE；研究者公開 PoC，專案釋出 9.9.1 修補版並提供設定緩解。" });
     return answer({ itemType: "model_release", authorRole: "principal", tags: ["模型发布", "开源", "Agent", "不存在的标签"], editorialJudgment: `理由 ${marker}`, titleZh: `理解标题 ${marker}`, summaryZh: `理解摘要 ${marker}。第二句补充一个关键数字。` });
   }
-  if (step === "structure") return answer(marker === "INFOSEC" || marker === "INFOSLOW" || marker === "CLEFSEC" || marker === "SECGUIDE"
+  if (step === "structure") return answer(marker === "INFOSEC" || marker === "INFOSLOW" || marker === "SECGUIDE"
     ? { category: marker === "SECGUIDE" ? "tip" : "industry", tags: marker === "INFOSLOW" || marker === "SECGUIDE" ? ["資訊安全"] : ["產業動態", "資訊安全"], subjects: [], fact: { title: "OpenSSH 修補 RCE", subject: "OpenSSH", action: "修補", object: "RCE 漏洞", occurredAt: null } }
     : { category: "ai-models", tags: ["模型发布", "推理"], subjects: ["anthropic", "unknown-co"], fact: { title: `事实 ${marker}`, subject: "某公司", action: "发布", object: "模型", occurredAt: null } });
   return answer(`title_zh: 翻译标题 ${marker}\nsummary_zh: 翻译摘要 ${marker}。第二句补充影响。`);
@@ -61,21 +60,6 @@ for (const env of ["DASHSCOPE_API_KEY", "ZHIPU_API_KEY", "DEEPSEEK_API_KEY"]) pr
 // AIHOT's own assignment of models to steps (the open-source default is one model for all of them).
 Object.assign(process.env, { PREFILTER_MODEL: "qwen3.7-flash", SCORE_MODEL: "glm-5.3-flash-selection", UNDERSTAND_MODEL: "glm-5.3-flash", SUMMARIZE_MODEL: "deepseek-flash", STRUCTURE_MODEL: "qwen3.8-flash" });
 
-const clefRequests: Record<string, any>[] = [];
-const clefProvider = await stub((_hit, req) => {
-  const input = JSON.parse(req.body);
-  clefRequests.push(input);
-  return {
-    model: "clef-flash", answers: {
-      relevance: { type: "choice", choice: "PASS", confidence: 0.96, probabilities: { PASS: 0.96, BLOCK: 0.02, UNKNOWN: 0.02 } },
-      score: { type: "score", score: 3, confidence: 0.95 },
-      category: { type: "choice", choice: "industry", confidence: 0.95 },
-      itemType: { type: "choice", choice: "industry_event", confidence: 0.95 },
-      authorRole: { type: "choice", choice: "observer", confidence: 0.95 },
-    }, usage: { input_tokens: 100, output_tokens: 0 },
-  };
-});
-
 before(async () => {
   await sql`INSERT INTO sources (id, name, kind, tier, participation_mode, next_fetch_at) VALUES
     (${SOURCE}, 'Test analyze source', 'rss', 'T1', 'editorial', '2100-01-01'),
@@ -83,7 +67,6 @@ before(async () => {
 });
 after(async () => {
   await provider.close();
-  await clefProvider.close();
   await stopBoss();
   await closeDb();
 });
@@ -190,56 +173,6 @@ test("an evidence-based infosec item reaches both scores, summary and the distin
   const fallback = requests.find((q) => q.marker === "INFOSLOW" && q.step === "summarize")!;
   assert.match(fallback.user, /【資安摘要規則】/);
   assert.match(fallback.user, /已知攻擊／研究 PoC／理論推測/);
-});
-
-test("a pure infosec article passes CLEF and reaches scoring, summary and infosec tagging", async () => {
-  config.allowPrivateNetworkFetch = true; // This case calls only the localhost CLEF stub.
-  process.env.CLEF_ENABLED = "true";
-  process.env.PREFILTER_USE_DECISION_ENGINE = "true";
-  process.env.CLEF_BASE_URL = clefProvider.url;
-  process.env.CLEF_FALLBACK_BASE_URL = "";
-  resetClefState();
-  try {
-    const id = await article("CLEFSEC", {
-      title: `OpenSSH CVE-2026-12345 permits unauthenticated remote code execution ${T}`,
-      bodyText: `CLEFSEC: OpenSSH 9.8 through 9.9 permits unauthenticated remote code execution. Researchers published a proof of concept. The project released version 9.9.1 to fix the vulnerability. ${T}`,
-    });
-    const result = await analyzeArticle(id);
-    const r = await row(id);
-    assert.deepEqual([result!.output!.selected, result!.output!.relevance, r.output.prefilter.label, r.output.writer], [true, "pass", "PASS", "understand"]);
-    assert.equal(r.output.prefilter.rawGrade, 3);
-    assert.deepEqual(calls("CLEFSEC").sort(), ["score", "score", "structure", "understand"]);
-    assert.deepEqual([r.category, r.tags], ["industry", ["產業動態", "資訊安全"]]);
-    assert.equal(r.title_zh, "OpenSSH 修補未驗證遠端程式碼執行漏洞");
-    assert.ok(clefRequests.some((request) => request.questions.relevance));
-    assert.ok(clefRequests.some((request) => JSON.stringify(request).includes("CVE-2026-12345")));
-  } finally {
-    process.env.CLEF_ENABLED = "false";
-    delete process.env.PREFILTER_USE_DECISION_ENGINE;
-    resetClefState();
-  }
-});
-
-test("by default prefilter uses standard LLM and bypasses decision engine even if clef is enabled", async () => {
-  config.allowPrivateNetworkFetch = true;
-  process.env.CLEF_ENABLED = "true";
-  delete process.env.PREFILTER_USE_DECISION_ENGINE;
-  process.env.CLEF_BASE_URL = clefProvider.url;
-  process.env.CLEF_FALLBACK_BASE_URL = "";
-  resetClefState();
-  const clefCountBefore = clefRequests.length;
-  try {
-    const id = await article("NOCLEF");
-    const result = await analyzeArticle(id);
-    assert.ok(result);
-    // CLEF stub should not have received any new request
-    assert.equal(clefRequests.length, clefCountBefore);
-    // Prefilter step was executed via standard LLM
-    assert.deepEqual(calls("NOCLEF").sort(), ["prefilter", "score", "score", "structure", "understand"]);
-  } finally {
-    process.env.CLEF_ENABLED = "false";
-    resetClefState();
-  }
 });
 
 test("structure maps a missing security-topic category tag from its explicit non-industry category", async () => {
