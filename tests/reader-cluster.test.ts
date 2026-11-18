@@ -178,7 +178,7 @@ describe("Round-Robin Load Balancing and Circuit Breaker", () => {
     assert.equal(candidates[1], "https://node-c.com");
     // Node A is strictly excluded
     assert.equal(candidates.length, 2);
-    assert.ok(!candidates.includes("https://node-a.com"));
+    assert.ok(!candidates.some((c) => c === nodeA));
   });
 
   it("does not trip circuit breaker on target page client errors (404/403)", () => {
