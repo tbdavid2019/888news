@@ -43,7 +43,6 @@
 | **行動端與 PWA** | 一般響應式網頁 | **完整 PWA 化**，支援 Android / iOS Safari「加到主畫面」獨立安裝與離線快取 |
 | **Docker 鏡像** | 需本機自行編譯 | **官方 GHCR 多架構預編譯映像檔** (`ghcr.io/tbdavid2019/888news`)，隨拉即跑 |
 | **自動化部署** | 手動拉取更新 | **GitHub Actions 矩陣建置 + Watchtower** 無感自動輪詢熱更新 |
-| **決策與 Token 優化** | 僅依賴常規生成式大模型 | **本地 Clef-flash + 雲端 Jev 雙決策引擎**，80%+ 雜訊 0 元攔截，告別 Rate Limit |
 | **Podcast 智庫與上市公司行情** | 無 | **收錄 100+ 全球頂尖 Podcast、零磁碟串流播放器、聯動 Yahoo Finance 即時美股/台股行情，並雙向匯流全站動態** |
 | **閱讀排版與字體規範** | 預設系統無襯線字體 | **導入 `JetBrains Mono`（Google Fonts 可變字型）+ `Gen Jyuu Gothic`（源柔黑體），嚴格落實中文字級 $\ge$ 12pt (16px) 標準** |
 
@@ -187,15 +186,6 @@ docker compose up -d --build
 | **`LLM_MODEL`** | 主要大模型名稱 | `gpt-4o-mini` / `deepseek-flash` 等 |
 | **`LLM_FALLBACK_1_*`** | 第一級容災大模型配置（BaseURL, Key, Model） | 選填，故障時自動切換 |
 | **`LLM_FALLBACK_2_*`** | 第二級容災大模型配置（BaseURL, Key, Model） | 選填，次級故障時切換 |
-| **`CLEF_ENABLED`** | 啟用本地自建 Clef-flash 決策引擎（Tier 0） | `true`（預設啟用，0 Token 成本） |
-| **`CLEF_BASE_URL`** | Clef 主力決策端點（[文件](https://clef.create360.ai/docs)） | `https://clef.create360.ai/v1` |
-| **`CLEF_FALLBACK_BASE_URL`** | Clef 備援決策端點（[文件](https://clef.aiurl.tw/docs)） | `https://clef.aiurl.tw/v1` |
-| **`CLEF_MODEL`** | Clef 決策模型名稱 | `clef-flash` |
-| **`CLEF_TIMEOUT_MS`** | Clef 請求逾時毫秒（逾時無縫降級備援端點） | `45000`（45 秒） |
-| **`JEV_ENABLED`** | 啟用 TypeSafe Jev 雲端決策引擎（Tier 1） | `true`（填寫金鑰時生效） |
-| **`JEV_API_KEY`** | Jev API 金鑰（支援多把逗號分隔） | `apikey_...` |
-| **`JEV_FALLBACK_API_KEYS`** | Jev 第二把、第三把備用金鑰 | 選填，402 額度用盡自動無縫輪換 |
-| **`SCORE_BY_DECISION_ENGINE`** | 是否完全跳過 Groq 評分（方案 B 開關） | `false`（預設方案 A：Clef 擋雜訊，Groq 精確定分） |
 | **`READER_BASE_URLS`** | 多節點 Universal Reader 叢集（逗號分隔） | `https://2md.aiurl.tw,https://create360.ai,https://2md.glsoft.ai` |
 | **`READER_TIMEOUT_MS`** | Reader 單節點請求逾時毫秒（防無頭渲染中斷） | `45000`（45 秒） |
 | **`READER_COOLDOWN_MS`** | Reader 故障節點熔斷冷卻毫秒（另支援 HTTP 429 `Retry-After`） | `60000`（60 秒） |

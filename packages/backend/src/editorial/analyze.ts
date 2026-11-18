@@ -250,7 +250,6 @@ async function runScores(a: AnalyzeInputArticle, threshold: number, opts: StepOp
 async function runStructure(
   a: AnalyzeInputArticle,
   opts: StepOpts,
-  hints?: { category?: string | null; itemType?: string | null }
 ): Promise<NonNullable<AnalysisRun["structure"]>> {
   const model = await modelFor("structure");
   checkAnalysisRunning();
@@ -267,30 +266,18 @@ async function runStructure(
     attemptTag: tagged(opts.attemptTag, "structure"),
   });
   const subjects = [...new Set(res.data.subjects.map((s) => s.trim().toLowerCase()).filter((s) => s in ENTITIES))];
-  const validCategory = res.data.category ?? (hints?.category && (CATEGORY_KEYS as readonly string[]).includes(hints.category) ? (hints.category as typeof CATEGORY_KEYS[number]) : null);
+  const validCategory = res.data.category ?? null;
   const categoryTag = validCategory ? CATEGORY_TAG_BY_KEY[validCategory] : null;
-  const typeCategory = hints?.itemType ? CATEGORY_BY_ITEM_TYPE[hints.itemType] : null;
-  return { model: res.model, category: validCategory, tags: normalizeTags(res.data.tags, { fallbackCategory: categoryTag ?? typeCategory ?? undefined }), subjects, fact: res.data.fact, receiptId: res.receiptId, reused: res.reused };
+  return { model: res.model, category: validCategory, tags: normalizeTags(res.data.tags, { fallbackCategory: categoryTag ?? undefined }), subjects, fact: res.data.fact, receiptId: res.receiptId, reused: res.reused };
 }
 
 /** The content understanding; null when the model's content filter declines the material. */
 async function runUnderstand(
   a: AnalyzeInputArticle,
   opts: StepOpts,
-  hints?: { itemType?: string | null; authorRole?: string | null }
 ): Promise<AnalysisRun["writing"]> {
   const model = await modelFor("understand");
-  let text = understandUser(a);
-  if (hints?.itemType || hints?.authorRole) {
-    const guidance = [
-      hints.itemType ? `【前置判定內容類型】\n${hints.itemType}` : "",
-      hints.authorRole ? `【前置判定作者視角】\n${hints.authorRole}` : "",
-      "請在此前置判定基礎上，專注於撰寫高品質繁體中文標題（titleZh）與精闢摘要（summaryZh）。",
-    ]
-      .filter(Boolean)
-      .join("\n");
-    text = `${guidance}\n\n${text}`;
-  }
+  const text = understandUser(a);
   const call = (image: ContentPart | null) => {
     checkAnalysisRunning();
     return chatJson({
@@ -317,12 +304,10 @@ async function runUnderstand(
   }
   const d = res.data;
   const copy = finalizeCopy(translateInputOf(a), { titleZh: d.titleZh, summaryZh: d.summaryZh });
-  const finalItemType = (hints?.itemType && (ITEM_TYPES as readonly string[]).includes(hints.itemType)) ? (hints.itemType as typeof ITEM_TYPES[number]) : d.itemType;
-  const finalAuthorRole = (hints?.authorRole === "principal" || hints?.authorRole === "observer" || hints?.authorRole === "relayer") ? hints.authorRole : d.authorRole;
   const reasonZh = d.editorialJudgment.trim() ? normalizeTaiwanTerms(d.editorialJudgment.trim()) : null;
   return {
     kind: "understand", model: res.model, titleZh: copy.titleZh, summaryZh: copy.summaryZh, reasonZh,
-    tags: normalizeTags(d.tags, { fallbackCategory: CATEGORY_BY_ITEM_TYPE[finalItemType] }), itemType: finalItemType, authorRole: finalAuthorRole,
+    tags: normalizeTags(d.tags, { fallbackCategory: CATEGORY_BY_ITEM_TYPE[d.itemType] }), itemType: d.itemType, authorRole: d.authorRole,
     identityGuard: copy.identityGuard, receiptIds: [res.receiptId], reused: res.reused,
   };
 }
