@@ -18,7 +18,7 @@ export const zhTW: Record<TranslationKey, string> = {
   "nav.podcast": "Podcast",
   "nav.starred": "收藏",
   "nav.leaderboard": "模型榜",
-  "nav.codex_reset": "Tibo重置監控",
+  "nav.codex_reset": "重設監控",
   "nav.agent": "Agent 接入",
   "nav.about": "關於",
   "nav.changelog": "更新日誌",

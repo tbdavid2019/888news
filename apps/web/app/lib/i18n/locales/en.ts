@@ -18,7 +18,7 @@ export const en: Record<TranslationKey, string> = {
   "nav.podcast": "Podcast",
   "nav.starred": "Bookmarks",
   "nav.leaderboard": "Leaderboard",
-  "nav.codex_reset": "Codex Reset",
+  "nav.codex_reset": "Reset Monitor",
   "nav.agent": "Agent API",
   "nav.about": "About",
   "nav.changelog": "Changelog",

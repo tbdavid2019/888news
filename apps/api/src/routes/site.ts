@@ -2,6 +2,7 @@
 // Reads through the same public read layer as v1; no cookies are read or set.
 import { FEATURES } from "@aihot/industry/features";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { parseMonitorPlatform, type MonitorPlatformId } from "@aihot/contracts/monitor";
 import { isCategoryKey, isChannelKey, type CategoryKey, type ChannelKey } from "@aihot/contracts/taxonomy";
 import { InvalidCursorError } from "@aihot/backend/lib/cursor";
 import { exportMarkdown, loadItemDetail, siteItemDetail } from "@aihot/backend/publication/detail";
@@ -31,7 +32,12 @@ import { looseQuery, sendJsonWithEtag, sendProblem } from "../http/respond.ts";
 
 type Handler = (req: FastifyRequest, reply: FastifyReply) => Promise<unknown>;
 
-const codexVersion = cached(() => codexResetVersion(), { freshMs: 5_000, maxStaleMs: 5_000 });
+const codexVersionByPlatform = new Map<MonitorPlatformId, ReturnType<typeof cached<Awaited<ReturnType<typeof codexResetVersion>>>>>([
+  ["codex", cached(() => codexResetVersion(Date.now(), "codex"), { freshMs: 5_000, maxStaleMs: 5_000 })],
+  ["antigravity", cached(() => codexResetVersion(Date.now(), "antigravity"), { freshMs: 5_000, maxStaleMs: 5_000 })],
+  ["claude", cached(() => codexResetVersion(Date.now(), "claude"), { freshMs: 5_000, maxStaleMs: 5_000 })],
+  ["grok", cached(() => codexResetVersion(Date.now(), "grok"), { freshMs: 5_000, maxStaleMs: 5_000 })],
+]);
 
 class BadRequest extends Error {}
 
@@ -286,21 +292,28 @@ export function registerSite(app: FastifyInstance) {
   }));
 }
 
-/** The Codex reset monitor's page data (an optional module, industry/features.ts). */
+/** The reset monitor's page data (an optional module, industry/features.ts). */
 function registerCodexReset(app: FastifyInstance) {
   app.get("/api/site/codex-reset", siteHandler(async (req, reply) => {
-    return sendJsonWithEtag(req, reply, await loadSiteCodexResetPage(), { etagPrefix: "codex-page", cacheControl: "public, max-age=30, s-maxage=30" });
+    const q = looseQuery(req);
+    const platform = parseMonitorPlatform(typeof q.platform === "string" ? q.platform : null);
+    return sendJsonWithEtag(req, reply, await loadSiteCodexResetPage(undefined, Date.now(), platform), { etagPrefix: `codex-page-${platform}`, cacheControl: "public, max-age=30, s-maxage=30" });
   }));
 
   app.get("/api/site/codex-reset/days/:date", siteHandler(async (req, reply) => {
     const { date } = req.params as { date: string };
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) return sendProblem(req, reply, { status: 404, code: "not_found", detail: "date not found" });
-    return sendJsonWithEtag(req, reply, await loadSiteCodexResetDay(date), { etagPrefix: "codex-day", cacheControl: "no-store" });
+    const q = looseQuery(req);
+    const platform = parseMonitorPlatform(typeof q.platform === "string" ? q.platform : null);
+    return sendJsonWithEtag(req, reply, await loadSiteCodexResetDay(date, platform), { etagPrefix: `codex-day-${platform}`, cacheControl: "no-store" });
   }));
 
   // Foreground polling from /codex-reset (every open tab, once a minute): the edge answers the tabs
   // of the same 15 s, and the process reads the database at most every 5 s.
   app.get("/api/site/codex-reset/version", siteHandler(async (req, reply) => {
-    return sendJsonWithEtag(req, reply, await codexVersion.get(), { etagPrefix: "codex-version", cacheControl: "public, max-age=0, s-maxage=15" });
+    const q = looseQuery(req);
+    const platform = parseMonitorPlatform(typeof q.platform === "string" ? q.platform : null);
+    const entry = codexVersionByPlatform.get(platform)!;
+    return sendJsonWithEtag(req, reply, await entry.get(), { etagPrefix: `codex-version-${platform}`, cacheControl: "public, max-age=0, s-maxage=15" });
   }));
 }

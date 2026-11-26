@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import type { CodexCalendarMark, CodexResetEvent, CodexResetDay } from "@aihot/contracts/monitor";
+import type { CodexCalendarMark, CodexResetEvent, CodexResetDay, MonitorPlatformId } from "@aihot/contracts/monitor";
 import { addDays } from "@aihot/contracts/time";
 import { IconChevronRight } from "../../components/icons";
 import { PostCard } from "./PostCard";
@@ -41,9 +41,9 @@ function gridDays(month: string): string[] {
   return days.slice(35).every((d) => monthOf(d) !== month) ? days.slice(0, 35) : days;
 }
 
-function statusChip(e: CodexResetEvent, now: number) {
+function statusChip(e: CodexResetEvent, now: number, authorName: string) {
   const s = e.presentation?.status ?? (e.status === "confirmed" ? "confirmed" : "announced");
-  if (s === "confirmed") return { text: e.confirmationBasis === "receipt_review" ? "已核實到賬" : "Tibo 已確認", tone: "text-ok-ink" };
+  if (s === "confirmed") return { text: e.confirmationBasis === "receipt_review" ? "已核實到賬" : `${authorName} 已確認`, tone: "text-ok-ink" };
   if (s === "likely_completed") return { text: "應已生效 · 未見確認帖", tone: "text-ok-ink" };
   if (s === "expired_unconfirmed") {
     const through = (e.estimate ?? e.schedule)?.through;
@@ -53,7 +53,33 @@ function statusChip(e: CodexResetEvent, now: number) {
   return { text: "已宣佈 · 等待生效", tone: "text-amber-ink" };
 }
 
-export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, selectedDate, version }: { selectedDate: string; version: string; marks: CodexCalendarMark[]; events: CodexResetEvent[]; today: string; historyFrom: string | null; now: number; avatar: string | null }) {
+export function ResetCalendar({
+  marks,
+  events,
+  today,
+  historyFrom,
+  now,
+  avatar,
+  selectedDate,
+  version,
+  platform = "codex",
+  authorName = "Tibo",
+  authorHandle = "thsottiaux",
+  productName = "Codex",
+}: {
+  selectedDate: string;
+  version: string;
+  marks: CodexCalendarMark[];
+  events: CodexResetEvent[];
+  today: string;
+  historyFrom: string | null;
+  now: number;
+  avatar: string | null;
+  platform?: MonitorPlatformId;
+  authorName?: string;
+  authorHandle?: string;
+  productName?: string;
+}) {
   const latest = useMemo(() => [...marks].sort((a, b) => (a.date < b.date ? 1 : -1))[0]?.date ?? today, [marks, today]);
   const initial = selectedDate;
   const [selected, setSelected] = useState(initial);
@@ -78,7 +104,7 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
     setFailed(false);
     if (daysLoaded[selected] || !marks.some((m) => m.date === selected)) return;
     const controller = new AbortController();
-    fetch(`/api/site/codex-reset/days/${selected}`, { signal: controller.signal, cache: "no-store" })
+    fetch(`/api/site/codex-reset/days/${selected}?platform=${platform}`, { signal: controller.signal, cache: "no-store" })
       .then((r) => { if (!r.ok) throw new Error("day unavailable"); return r.json(); })
       .then((data: CodexResetDay) => {
         // The page or this day may predate the latest monitor update. Do not cache either mismatch;
@@ -88,7 +114,7 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
       })
       .catch(() => { if (!controller.signal.aborted) setFailed(true); });
     return () => controller.abort();
-  }, [selected, version, marks, daysLoaded]);
+  }, [selected, version, marks, daysLoaded, platform]);
   const inMonth = marks.filter((m) => monthOf(m.date) === month);
   const summary = [
     [inMonth.filter((m) => m.type === "direct_reset" && m.state !== "pending").length, "次額度重置"],
@@ -115,11 +141,11 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
   return (
     <section className="mt-8" aria-labelledby="calendar-title">
       <h2 id="calendar-title" className="text-[18px] font-bold text-ink">
-        重置日曆
+        重設日曆
       </h2>
-      <p className="mt-1 text-[12.5px] text-ink-3">點日期檢視當天的重置、髮卡和 Tibo 原帖。</p>
+      <p className="mt-1 text-[12.5px] text-ink-3">點日期檢視當天的重設、發卡和 {authorName} 原帖。</p>
 
-      <noscript><nav aria-label="歷史重置記錄">{[...new Set(marks.map((m) => m.date))].sort().reverse().map((d) => <a key={d} href={`/codex-reset/history/${d}`} className="mr-3 inline-block">{d}</a>)}</nav></noscript>
+      <noscript><nav aria-label="歷史重設記錄">{[...new Set(marks.map((m) => m.date))].sort().reverse().map((d) => <a key={d} href={`/codex-reset/history/${d}${platform === "codex" ? "" : `?platform=${platform}`}`} className="mr-3 inline-block">{d}</a>)}</nav></noscript>
       <div className="mt-4 overflow-hidden rounded-card border border-line-strong bg-surface lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,1fr)] xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,1fr)]">
         <div className="px-3 py-[18px] sm:p-6">
           <div className="flex items-center justify-between gap-3">
@@ -174,7 +200,7 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                 return (
                   <a
                     key={d}
-                    href={`/codex-reset/history/${d}` }
+                    href={`/codex-reset/history/${d}${platform === "codex" ? "" : `?platform=${platform}`}`}
                     role="gridcell"
                     data-day={d}
                     tabIndex={isSel ? 0 : -1}
@@ -227,11 +253,11 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
           <p className="sr-only">
             已選擇 {selected}，{selectedMarks.length} 則記錄。
           </p>
-          {selectedMarks.length > 0 && !daysLoaded[selected] && <p className="text-[13px] text-ink-3">{failed ? <a href={`/codex-reset/history/${selected}`} className="text-accent">重新讀取當天記錄</a> : "正在讀取當天記錄…"}</p>}
+          {selectedMarks.length > 0 && !daysLoaded[selected] && <p className="text-[13px] text-ink-3">{failed ? <a href={`/codex-reset/history/${selected}${platform === "codex" ? "" : `?platform=${platform}`}`} className="text-accent">重新讀取當天記錄</a> : "正在讀取當天記錄…"}</p>}
           {selectedMarks.map((m, i) => {
             const e = eventById.get(m.eventId);
             if (!e) return null;
-            const chip = statusChip(e, now);
+            const chip = statusChip(e, now, authorName);
             const window = e.estimate ?? e.schedule;
             const post = e.posts[0];
             return (
@@ -241,7 +267,7 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                   {chip.text}
                 </span>
                 <h4 className="mb-1 mt-2 text-[15px] font-bold leading-[1.6] text-ink">
-                  {e.type === "reset_credit" ? "重置卡發放" : e.displayLabel === "額度重置" || e.displayLabel === "額度重置" ? "Codex 額度重置" : e.displayLabel}
+                  {e.type === "reset_credit" ? "重置卡發放" : e.displayLabel === "額度重置" || e.displayLabel === "额度重置" ? `${productName} 額度重置` : e.displayLabel}
                 </h4>
                 {e.confirmedAt && (
                   <p className="num mb-1 text-[13px] font-medium text-ink">
@@ -262,7 +288,14 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                 </p>
                 {post && (
                   <div className="mb-2 mt-3">
-                    <PostCard compact avatar={avatar} stage={post.stage} post={{ id: post.id, publishedAt: post.publishedAt, translation: post.fullText ?? post.text, original: post.fullOriginalText ?? post.originalText, context: post.context, url: post.url }} />
+                    <PostCard
+                      compact
+                      avatar={avatar}
+                      authorName={authorName}
+                      authorHandle={authorHandle}
+                      stage={post.stage}
+                      post={{ id: post.id, author: post.author, publishedAt: post.publishedAt, translation: post.fullText ?? post.text, original: post.fullOriginalText ?? post.originalText, context: post.context, url: post.url }}
+                    />
                   </div>
                 )}
                 {e.posts.length > 1 && (
@@ -280,7 +313,7 @@ export function ResetCalendar({ marks, events, today, historyFrom, now, avatar, 
                 <path d="M3.5 9.5h17M8 3v4M16 3v4" />
               </svg>
               <h4 className="mt-4 text-[15px] font-semibold text-ink">這一天沒有記錄</h4>
-              <p className="mb-5 mt-3 max-w-[280px] text-[12px] leading-[1.8] text-ink-4">這天沒有 Tibo 宣佈或確認的重置，也沒有發放重置卡。點日曆上帶標籤的日期檢視記錄。</p>
+              <p className="mb-5 mt-3 max-w-[280px] text-[12px] leading-[1.8] text-ink-4">這天沒有 {authorName} 宣佈或確認的重設，也沒有發放重設卡。點日曆上帶標籤的日期檢視記錄。</p>
             </div>
           )}
         </aside>

@@ -2,7 +2,7 @@
 // same events. Announcement, in-progress, confirmation and "should have landed" stay distinct;
 // passing an announced time never turns into a confirmation.
 import { addDays, beijingDate, beijingMidnight } from "@aihot/contracts/time";
-import type { CodexCalendarMark, CodexResetMonitor, CodexResetPageData, CodexResetsSnapshot } from "@aihot/contracts/monitor";
+import { getMonitorPlatform, type CodexCalendarMark, type CodexResetMonitor, type CodexResetPageData, type CodexResetsSnapshot, type MonitorPlatformId } from "@aihot/contracts/monitor";
 import { sql } from "../db.ts";
 import { sha256, stableJson } from "../lib/ids.ts";
 import { proxiedImage } from "../media/imgproxy.ts";
@@ -44,6 +44,7 @@ interface EventRow {
 
 interface PostRow {
   id: string;
+  author: string;
   published_at: Date;
   text: string;
   translation: string | null;
@@ -77,16 +78,17 @@ export function presentationStatus(e: Pick<EventRow, "status" | "estimate" | "sc
  * Titles follow the event's state, so an announcement that should have landed says so, and a reset
  * confirmed only by an account check does not read as Tibo's own confirmation.
  */
-export function eventTitle(type: EventRow["type"], status: EventRow["status"], shown: PresentationStatus, kindExplicit: boolean, basis: EventRow["confirmation_basis"] = null): string {
+export function eventTitle(type: EventRow["type"], status: EventRow["status"], shown: PresentationStatus, kindExplicit: boolean, basis: EventRow["confirmation_basis"] = null, platform: MonitorPlatformId = "codex"): string {
+  const meta = getMonitorPlatform(platform);
   const credit = type === "reset_credit";
   if (status === "confirmed") {
     if (credit) return "重置卡已发放";
     if (basis === "receipt_review") return "额度重置已核实到账";
-    return kindExplicit ? "Codex 额度重置已完成" : "Tibo 确认重置";
+    return kindExplicit ? `${meta.product} 额度重置已完成` : `${meta.authorName} 确认重置`;
   }
   if (shown === "likely_completed") return credit ? "重置卡应已发放" : "额度应已重置";
   if (shown === "in_progress") return credit ? "重置卡正在发放" : "额度重置进行中";
-  return credit ? "Tibo 预告将发放重置卡" : "Tibo 预告将重置额度";
+  return credit ? `${meta.authorName} 预告将发放重置卡` : `${meta.authorName} 预告将重置额度`;
 }
 
 /** The Beijing day an event belongs to on the calendar. */
@@ -98,23 +100,26 @@ export function eventDay(e: Pick<EventRow, "occurred_on" | "confirmed_at" | "est
   return beijingDate(e.created_at);
 }
 
-async function loadAll() {
+async function loadAll(platform: MonitorPlatformId) {
   const events = await sql<EventRow[]>`
     SELECT id, type, status, title, scope, label, display_label, schedule, estimate, presentation, confirmed_at, occurred_on, confirmation_basis, created_at, updated_at
-    FROM monitor_events WHERE NOT withdrawn ORDER BY updated_at DESC, id ASC`;
-  const links = await sql<LinkRow[]>`SELECT event_id, post_id, stage, text, original_text FROM monitor_event_posts`;
+    FROM monitor_events WHERE platform = ${platform} AND NOT withdrawn ORDER BY updated_at DESC, id ASC`;
+  const links = await sql<LinkRow[]>`
+    SELECT ep.event_id, ep.post_id, ep.stage, ep.text, ep.original_text
+    FROM monitor_event_posts ep JOIN monitor_events e ON e.id = ep.event_id
+    WHERE e.platform = ${platform} AND NOT e.withdrawn`;
   const posts = await sql<PostRow[]>`
-    SELECT id, published_at, text, translation, url, context, activity, outage FROM monitor_posts
-    WHERE activity IS NOT NULL OR outage IS NOT NULL OR id IN (SELECT post_id FROM monitor_event_posts)`;
+    SELECT id, author, published_at, text, translation, url, context, activity, outage FROM monitor_posts
+    WHERE platform = ${platform} AND (activity IS NOT NULL OR outage IS NOT NULL OR id IN (SELECT post_id FROM monitor_event_posts))`;
   const state = new Map((await sql<{ key: string; value: any }[]>`SELECT key, value FROM monitor_state`).map((r) => [r.key, r.value]));
   const [counts] = await sql<{ pending: number; review: number }[]>`
     SELECT count(*) FILTER (WHERE processed_at IS NULL) AS pending,
            count(*) FILTER (WHERE recognition->>'needsReview' = 'true') AS review
-    FROM monitor_posts`;
+    FROM monitor_posts WHERE platform = ${platform}`;
   return { events, links, posts: new Map(posts.map((p) => [p.id, p])), state, counts: counts ?? { pending: 0, review: 0 } };
 }
 
-function eventJson(e: EventRow, links: LinkRow[], posts: Map<string, PostRow>, now: number) {
+function eventJson(e: EventRow, links: LinkRow[], posts: Map<string, PostRow>, now: number, platform: MonitorPlatformId) {
   const status = presentationStatus(e, now);
   const p = e.presentation;
   const presentation = p
@@ -136,6 +141,7 @@ function eventJson(e: EventRow, links: LinkRow[], posts: Map<string, PostRow>, n
     .sort((a, b) => b.post.published_at.getTime() - a.post.published_at.getTime() || (a.l.post_id < b.l.post_id ? 1 : -1))
     .map(({ l, post }) => ({
       id: post.id,
+      author: post.author,
       publishedAt: bjIso(post.published_at),
       stage: l.stage,
       text: l.text,
@@ -147,6 +153,7 @@ function eventJson(e: EventRow, links: LinkRow[], posts: Map<string, PostRow>, n
     }));
   const schedule = e.schedule && { precision: e.schedule.precision, from: bjIso(e.schedule.from), through: bjIso(e.schedule.through), label: e.schedule.label };
   const estimate = e.estimate && { from: bjIso(e.estimate.from), through: bjIso(e.estimate.through), basis: e.estimate.basis, label: e.estimate.label, reason: e.estimate.reason };
+  const pageUrl = platform === "codex" ? MONITOR_PAGE_URL : `${MONITOR_PAGE_URL}?platform=${platform}`;
   return {
     id: e.id,
     type: e.type,
@@ -155,7 +162,7 @@ function eventJson(e: EventRow, links: LinkRow[], posts: Map<string, PostRow>, n
     presentation,
     estimate: e.status === "confirmed" ? null : estimate,
     status: e.status,
-    title: eventTitle(e.type, e.status, status, p?.kindExplicit ?? true, e.confirmation_basis),
+    title: eventTitle(e.type, e.status, status, p?.kindExplicit ?? true, e.confirmation_basis, platform),
     scope: e.scope,
     createdAt: bjIso(e.created_at),
     updatedAt: bjIso(e.updated_at),
@@ -164,7 +171,7 @@ function eventJson(e: EventRow, links: LinkRow[], posts: Map<string, PostRow>, n
     confirmationBasis: e.confirmation_basis,
     schedule,
     posts: eventPosts,
-    url: MONITOR_PAGE_URL,
+    url: pageUrl,
   };
 }
 
@@ -201,8 +208,8 @@ export const RECENT_DAYS = 7;
  * still waiting to land, and the week's source posts. The full snapshot is about 250 KB and grows every
  * month; this one carries what a poller acts on in a few KB.
  */
-export async function codexResetsRecent(now = Date.now()): Promise<CodexResetsSnapshot> {
-  const full = await codexResetsSnapshot(now);
+export async function codexResetsRecent(now = Date.now(), platform: MonitorPlatformId = "codex"): Promise<CodexResetsSnapshot> {
+  const full = await codexResetsSnapshot(now, platform);
   // Whole Beijing days, so the answer (and its ETag) only changes when the content does.
   const from = beijingMidnight(addDays(beijingDate(now), -RECENT_DAYS)).getTime();
   const open = new Set(["announced", "in_progress", "expired_unconfirmed"]);
@@ -218,9 +225,9 @@ export async function codexResetsRecent(now = Date.now()): Promise<CodexResetsSn
 }
 
 /** The complete public snapshot served at GET /api/v1/codex-resets. */
-export async function codexResetsSnapshot(now = Date.now()): Promise<CodexResetsSnapshot> {
-  const { events, links, posts, state, counts } = await loadAll();
-  const eventJsons = events.map((e) => eventJson(e, links, posts, now));
+export async function codexResetsSnapshot(now = Date.now(), platform: MonitorPlatformId = "codex"): Promise<CodexResetsSnapshot> {
+  const { events, links, posts, state, counts } = await loadAll(platform);
+  const eventJsons = events.map((e) => eventJson(e, links, posts, now, platform));
   const activities = [...posts.values()]
     .filter((p) => p.activity)
     .sort((a, b) => b.published_at.getTime() - a.published_at.getTime())
@@ -253,10 +260,11 @@ export async function codexResetsSnapshot(now = Date.now()): Promise<CodexResets
   const monitor = monitorJson(state, counts, now);
   return {
     schemaVersion: 1 as const,
+    platform,
     timezone: "Asia/Shanghai" as const,
     today: beijingDate(now),
     checkedAt: monitor?.lastVerifiedAt ?? null,
-    historyFrom: bjIso(state.get("history")?.from ?? "2026-06-12T00:00:00+08:00"),
+    historyFrom: bjIso(state.get("history")?.from ?? (platform === "codex" ? "2026-06-12T00:00:00+08:00" : "2026-09-01T00:00:00+08:00")),
     count: eventJsons.length,
     events: eventJsons,
     activities,
@@ -272,8 +280,9 @@ function versionHash(events: Array<[string, string | null, PresentationStatus | 
 }
 
 /** Everything /codex-reset renders, derived from the same snapshot as v1. */
-export async function codexResetPage(now = Date.now()): Promise<CodexResetPageData> {
-  const snap = await codexResetsSnapshot(now);
+export async function codexResetPage(now = Date.now(), platform: MonitorPlatformId = "codex"): Promise<CodexResetPageData> {
+  const meta = getMonitorPlatform(platform);
+  const snap = await codexResetsSnapshot(now, platform);
   const today = snap.today;
   const marks: CalendarMark[] = snap.events.map((e) => {
     const status = e.presentation?.status ?? (e.status === "confirmed" ? "confirmed" : "announced");
@@ -292,16 +301,25 @@ export async function codexResetPage(now = Date.now()): Promise<CodexResetPageDa
   const sorted = [...intervals].sort((a, b) => a - b);
   const median = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2]! : (sorted[sorted.length / 2 - 1]! + sorted[sorted.length / 2]!) / 2) : null;
   const pending = snap.events.find((e) => e.presentation && ["announced", "in_progress", "expired_unconfirmed"].includes(e.presentation.status));
-  // Tibo's current X avatar, from his latest collected post.
+  const sourceId = `x-account-${meta.primaryAuthor}`;
   const [author] = await sql<{ avatar: string | null }[]>`
     SELECT x_post->>'avatarUrl' AS avatar FROM articles
-    WHERE source_id = 'x-account-thsottiaux' AND x_post ? 'avatarUrl' ORDER BY discovered_at DESC LIMIT 1`;
+    WHERE source_id = ${sourceId} AND x_post ? 'avatarUrl' ORDER BY discovered_at DESC LIMIT 1`;
+  const [monitorAvatar] = author?.avatar
+    ? [author]
+    : await sql<{ avatar: string | null }[]>`
+        SELECT raw->'tweet'->'user'->>'profile_image_url_https' AS avatar FROM monitor_posts
+        WHERE platform = ${platform} AND raw->'tweet'->'user' ? 'profile_image_url_https'
+        ORDER BY published_at DESC LIMIT 1`;
   const lastLanded = snap.events.find((e) => e.presentation?.status === "confirmed" || e.presentation?.status === "likely_completed");
   return {
     ...snap,
+    platform,
     current: pending ?? null,
     lastLanded: lastLanded ?? null,
-    authorAvatar: author?.avatar ? proxiedImage(author.avatar, "avatar") : null,
+    authorAvatar: monitorAvatar?.avatar ? proxiedImage(monitorAvatar.avatar, "avatar") : null,
+    authorHandle: meta.primaryAuthor,
+    authorDisplayName: meta.authorName,
     stats: {
       resets90: inWindow.filter((m) => m.type === "direct_reset").length,
       credits90: inWindow.filter((m) => m.type === "reset_credit").length,
@@ -317,13 +335,13 @@ export async function codexResetPage(now = Date.now()): Promise<CodexResetPageDa
 }
 
 /** Cheap version probe for the page's foreground polling. */
-export async function codexResetVersion(now = Date.now()) {
+export async function codexResetVersion(now = Date.now(), platform: MonitorPlatformId = "codex") {
   // Keep clock-driven transitions in the hash, without loading posts, citations, calendars or avatars.
   type VersionEvent = Pick<EventRow, "id" | "updated_at" | "status" | "estimate" | "schedule" | "presentation">;
   const [events, [outage], [state]] = await Promise.all([
     sql<VersionEvent[]>`SELECT id, updated_at, status, estimate, schedule, presentation
-      FROM monitor_events WHERE NOT withdrawn ORDER BY updated_at DESC, id ASC`,
-    sql<{ id: string }[]>`SELECT id FROM monitor_posts WHERE outage IS NOT NULL AND outage <> 'null'::jsonb
+      FROM monitor_events WHERE platform = ${platform} AND NOT withdrawn ORDER BY updated_at DESC, id ASC`,
+    sql<{ id: string }[]>`SELECT id FROM monitor_posts WHERE platform = ${platform} AND outage IS NOT NULL AND outage <> 'null'::jsonb
       AND published_at >= ${new Date(now - OUTAGE_VISIBLE_MS)} ORDER BY published_at DESC, id COLLATE "C" ASC LIMIT 1`,
     sql<{ verified: string | null }[]>`SELECT value->>'lastVerifiedAt' AS verified FROM monitor_state WHERE key = 'watermarks'`,
   ]);

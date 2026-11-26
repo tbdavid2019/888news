@@ -2,6 +2,7 @@
 // context are stored before the cursor moves; recognition runs afterwards in publication order.
 // Normal cadence is 5 minutes, as the public v1 description states; after an outage or an
 // announcement it is 3 minutes for a while.
+import { getMonitorPlatform, MONITOR_PLATFORMS, type MonitorPlatformId } from "@aihot/contracts/monitor";
 import { sql } from "../db.ts";
 import { shutdownSignal } from "../jobs/queue.ts";
 import { credential } from "../config.ts";
@@ -60,40 +61,43 @@ async function contextOf(t: SdTweet, subject: string): Promise<Array<ContextInpu
   return out;
 }
 
-async function storePost(t: SdTweet) {
+async function storePost(t: SdTweet, author: string, platform: MonitorPlatformId) {
   const context = await contextOf(t, `x:${t.id_str}`);
   await sql`
-    INSERT INTO monitor_posts (id, author, published_at, text, url, context, raw, origin)
-    VALUES (${t.id_str}, ${t.user.screen_name}, ${new Date(t.tweet_created_at)}, ${tweetText(t)}, ${`https://x.com/${AUTHOR}/status/${t.id_str}`},
+    INSERT INTO monitor_posts (id, author, platform, published_at, text, url, context, raw, origin)
+    VALUES (${t.id_str}, ${t.user.screen_name}, ${platform}, ${new Date(t.tweet_created_at)}, ${tweetText(t)}, ${`https://x.com/${author}/status/${t.id_str}`},
             ${sql.json(context.map(({ publishedAt: _p, ...c }) => ({ id: c.id, author: c.author, relation: c.relation, text: null, originalText: c.text, url: c.url })) as never)},
             ${sql.json({ tweet: t, context } as never)}, 'live')
     ON CONFLICT (id) DO NOTHING`;
 }
 
-async function collectPostsVia2md(): Promise<number> {
+async function collectPostsVia2md(author: string, platform: MonitorPlatformId): Promise<number> {
   try {
-    const profilePage = await readPageAsMarkdown(`https://x.com/${AUTHOR}`);
-    const statusIds = Array.from(new Set(Array.from(profilePage.raw.matchAll(/https:\/\/x\.com\/thsottiaux\/status\/(\d+)/g), (m) => m[1])));
+    const profilePage = await readPageAsMarkdown(`https://x.com/${author}`);
+    const statusPattern = new RegExp(`https://x\\.com/${author}/status/(\\d+)`, "gi");
+    const statusIds = Array.from(new Set(Array.from(profilePage.raw.matchAll(statusPattern), (m) => m[1]))).sort((a, b) => (idGreater(a, b) ? 1 : -1));
     let stored = 0;
     for (const id of statusIds) {
       const [exists] = await sql`SELECT 1 FROM monitor_posts WHERE id = ${id}`;
       if (exists) continue;
 
       try {
-        const page = await readPageAsMarkdown(`https://x.com/${AUTHOR}/status/${id}`);
+        const page = await readPageAsMarkdown(`https://x.com/${author}/status/${id}`);
         let text = "";
-        const m = page.markdown.match(/@thsottiaux\)\s+([\s\S]*?)(?:\[\d+:\d+|\n\n## Log in|\n\*)/);
+        const mentionPattern = new RegExp(`@${author}\\)\\s+([\\s\\S]*?)(?:\\[\\d+:\\d+|\\n\\n## Log in|\\n\\*)`, "i");
+        const m = page.markdown.match(mentionPattern);
         if (m && m[1]) {
           text = m[1].replace(/Show more/g, "").trim();
         } else {
-          text = page.markdown.split("\n\n").find((p) => p.includes("GPT") || p.includes("Codex") || p.length > 20) ?? page.title ?? "";
+          text = page.markdown.split("\n\n").find((p) => /reset|quota|limit|codex|antigravity|claude|grok/i.test(p) || p.length > 20) ?? page.title ?? "";
         }
 
-        const publishedAt = page.publishedTime ? new Date(page.publishedTime) : new Date();
+        const parsedMs = page.publishedTime ? Date.parse(page.publishedTime) : NaN;
+        const publishedAt = Number.isFinite(parsedMs) ? new Date(parsedMs) : new Date();
 
         await sql`
-          INSERT INTO monitor_posts (id, author, published_at, text, url, context, raw, origin)
-          VALUES (${id}, ${AUTHOR}, ${publishedAt}, ${text}, ${`https://x.com/${AUTHOR}/status/${id}`},
+          INSERT INTO monitor_posts (id, author, platform, published_at, text, url, context, raw, origin)
+          VALUES (${id}, ${author}, ${platform}, ${publishedAt}, ${text}, ${`https://x.com/${author}/status/${id}`},
                   ${sql.json([])}, ${sql.json({ page } as never)}, 'live')
           ON CONFLICT (id) DO NOTHING`;
         stored++;
@@ -103,31 +107,27 @@ async function collectPostsVia2md(): Promise<number> {
     }
     return stored;
   } catch (err) {
-    console.warn(`[Monitor] Failed to fetch Tibo profile via 2md:`, err);
+    console.warn(`[Monitor] Failed to fetch @${author} profile via 2md:`, err);
     return 0;
   }
 }
 
-/** Collects new posts (or a lookback window) and stores them before moving the cursor. */
-export async function collectPosts(opts: { lookbackHours?: number } = {}): Promise<{ stored: number; pages: number }> {
-  const started = new Date();
-  await touchWatermarks({ lastAttemptAt: started.toISOString() });
-
+async function collectAuthorPosts(author: string, platform: MonitorPlatformId, opts: { lookbackHours?: number }): Promise<{ stored: number; pages: number }> {
   if (!credential("collectors", "SOCIALDATA_API_KEY")) {
-    const stored = await collectPostsVia2md();
-    await touchWatermarks({ lastCollectedAt: started.toISOString() });
+    const stored = await collectPostsVia2md(author, platform);
     return { stored, pages: 1 };
   }
 
-  const cursor = (await getState<{ sinceId: string | null }>("cursor")) ?? { sinceId: null };
+  const cursorKey = author === AUTHOR ? "cursor" : `cursor:${author.toLowerCase()}`;
+  const cursor = (await getState<{ sinceId: string | null }>(cursorKey)) ?? { sinceId: null };
   const since = opts.lookbackHours ? Math.floor((Date.now() - opts.lookbackHours * 3600_000) / 1000) : null;
-  const query = since ? `from:${AUTHOR} since_time:${since}` : `from:${AUTHOR}`;
+  const query = since ? `from:${author} since_time:${since}` : `from:${author}`;
   const window = new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString();
   const found: SdTweet[] = [];
   let next: string | null = null;
   let pages = 0;
   do {
-    const res = await searchTweets(query, { purpose: opts.lookbackHours ? "monitor.lookback" : "monitor.scan", subject: `x:${AUTHOR}`, window, cursor: next });
+    const res = await searchTweets(query, { purpose: opts.lookbackHours ? "monitor.lookback" : "monitor.scan", subject: `x:${author}`, window, cursor: next });
     pages++;
     let reachedKnown = false;
     for (const t of res.tweets) {
@@ -145,39 +145,63 @@ export async function collectPosts(opts: { lookbackHours?: number } = {}): Promi
   for (const t of found.sort((a, b) => (idGreater(a.id_str, b.id_str) ? 1 : -1))) {
     const [exists] = await sql`SELECT 1 FROM monitor_posts WHERE id = ${t.id_str}`;
     if (exists) continue;
-    await storePost(t);
+    await storePost(t, author, platform);
     stored++;
   }
   const newest = found.reduce<string | null>((m, t) => (!m || idGreater(t.id_str, m) ? t.id_str : m), cursor.sinceId);
-  if (newest && newest !== cursor.sinceId) await setState("cursor", { sinceId: newest });
-  await touchWatermarks({ lastCollectedAt: started.toISOString() });
+  if (newest && newest !== cursor.sinceId) await setState(cursorKey, { sinceId: newest });
   return { stored, pages };
 }
 
-async function openEvents(before: Date): Promise<OpenEventInput[]> {
+/** Collects new posts (or a lookback window) across all monitored platforms before moving cursors. */
+export async function collectPosts(opts: { lookbackHours?: number } = {}): Promise<{ stored: number; pages: number }> {
+  const started = new Date();
+  await touchWatermarks({ lastAttemptAt: started.toISOString() });
+
+  let totalStored = 0;
+  let totalPages = 0;
+  for (const p of MONITOR_PLATFORMS) {
+    for (const author of p.authors) {
+      if (shutdownSignal.signal.aborted) break;
+      try {
+        const res = await collectAuthorPosts(author, p.id, opts);
+        totalStored += res.stored;
+        totalPages += res.pages;
+      } catch (err) {
+        console.warn(`[Monitor] Failed to collect @${author} (${p.id}):`, err);
+      }
+    }
+  }
+  await touchWatermarks({ lastCollectedAt: started.toISOString() });
+  return { stored: totalStored, pages: totalPages };
+}
+
+async function openEvents(before: Date, platform: MonitorPlatformId): Promise<OpenEventInput[]> {
   const rows = await sql<{ id: string; type: OpenEventInput["kind"]; status: OpenEventInput["status"]; schedule: { label: string } | null; first_at: Date; excerpt: string }[]>`
     SELECT e.id, e.type, e.status, e.schedule, min(p.published_at) AS first_at,
       (SELECT ep.original_text FROM monitor_event_posts ep JOIN monitor_posts pp ON pp.id = ep.post_id WHERE ep.event_id = e.id ORDER BY pp.published_at LIMIT 1) AS excerpt
     FROM monitor_events e JOIN monitor_event_posts l ON l.event_id = e.id JOIN monitor_posts p ON p.id = l.post_id
-    WHERE NOT e.withdrawn AND e.created_at <= ${before}
+    WHERE NOT e.withdrawn AND e.platform = ${platform} AND e.created_at <= ${before}
       AND ((e.status = 'announced' OR e.confirmation_basis = 'receipt_review' AND e.confirmed_at IS NULL) AND e.created_at >= ${new Date(before.getTime() - 72 * 3600_000)}
            OR e.confirmed_at >= ${new Date(before.getTime() - 48 * 3600_000)})
     GROUP BY e.id ORDER BY first_at DESC LIMIT 8`;
   return rows.map((r) => ({ id: r.id, kind: r.type, status: r.status, firstPostAt: r.first_at.toISOString(), excerpt: r.excerpt, schedule: r.schedule?.label ?? null }));
 }
 
-function resetCard(eventId: string, action: "announce" | "confirm", snapshot: Awaited<ReturnType<typeof codexResetsSnapshot>>, postId: string) {
+function resetCard(eventId: string, action: "announce" | "confirm", snapshot: Awaited<ReturnType<typeof codexResetsSnapshot>>, postId: string, platform: MonitorPlatformId) {
   const e = snapshot.events.find((x) => x.id === eventId);
   if (!e) return null;
+  const meta = getMonitorPlatform(platform);
   const post = e.posts.find((p) => p.id === postId) ?? e.posts[0];
-  const kind = e.type === "reset_credit" ? "重置卡发放" : "Codex 额度重置";
-  const title = action === "confirm" ? `${kind}已完成（Tibo 确认）` : `${kind}：Tibo 已宣布`;
+  const kind = e.type === "reset_credit" ? "重置卡发放" : `${meta.product} 额度重置`;
+  const title = action === "confirm" ? `${kind}已完成（${meta.authorName} 确认）` : `${kind}：${meta.authorName} 已宣布`;
   const window = e.estimate ?? e.schedule;
   const lines = [
     action === "announce" && window ? `**预计生效**：${window.label}${e.estimate ? `（${SITE.name} 推算）` : ""}` : null,
     action === "confirm" && e.confirmedAt ? `**確認時間**：台北時間 ${e.confirmedAt.slice(5, 16).replace("T", " ")}（確認帖時間，不是精確到帳時間）` : null,
     `**适用范围**：${e.presentation?.audienceZh ?? e.presentation?.scopeLabel ?? "未说明"}${e.presentation?.productsZh ? ` · ${e.presentation.productsZh}` : ""}`,
   ].filter(Boolean);
+  const pageUrl = platform === "codex" ? MONITOR_PAGE_URL : `${MONITOR_PAGE_URL}?platform=${platform}`;
   return {
     header: { title: { tag: "plain_text", content: title }, template: action === "confirm" ? "turquoise" : "orange" },
     elements: [
@@ -187,7 +211,7 @@ function resetCard(eventId: string, action: "announce" | "confirm", snapshot: Aw
         tag: "action",
         actions: [
           post ? { tag: "button", text: { tag: "plain_text", content: "查看原帖" }, url: post.url, type: "default" } : null,
-          { tag: "button", text: { tag: "plain_text", content: "打开重置监控" }, url: MONITOR_PAGE_URL, type: "primary" },
+          { tag: "button", text: { tag: "plain_text", content: "打开重置监控" }, url: pageUrl, type: "primary" },
         ].filter(Boolean),
       },
     ].filter(Boolean),
@@ -200,24 +224,35 @@ function resetCard(eventId: string, action: "announce" | "confirm", snapshot: Aw
  * for long, which an admin can then skip.
  */
 export async function processPending(limit = 20): Promise<{ processed: number; failed: number }> {
-  const posts = await sql<{ id: string; text: string; published_at: Date; raw: { context?: Array<ContextInput & { url: string }> } | null }[]>`
-    SELECT id, text, published_at, raw FROM monitor_posts WHERE processed_at IS NULL AND author = ${AUTHOR}
+  const posts = await sql<{ id: string; author: string; platform: MonitorPlatformId; text: string; published_at: Date; raw: { context?: Array<ContextInput & { url: string }> } | null }[]>`
+    SELECT id, author, platform, text, published_at, raw FROM monitor_posts WHERE processed_at IS NULL
     ORDER BY published_at, id LIMIT ${limit}`;
   let processed = 0;
   let failed = 0;
+  const failedPlatforms = new Set<MonitorPlatformId>();
   for (const p of posts) {
     if (shutdownSignal.signal.aborted) break; // later posts wait for the next tick, in order
+    if (failedPlatforms.has(p.platform)) continue;
     try {
-      const rec = await recognizePost({ id: p.id, text: p.text, publishedAt: p.published_at.toISOString(), context: p.raw?.context ?? [], openEvents: await openEvents(p.published_at) });
-      await applyRecognition(p.id, rec);
+      const rec = await recognizePost({
+        id: p.id,
+        text: p.text,
+        publishedAt: p.published_at.toISOString(),
+        context: p.raw?.context ?? [],
+        openEvents: await openEvents(p.published_at, p.platform),
+        platform: p.platform,
+        author: p.author,
+      });
+      await applyRecognition(p.id, rec, p.platform);
       processed++;
       await sql`DELETE FROM monitor_state WHERE key = ${`failures:${p.id}`}`;
     } catch (error) {
       failed++;
+      failedPlatforms.add(p.platform);
       const prev = (await getState<{ count: number; since: string }>(`failures:${p.id}`)) ?? { count: 0, since: new Date().toISOString() };
       await setState(`failures:${p.id}`, { count: prev.count + 1, since: prev.since, error: String(error).slice(0, 300) });
-      console.error(JSON.stringify({ level: "error", msg: "monitor recognition failed", post: p.id, error: String(error).slice(0, 300) }));
-      break; // keep order: later posts wait for this one
+      console.error(JSON.stringify({ level: "error", msg: "monitor recognition failed", post: p.id, platform: p.platform, error: String(error).slice(0, 300) }));
+      continue; // keep order per platform without blocking other platforms
     }
   }
   return { processed, failed };
@@ -229,22 +264,28 @@ export async function processPending(limit = 20): Promise<{ processed: number; f
  * one delivery row per dedupe key, so nothing is sent twice; pushes older than 36 hours are dropped.
  */
 export async function flushResetPushes(): Promise<number> {
-  const owed = await sql<{ post_id: string; published_at: Date; event_id: string; action: "announce" | "confirm" }[]>`
-    SELECT p.id AS post_id, p.published_at, n->>'eventId' AS event_id, n->>'action' AS action
+  const owed = await sql<{ post_id: string; platform: MonitorPlatformId; published_at: Date; event_id: string; action: "announce" | "confirm" }[]>`
+    SELECT p.id AS post_id, p.platform, p.published_at, n->>'eventId' AS event_id, n->>'action' AS action
     FROM monitor_posts p, jsonb_array_elements(coalesce(p.recognition->'notify', '[]'::jsonb)) n
-    WHERE p.processed_at IS NOT NULL AND p.author = ${AUTHOR} AND p.published_at > ${new Date(Date.now() - PUSH_MAX_AGE_MS)}
+    WHERE p.processed_at IS NOT NULL AND p.published_at > ${new Date(Date.now() - PUSH_MAX_AGE_MS)}
       AND EXISTS (
         SELECT 1 FROM notify_targets t
         WHERE t.purpose = 'content' AND t.enabled AND (t.enabled_at IS NULL OR t.enabled_at <= p.published_at)
-          AND NOT EXISTS (SELECT 1 FROM deliveries d WHERE d.target_key = t.key AND d.dedupe_key = 'codex:' || p.id || ':' || (n->>'eventId') || ':' || (n->>'action')))
+          AND NOT EXISTS (SELECT 1 FROM deliveries d WHERE d.target_key = t.key AND d.dedupe_key = (CASE WHEN p.platform = 'codex' THEN 'codex' ELSE p.platform END) || ':' || p.id || ':' || (n->>'eventId') || ':' || (n->>'action')))
     ORDER BY p.published_at, p.id`;
   if (!owed.length) return 0;
-  const snapshot = await codexResetsSnapshot();
+  const snapshots = new Map<MonitorPlatformId, Awaited<ReturnType<typeof codexResetsSnapshot>>>();
   let pushed = 0;
   for (const o of owed) {
-    const card = resetCard(o.event_id, o.action, snapshot, o.post_id);
+    let snapshot = snapshots.get(o.platform);
+    if (!snapshot) {
+      snapshot = await codexResetsSnapshot(Date.now(), o.platform);
+      snapshots.set(o.platform, snapshot);
+    }
+    const card = resetCard(o.event_id, o.action, snapshot, o.post_id, o.platform);
     if (!card) continue;
-    const results = await deliverContent({ subjectKind: "codex_reset", subjectId: o.event_id, dedupeKey: `codex:${o.post_id}:${o.event_id}:${o.action}`, contentAt: o.published_at, card });
+    const prefix = o.platform === "codex" ? "codex" : o.platform;
+    const results = await deliverContent({ subjectKind: "codex_reset", subjectId: o.event_id, dedupeKey: `${prefix}:${o.post_id}:${o.event_id}:${o.action}`, contentAt: o.published_at, card });
     pushed += results.filter((r) => r.status === "sent").length;
   }
   return pushed;
@@ -257,7 +298,7 @@ export async function monitorTick(opts: { force?: boolean; lookbackHours?: numbe
   const collected = await collectPosts({ lookbackHours: opts.lookbackHours });
   const result = await processPending();
   const pushed = await flushResetPushes();
-  const [pending] = await sql<{ n: number }[]>`SELECT count(*)::int AS n FROM monitor_posts WHERE processed_at IS NULL AND author = ${AUTHOR}`;
+  const [pending] = await sql<{ n: number }[]>`SELECT count(*)::int AS n FROM monitor_posts WHERE processed_at IS NULL`;
   if (!pending?.n) await touchWatermarks({ lastVerifiedAt: started.toISOString() });
   return { ...collected, ...result, pushed, pending: pending?.n ?? 0, verifiedAt: pending?.n ? null : bjIso(started) };
 }

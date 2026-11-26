@@ -1,6 +1,7 @@
 // Turns a recognized post into monitor facts: events (announce → progress → confirm, amend,
 // withdraw), the post's activity role, outage links and the hot-scanning window. Code decides what
 // a proposition may change; the model's wording never confirms anything on its own.
+import type { MonitorPlatformId } from "@aihot/contracts/monitor";
 import { sql, type Tx } from "../db.ts";
 import type { Proposition, Recognition } from "./recognize.ts";
 import { estimateFor, resolveStatedTime, scheduleFrom, type Schedule } from "./time.ts";
@@ -70,9 +71,9 @@ function presentationOf(p: Proposition, extra: Record<string, unknown> = {}) {
   };
 }
 
-async function findTarget(tx: Tx, p: Proposition, postAt: Date): Promise<EventRow | null> {
+async function findTarget(tx: Tx, p: Proposition, postAt: Date, platform: MonitorPlatformId): Promise<EventRow | null> {
   if (p.relatesTo) {
-    const [e] = await tx<EventRow[]>`SELECT id, type, status, schedule, presentation, created_at FROM monitor_events WHERE id = ${p.relatesTo} AND NOT withdrawn`;
+    const [e] = await tx<EventRow[]>`SELECT id, type, status, schedule, presentation, created_at FROM monitor_events WHERE id = ${p.relatesTo} AND platform = ${platform} AND NOT withdrawn`;
     // A new announcement tied to one whose time long passed is a different reset.
     if (e && e.type === p.kind && (e.status !== "announced" || isOpen(e, postAt, p.action === "announce" ? 12 * HOUR : 48 * HOUR))) return e;
   }
@@ -81,7 +82,7 @@ async function findTarget(tx: Tx, p: Proposition, postAt: Date): Promise<EventRo
   // land on one already confirmed from an account check while Tibo had said nothing.
   const rows = await tx<EventRow[]>`
     SELECT id, type, status, schedule, presentation, created_at FROM monitor_events
-    WHERE type = ${p.kind} AND NOT withdrawn AND created_at <= ${postAt}
+    WHERE type = ${p.kind} AND platform = ${platform} AND NOT withdrawn AND created_at <= ${postAt}
       AND (status = 'announced' OR ${p.action === "confirm"} AND confirmation_basis = 'receipt_review' AND confirmed_at IS NULL)
     ORDER BY created_at DESC LIMIT 5`;
   return rows.find((e) => isOpen(e, postAt, 12 * HOUR)) ?? null;
@@ -114,15 +115,15 @@ async function link(tx: Tx, eventId: string, postId: string, p: Proposition) {
     ON CONFLICT (event_id, post_id) DO UPDATE SET stage = EXCLUDED.stage, action = EXCLUDED.action, text = EXCLUDED.text, original_text = EXCLUDED.original_text`;
 }
 
-async function createEvent(tx: Tx, p: Proposition, postId: string, index: number, postAt: Date, status: "announced" | "confirmed", extra: Record<string, unknown> = {}, nth = 1) {
+async function createEvent(tx: Tx, p: Proposition, postId: string, index: number, postAt: Date, status: "announced" | "confirmed", platform: MonitorPlatformId, extra: Record<string, unknown> = {}, nth = 1) {
   // Event ids: <kind>-<creating post>-<proposition #>-<reset # within it> ("reset twice" makes -1-1 and -1-2).
   const id = `${p.kind === "reset_credit" ? "banked" : "reset"}-${postId}-${index + 1}-${nth}`;
   const stated = usableTime(p, postAt);
   const schedule = stated ? scheduleFrom(stated) : null;
   const estimate = status === "confirmed" ? null : estimateFor({ schedule, announcedAt: postAt, model: p.expectedLanding });
   await tx`
-    INSERT INTO monitor_events (id, type, status, title, scope, label, display_label, schedule, estimate, presentation, confirmed_at, confirmation_basis, created_at, updated_at)
-    VALUES (${id}, ${p.kind}, ${status}, '', ${legacyScope(p)}, ${p.kind === "reset_credit" ? "发重置卡" : "全员重置"},
+    INSERT INTO monitor_events (id, platform, type, status, title, scope, label, display_label, schedule, estimate, presentation, confirmed_at, confirmation_basis, created_at, updated_at)
+    VALUES (${id}, ${platform}, ${p.kind}, ${status}, '', ${legacyScope(p)}, ${p.kind === "reset_credit" ? "发重置卡" : "全员重置"},
             ${p.kindExplicit ? (p.kind === "reset_credit" ? "重置卡发放" : "额度重置") : "重置（形式未明确）"},
             ${schedule ? tx.json(schedule as never) : null}, ${estimate ? tx.json(estimate as never) : null}, ${tx.json(presentationOf(p, extra) as never)},
             ${status === "confirmed" ? postAt : null}, ${status === "confirmed" ? "source_post" : null}, ${postAt}, ${postAt})
@@ -135,12 +136,13 @@ async function createEvent(tx: Tx, p: Proposition, postId: string, index: number
  * overlapping tick, a lookback, a retry) finds the post processed under its row lock and changes
  * nothing, so it cannot create a second event or notification.
  */
-export async function applyRecognition(postId: string, rec: Recognition): Promise<Applied> {
+export async function applyRecognition(postId: string, rec: Recognition, platformOverride?: MonitorPlatformId): Promise<Applied> {
   return sql.begin(async (tx) => {
-    const [post] = await tx<{ published_at: Date; text: string; context: Array<Record<string, unknown>>; processed_at: Date | null }[]>`
-      SELECT published_at, text, context, processed_at FROM monitor_posts WHERE id = ${postId} FOR UPDATE`;
+    const [post] = await tx<{ platform: MonitorPlatformId; published_at: Date; text: string; context: Array<Record<string, unknown>>; processed_at: Date | null }[]>`
+      SELECT platform, published_at, text, context, processed_at FROM monitor_posts WHERE id = ${postId} FOR UPDATE`;
     if (!post) throw new Error(`monitor post ${postId} not found`);
     if (post.processed_at) return { eventIds: [], notify: [] };
+    const platform = platformOverride ?? post.platform ?? "codex";
     const postAt = post.published_at;
     const contextZh = new Map(rec.contextZh.map((c) => [c.id, c.textZh]));
     const context = post.context.map((c) => ({ ...c, text: (c.text as string | null) ?? contextZh.get(String(c.id)) ?? null }));
@@ -162,7 +164,7 @@ export async function applyRecognition(postId: string, rec: Recognition): Promis
         const stated = usableTime(p, postAt);
         if (!stated || scheduleFrom(stated).label === here.label) continue;
       }
-      const target = await findTarget(tx, p, postAt);
+      const target = await findTarget(tx, p, postAt, platform);
       let eventId: string;
       if (p.action === "announce") {
         if (target && target.status === "announced") {
@@ -174,11 +176,11 @@ export async function applyRecognition(postId: string, rec: Recognition): Promis
             await tx`UPDATE monitor_events SET schedule = ${tx.json(schedule as never)}, estimate = ${tx.json(estimate as never)}, updated_at = ${postAt} WHERE id = ${eventId}`;
           }
         } else {
-          eventId = await createEvent(tx, p, postId, index, postAt, "announced");
+          eventId = await createEvent(tx, p, postId, index, postAt, "announced", platform);
           createdHere.set(p.kind, { id: eventId, label: labelOf(p, postAt) });
           applied.notify.push({ eventId, action: "announce", postId });
           for (let nth = 2; nth <= p.count; nth++) {
-            const extraId = await createEvent(tx, p, postId, index, postAt, "announced", {}, nth);
+            const extraId = await createEvent(tx, p, postId, index, postAt, "announced", platform, {}, nth);
             await link(tx, extraId, postId, p);
             applied.eventIds.push(extraId);
           }
@@ -194,7 +196,7 @@ export async function applyRecognition(postId: string, rec: Recognition): Promis
             await tx`UPDATE monitor_events SET schedule = ${tx.json(schedule as never)}, estimate = ${tx.json(estimateFor({ schedule, announcedAt: postAt, model: p.expectedLanding }) as never)} WHERE id = ${eventId}`;
           }
         } else {
-          eventId = await createEvent(tx, p, postId, index, postAt, "announced", { inProgress: true, reportedAt: postAt.toISOString() });
+          eventId = await createEvent(tx, p, postId, index, postAt, "announced", platform, { inProgress: true, reportedAt: postAt.toISOString() });
           createdHere.set(p.kind, { id: eventId, label: labelOf(p, postAt) });
           applied.notify.push({ eventId, action: "announce", postId });
         }
@@ -203,7 +205,7 @@ export async function applyRecognition(postId: string, rec: Recognition): Promis
           // A fresh confirmation long after the related event completed is a different reset.
           const [c] = await tx<{ confirmed_at: Date | null; confirmation_basis: string | null }[]>`SELECT confirmed_at, confirmation_basis FROM monitor_events WHERE id = ${target.id}`;
           if (c?.confirmed_at && postAt.getTime() - c.confirmed_at.getTime() > 6 * 3600_000) {
-            eventId = await createEvent(tx, p, postId, index, postAt, "confirmed");
+            eventId = await createEvent(tx, p, postId, index, postAt, "confirmed", platform);
             applied.notify.push({ eventId, action: "confirm", postId });
             await link(tx, eventId, postId, p);
             if (!applied.eventIds.includes(eventId)) applied.eventIds.push(eventId);
@@ -223,11 +225,11 @@ export async function applyRecognition(postId: string, rec: Recognition): Promis
             WHERE id = ${eventId} AND status = 'announced'`;
           if (updated.count) applied.notify.push({ eventId, action: "confirm", postId });
         } else {
-          eventId = await createEvent(tx, p, postId, index, postAt, "confirmed");
+          eventId = await createEvent(tx, p, postId, index, postAt, "confirmed", platform);
           applied.notify.push({ eventId, action: "confirm", postId });
           // "We reset twice" with nothing announced: each stated round is a confirmed reset of its own.
           for (let nth = 2; nth <= p.count; nth++) {
-            const extraId = await createEvent(tx, p, postId, index, postAt, "confirmed", {}, nth);
+            const extraId = await createEvent(tx, p, postId, index, postAt, "confirmed", platform, {}, nth);
             await link(tx, extraId, postId, p);
             applied.eventIds.push(extraId);
           }
@@ -264,7 +266,7 @@ export async function applyRecognition(postId: string, rec: Recognition): Promis
     let outage: Record<string, unknown> | null = null;
     if (rec.outage === "outage") outage = { kind: "outage", recoveredAt: null, resetEventId: null };
     const [open] = await tx<{ id: string; outage: { recoveredAt: string | null; resetEventId: string | null } }[]>`
-      SELECT id, outage FROM monitor_posts WHERE outage IS NOT NULL AND id <> ${postId}
+      SELECT id, outage FROM monitor_posts WHERE outage IS NOT NULL AND platform = ${platform} AND id <> ${postId}
         AND published_at >= ${new Date(postAt.getTime() - OUTAGE_LINK_MS)} AND published_at <= ${postAt}
       ORDER BY published_at DESC LIMIT 1`;
     if (open) {

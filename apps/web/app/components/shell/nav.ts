@@ -44,7 +44,7 @@ export function getSidebar(t: (key: TranslationKey) => string, locale: string = 
             title: t("nav.section.models"),
             items: [
               ...(FEATURES.leaderboard ? [{ to: "/leaderboard", label: t("nav.leaderboard"), icon: IconChart }] : []),
-              ...(FEATURES.codexResetMonitor ? [{ to: "/codex-reset", label: t("nav.codex_reset"), icon: IconHistory }] : []),
+              ...(FEATURES.codexResetMonitor ? [{ to: "/resets", label: t("nav.codex_reset"), icon: IconHistory }] : []),
             ],
           },
         ]

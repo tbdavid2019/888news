@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Collapse } from "../../components/ui/Presence";
-import type { CodexResetContextPost } from "@aihot/contracts/monitor";
+import { getMonitorAuthorName, type CodexResetContextPost } from "@aihot/contracts/monitor";
 import { IconArrowUpRight, IconChevronRight } from "../../components/icons";
 import { SourceAvatar } from "../../components/ui/SourceAvatar";
 import { stamp } from "./format";
 
 export interface CardPost {
   id: string;
+  author?: string;
   publishedAt: string | null;
   translation: string | null;
   original: string;
@@ -26,17 +27,34 @@ function Context({ c, original }: { c: CodexResetContextPost; original: boolean 
   );
 }
 
-/** A Tibo post: Chinese translation first, context below, the English original one tap away. */
-export function PostCard({ post, stage, avatar, compact = false }: { post: CardPost; stage?: string; avatar?: string | null; compact?: boolean }) {
+/** An official X post: Chinese translation first, context below, the English original one tap away. */
+export function PostCard({
+  post,
+  stage,
+  avatar,
+  authorName = "Tibo",
+  authorHandle = "thsottiaux",
+  compact = false,
+}: {
+  post: CardPost;
+  stage?: string;
+  avatar?: string | null;
+  authorName?: string;
+  authorHandle?: string;
+  compact?: boolean;
+}) {
   const [showOriginal, setShowOriginal] = useState(false);
   const hasTranslation = !!post.translation;
+  const handle = post.author ?? authorHandle;
+  const displayName = post.author ? getMonitorAuthorName(post.author, authorName) : authorName;
+  const displayAvatar = post.author && post.author.toLowerCase() !== authorHandle.toLowerCase() ? null : avatar;
   return (
     <article className={`min-w-0 rounded-card border border-line-strong bg-surface ${compact ? "px-4 py-3" : "p-4 sm:px-6"}`}>
       <header className="flex items-center gap-2.5">
-        <SourceAvatar name="Tibo" avatarUrl={avatar} size={36} />
+        <SourceAvatar name={displayName} avatarUrl={displayAvatar} size={36} />
         <span className="min-w-0 flex-1 leading-tight">
-          <strong className="block text-[13px] font-semibold text-ink">Tibo</strong>
-          <small className="block text-[12px] text-ink-4">@thsottiaux</small>
+          <strong className="block text-[13px] font-semibold text-ink">{displayName}</strong>
+          <small className="block text-[12px] text-ink-4">@{handle}</small>
         </span>
         {stage && <span className="rounded-full bg-[rgba(28,39,51,0.04)] px-2 py-0.5 text-[12px] text-ink-4 dark:bg-white/[0.06]">{stage}</span>}
       </header>

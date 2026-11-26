@@ -50,7 +50,7 @@ export default function MorePage() {
         { to: "/topics", label: t("nav.topics"), icon: <IconGrid size={18} /> },
         { to: "/podcast/recommend", label: "Podcast 智庫", icon: <IconMic size={18} /> },
         ...(FEATURES.leaderboard ? [{ to: "/leaderboard", label: t("nav.leaderboard"), icon: <IconChart size={18} /> }] : []),
-        ...(FEATURES.codexResetMonitor ? [{ to: "/codex-reset", label: t("nav.codex_reset"), icon: <IconHistory size={18} /> }] : []),
+        ...(FEATURES.codexResetMonitor ? [{ to: "/resets", label: t("nav.codex_reset"), icon: <IconHistory size={18} /> }] : []),
         { to: "/agent", label: t("nav.agent"), icon: <IconPlug size={18} /> },
       ],
     },

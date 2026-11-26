@@ -1,4 +1,4 @@
-import type { CodexResetPageData, CodexResetSitePage, CodexResetDay } from "@aihot/contracts/monitor";
+import type { CodexResetPageData, CodexResetSitePage, CodexResetDay, MonitorPlatformId } from "@aihot/contracts/monitor";
 import { codexResetPage } from "../monitor/read.ts";
 
 export function siteCodexResetPage(page: CodexResetPageData, date?: string): CodexResetSitePage {
@@ -9,11 +9,11 @@ export function siteCodexResetPage(page: CodexResetPageData, date?: string): Cod
   return { ...rest, selectedDate, events: page.events.filter((e) => ids.has(e.id)) };
 }
 
-export async function loadSiteCodexResetPage(date?: string, now = Date.now()) {
-  return siteCodexResetPage(await codexResetPage(now), date);
+export async function loadSiteCodexResetPage(date?: string, now = Date.now(), platform: MonitorPlatformId = "codex") {
+  return siteCodexResetPage(await codexResetPage(now, platform), date);
 }
 
-export async function loadSiteCodexResetDay(date: string): Promise<CodexResetDay> {
-  const page = await loadSiteCodexResetPage(date);
+export async function loadSiteCodexResetDay(date: string, platform: MonitorPlatformId = "codex"): Promise<CodexResetDay> {
+  const page = await loadSiteCodexResetPage(date, Date.now(), platform);
   return { date, version: page.version, events: page.events };
 }
