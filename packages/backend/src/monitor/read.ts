@@ -301,10 +301,10 @@ export async function codexResetPage(now = Date.now(), platform: MonitorPlatform
   const sorted = [...intervals].sort((a, b) => a - b);
   const median = sorted.length ? (sorted.length % 2 ? sorted[(sorted.length - 1) / 2]! : (sorted[sorted.length / 2 - 1]! + sorted[sorted.length / 2]!) / 2) : null;
   const pending = snap.events.find((e) => e.presentation && ["announced", "in_progress", "expired_unconfirmed"].includes(e.presentation.status));
-  const sourceId = `x-account-${meta.primaryAuthor}`;
   const [author] = await sql<{ avatar: string | null }[]>`
     SELECT x_post->>'avatarUrl' AS avatar FROM articles
-    WHERE source_id = ${sourceId} AND x_post ? 'avatarUrl' ORDER BY discovered_at DESC LIMIT 1`;
+    WHERE lower(x_post->>'handle') = lower(${meta.primaryAuthor}) AND x_post->>'avatarUrl' IS NOT NULL
+    ORDER BY discovered_at DESC LIMIT 1`;
   const [monitorAvatar] = author?.avatar
     ? [author]
     : await sql<{ avatar: string | null }[]>`

@@ -2,6 +2,26 @@
   "$comment": "示範信源：首次啟動時導入（scripts/seed.ts），已存在的不會被覆蓋。之後在後台「信源」裡增刪改。欄位說明見 docs/sources.md。",
   "sources": [
     {
+      "id": "x-bot",
+      "name": "Grok Bot (@bot)",
+      "kind": "x_search",
+      "config": {
+        "query": "from:bot -filter:replies",
+        "searchType": "Latest"
+      },
+      "tier": "T1_5",
+      "first_party": false,
+      "owner_entity_id": "xai",
+      "participation_mode": "editorial",
+      "interval_minutes": 30,
+      "tags": [
+        "xAI",
+        "Grok"
+      ],
+      "site_fulltext": false,
+      "syndicate_fulltext": false
+    },
+    {
       "id": "_mohansolo",
       "name": "Mohan (@_mohansolo)",
       "kind": "x_search",

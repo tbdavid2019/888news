@@ -153,12 +153,55 @@ async function collectAuthorPosts(author: string, platform: MonitorPlatformId, o
   return { stored, pages };
 }
 
+async function syncMonitorPostsFromArticles(): Promise<number> {
+  const authorToPlatform = new Map<string, MonitorPlatformId>();
+  for (const p of MONITOR_PLATFORMS) {
+    for (const a of p.authors) authorToPlatform.set(a.toLowerCase(), p.id);
+  }
+  const handles = [...authorToPlatform.keys()];
+  const rows = await sql<{
+    tweet_id: string;
+    handle: string;
+    text: string;
+    url: string;
+    published_at: Date;
+    x_post: Record<string, unknown>;
+  }[]>`
+    SELECT x_post->>'tweetId' AS tweet_id,
+           x_post->>'handle' AS handle,
+           coalesce(x_post->>'text', body_text, excerpt, title) AS text,
+           url,
+           coalesce(published_at, discovered_at) AS published_at,
+           x_post
+    FROM articles
+    WHERE lower(x_post->>'handle') = ANY(${handles})
+      AND x_post->>'tweetId' IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM monitor_posts mp WHERE mp.id = articles.x_post->>'tweetId')
+    ORDER BY coalesce(published_at, discovered_at) ASC
+    LIMIT 200`;
+  let stored = 0;
+  for (const r of rows) {
+    const platform = authorToPlatform.get(r.handle.toLowerCase());
+    if (!platform || !r.tweet_id || !r.text) continue;
+    const inserted = await sql`
+      INSERT INTO monitor_posts (id, author, platform, published_at, text, url, context, raw, origin)
+      VALUES (${r.tweet_id}, ${r.handle}, ${platform}, ${r.published_at}, ${r.text}, ${r.url},
+              ${sql.json([])}, ${sql.json({ x_post: r.x_post } as never)}, 'live')
+      ON CONFLICT (id) DO NOTHING`;
+    stored += inserted.count;
+  }
+  return stored;
+}
+
 /** Collects new posts (or a lookback window) across all monitored platforms before moving cursors. */
 export async function collectPosts(opts: { lookbackHours?: number } = {}): Promise<{ stored: number; pages: number }> {
   const started = new Date();
   await touchWatermarks({ lastAttemptAt: started.toISOString() });
 
-  let totalStored = 0;
+  let totalStored = await syncMonitorPostsFromArticles().catch((err) => {
+    console.warn("[Monitor] Failed to sync from articles:", err);
+    return 0;
+  });
   let totalPages = 0;
   for (const p of MONITOR_PLATFORMS) {
     for (const author of p.authors) {
